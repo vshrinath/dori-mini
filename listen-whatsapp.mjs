@@ -119,33 +119,32 @@ async function connect({ pairOnly = false } = {}) {
     if (qr) qrcodeTerminal.generate(qr, { small: true });
   });
 
-  if (pairOnly) {
-    // setup.sh runs this inline during install so a non-technical user can scan the QR
-    // right there without needing to know to Ctrl+C — exit cleanly the moment pairing
-    // succeeds instead of settling into the normal always-on listener.
-    sock.ev.on('connection.update', ({ connection }) => {
-      if (connection === 'open') {
-        console.log('WhatsApp paired.');
-        process.exit(0);
+  if (!pairOnly) {
+    const processedIds = loadProcessedIds();
+    sock.ev.on('messages.upsert', async ({ messages }) => {
+      for (const msg of messages) {
+        try {
+          await handleMessage(sock, msg, processedIds);
+        } catch (err) {
+          console.error(`Failed to process message ${msg.key.id}: ${err.message}`);
+        }
       }
     });
-    return;
   }
 
-  const processedIds = loadProcessedIds();
-  sock.ev.on('messages.upsert', async ({ messages }) => {
-    for (const msg of messages) {
-      try {
-        await handleMessage(sock, msg, processedIds);
-      } catch (err) {
-        console.error(`Failed to process message ${msg.key.id}: ${err.message}`);
-      }
-    }
-  });
-
+  // Pairing itself closes and reopens the connection once as part of finishing the
+  // handshake right after you scan — reconnecting through that (not just on the
+  // long-lived listener's later drops) is required or pairing silently never finishes.
   let reconnectDelay = 5000;
   sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
     if (connection === 'open') {
+      if (pairOnly) {
+        // setup.sh runs this inline during install so a non-technical user can scan the
+        // QR right there without needing to know to Ctrl+C — exit cleanly once paired
+        // instead of settling into the normal always-on listener.
+        console.log('WhatsApp paired.');
+        process.exit(0);
+      }
       console.log('WhatsApp listener connected.');
       reconnectDelay = 5000;
     }
@@ -155,8 +154,8 @@ async function connect({ pairOnly = false } = {}) {
         console.error(`Logged out — delete ${SESSION_DIR} and re-run to re-pair.`);
         process.exit(1);
       }
-      console.error(`Connection closed, reconnecting in ${reconnectDelay / 1000}s...`);
-      setTimeout(connect, reconnectDelay);
+      console.error(`Connection closed (${lastDisconnect?.error?.message || 'no reason given'}), reconnecting in ${reconnectDelay / 1000}s...`);
+      setTimeout(() => connect({ pairOnly }), reconnectDelay);
       reconnectDelay = Math.min(reconnectDelay * 2, 60000);
     }
   });
