@@ -123,3 +123,14 @@ echo
 echo "Then in this shell:"
 echo "  source $CONFIG_FILE"
 echo "  node route-destination.mjs youtube"
+
+# --- open the start-here guide, since a silent finish leaves you not knowing what to do next ---
+GUIDE="$(pwd)/docs/getting-started.html"
+if [ -f "$GUIDE" ]; then
+  echo
+  echo "Opening the guide — see it for what to try first..."
+  if command -v open >/dev/null 2>&1; then open "$GUIDE"
+  elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$GUIDE"
+  else echo "  (couldn't auto-open — open $GUIDE yourself)"
+  fi
+fi

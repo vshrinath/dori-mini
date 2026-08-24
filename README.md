@@ -41,6 +41,14 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
 built for themself — deliberately left out here since it's macOS-only (Keychain-backed)
 and not something to hand out even in sanitized form.
 
+## Read this first
+
+[`docs/getting-started.html`](docs/getting-started.html) — `setup.sh` opens it in your
+browser automatically once it's done. It explains what the install actually did, what
+your vault looks like before and after real use, and three things to try first.
+[`docs/guide.html`](docs/guide.html) covers every capture type in depth, plus how it
+stays cheap and fast to run.
+
 ## Setup
 
 Requires Node.js 24+ (uses the built-in `node:sqlite` module).
