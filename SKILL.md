@@ -7,6 +7,20 @@ description: Route a pasted YouTube link, document, meeting transcript, or expen
 
 Detect what was given, run the matching tool directly via Bash — no subagent, no LLM step for extraction — then ask the user where to save the output if they haven't said. Keep this file as the only thing you load up front; only read `mom-prompt.md` in this same directory when branch 3 applies, never for branches 1 or 2.
 
+## 0. When to act without being asked, vs. waiting for "Dori"
+
+This session is usually also being used for real project work, not just capture — so
+two message shapes get two different rules (see also `AGENTS.md`):
+
+- **Structural** (act immediately, no prefix): a pasted YouTube URL, an attached
+  document/receipt image, a pasted block that's clearly a raw meeting transcript. These
+  shapes don't occur in ordinary conversation, so there's nothing to disambiguate.
+- **Conversational** (only act if the message starts with "Dori", case-insensitive,
+  optional comma — strip it, then match normally): recall/search, task queries,
+  free-text expense statements, starting something new (a project, a trip), person
+  research. These are plain sentences that could just as easily be about whatever else
+  is going on in this session.
+
 ## 1. YouTube link (`youtube.com/...` or `youtu.be/...`)
 
 Transcript only (default, fastest) — `--write-info-json` also lands the uploader's own chapters and description alongside the captions, in the same call:

@@ -128,6 +128,10 @@
   message</b> and reaches for the matching script. This mirrors Dori's own capture and
   routing logic specifically — not the full executive-assistant experience, just the
   parts that save you from filing things by hand.</p>
+  <p class="lede" style="margin-top:-14px;">One convention throughout this page: a pasted link or a dragged-in file reacts on
+  its own — it can only ever mean "capture this." Anything conversational is prefixed
+  with <b>"Dori"</b>, so it never gets confused with whatever else you're discussing
+  in this same chat.</p>
   <div class="flow">
     <div class="flow-step">you say it</div><span class="flow-arrow">→</span>
     <div class="flow-step">a script routes it</div><span class="flow-arrow">→</span>
@@ -147,7 +151,7 @@
     <div class="moment"><time>8:40am</time><p>Someone shares a talk on the walk in. You paste the link and say <b>"grab this"</b> — by the time you're at your desk, it's a searchable transcript.</p></div>
     <div class="moment"><time>11:15am</time><p>Out of a client call. Instead of writing notes, you say <b>"turn this into minutes"</b> — pasting the transcript, or letting a connected Fathom account supply it — and keep moving to the next thing.</p></div>
     <div class="moment"><time>1:30pm</time><p>Cab receipt lands in your gallery. You drop the photo in and say <b>"add this to the trip"</b> — no spreadsheet, no separate app.</p></div>
-    <div class="moment"><time>4:00pm</time><p>Can't remember what you agreed to two weeks ago. You ask <b>"what did we decide with the design team?"</b> instead of scrolling through old docs.</p></div>
+    <div class="moment"><time>4:00pm</time><p>Can't remember what you agreed to two weeks ago. You ask <b>"Dori, what did we decide with the design team?"</b> instead of scrolling through old docs.</p></div>
     <div class="moment"><time>6:45pm</time><p>You ask <b>"Dori, give me a summary of the day"</b> — nothing was filed by hand, it's all just where it should be because you talked, not because you organized.</p></div>
   </div>
 
@@ -187,8 +191,8 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="slip-head"><div><span class="sticker purple">Capture · minutes</span><div class="slip-title">Raw transcript → structured minutes</div></div></div>
     <div class="slip-body">
       <div class="say-label">You say</div>
-      <p class="say">"Turn this transcript into minutes" — or, with no transcript at all —</p>
-      <p class="say">"Pull my meeting with the design team from Fathom"</p>
+      <p class="say">"Turn this into minutes" <span style="opacity:.6">(pasted alongside a transcript — reacts on its own)</span></p>
+      <p class="say">"Dori, pull my meeting with the design team from Fathom" <span style="opacity:.6">(no transcript in hand — this needs the prefix)</span></p>
       <p class="then">Long transcripts get compressed by a cheap model first (facts, decisions, and action items kept verbatim), then extracted into <b>Attendees · Topics · Decisions Log · Action Items</b>. Fathom sync dedups automatically — never re-files the same call twice.</p>
       <pre>## Decisions Log
 - Ship the v2 pricing page before the Q3 review     [owner: Priya]
@@ -202,8 +206,8 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="slip-head"><div><span class="sticker green">Capture · finance</span><div class="slip-title">A bill photo becomes a ledger row</div></div></div>
     <div class="slip-body">
       <div class="say-label">You say</div>
-      <p class="say">"Start a trip for the Denver conference"</p>
-      <p class="say">"Here's the airport taxi receipt" <span style="opacity:.6">(photo attached)</span></p>
+      <p class="say">"Dori, start a trip for the Denver conference" <span style="opacity:.6">(no attachment yet — needs the prefix)</span></p>
+      <p class="say">"Here's the airport taxi receipt" <span style="opacity:.6">(photo attached — reacts on its own)</span></p>
       <p class="then">Reads each bill, proposes a row (date · vendor · amount · tax), and appends it to a running ledger. Before you submit a claim, it <b>checks for gaps</b> — no date, no amount, no attachment — so nothing gets rejected downstream.</p>
       <pre>| Date       | Description           | Category  | Amount  | Tax   |
 |------------|------------------------|-----------|---------|-------|
@@ -221,8 +225,8 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="slip-head"><div><span class="sticker amber">Recall</span><div class="slip-title">Ask instead of digging through folders</div></div></div>
     <div class="slip-body">
       <div class="say-label">You say</div>
-      <p class="say">"What did we decide with the design team last time?"</p>
-      <p class="say">"Find anything about the annual-plan discount"</p>
+      <p class="say">"Dori, what did we decide with the design team last time?"</p>
+      <p class="say">"Dori, find anything about the annual-plan discount"</p>
       <p class="then">Exact-phrase recall hits a local <b>full-text index</b> instantly; a looser, paraphrased question falls back to <b>local semantic search</b> — embeddings run entirely on your machine, no API call.</p>
       <pre>last-meeting --person "design team"
 → 2026-08-19 · Decisions Log · Action Items <span class="dim">(3 open)</span></pre>
@@ -235,7 +239,7 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="slip-head"><div><span class="sticker coral">Enrich</span><div class="slip-title">A new name gets real context</div></div></div>
     <div class="slip-body">
       <div class="say-label">You say</div>
-      <p class="say">"Who's Priya Menon from Acme? — she just joined a meeting"</p>
+      <p class="say">"Dori, who's Priya Menon from Acme? — she just joined a meeting"</p>
       <p class="then">Searches the open web for the right person — <b>always confirms</b> before filing, since common names collide. Nothing gets written until you say yes.</p>
       <div class="filed">confirmed → entities/people/</div>
     </div>
@@ -246,8 +250,8 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="slip-head"><div><span class="sticker blue">Housekeeping</span><div class="slip-title">Nothing files itself ambiguously</div></div></div>
     <div class="slip-body">
       <div class="say-label">You say</div>
-      <p class="say">"Anything waiting on me?"</p>
-      <p class="say">"What are my pending tasks?"</p>
+      <p class="say">"Dori, anything waiting on me?"</p>
+      <p class="say">"Dori, what are my pending tasks?"</p>
       <p class="then">When a capture could belong to more than one project — or none — it's held as a pending decision instead of guessing. <b>These survive across sessions</b>, so nothing quietly falls through. The tasks question pulls open action items straight from meeting minutes you've already captured.</p>
       <pre>2 unfiled captures
 1 pending clarification — "Denver notes.pdf" could match: acme-nonprofit, acme-events</pre>
