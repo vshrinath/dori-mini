@@ -108,6 +108,7 @@
   .trust-item p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.55; }
 
   footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .peek { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 2px 0 8px; }
 
   @media (max-width: 560px) {
     .moment { grid-template-columns: 1fr; gap: 4px; }
@@ -125,9 +126,9 @@
   <h1>Everything you can<br><span class="serif-pop">just say.</span></h1>
   <p class="lede">Every trigger below is something you'd type without thinking about
   which tool handles it — that's the point. <b>Your agent recognizes the shape of the
-  message</b> and reaches for the matching script. This mirrors Dori's own capture and
-  routing logic specifically — not the full executive-assistant experience, just the
-  parts that save you from filing things by hand.</p>
+  message</b> and quietly does the right thing with it. (If you've heard of Dori, the
+  full product, this is its capture-and-filing layer running locally, on its own — not
+  the whole assistant, just the part that saves you from filing things by hand.)</p>
   <p class="lede" style="margin-top:-14px;">One convention throughout this page: a pasted link or a dragged-in file reacts on
   its own — it can only ever mean "capture this." Anything conversational is prefixed
   with <b>"Dori"</b>, so it never gets confused with whatever else you're discussing
@@ -180,6 +181,7 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
       <div class="say-label">You say</div>
       <p class="say">"Here are the board minutes from Tuesday" <span style="opacity:.6">(.docx attached)</span></p>
       <p class="then">Converts locally via <a href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener"><code>markitdown</code></a> into Markdown — plain text with light structure, the format an agent can read at the lowest token cost — then figures out <b>where it belongs</b> — an existing project if one matches, otherwise your inbox. It asks before filing anywhere new.</p>
+      <div class="peek">Under the hood — skip if you don't care</div>
       <pre><span class="dim">$</span> route-destination.mjs document acme-nonprofit
 { "relPath": <span class="hit">"projects/acme-nonprofit/2026-08-24-ec-minutes.md"</span> }</pre>
       <div class="filed">filed to projects/</div>
@@ -212,9 +214,9 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
       <pre>| Date       | Description           | Category  | Amount  | Tax   |
 |------------|------------------------|-----------|---------|-------|
 | 2026-08-21 | Airport taxi           | Transport | 1350.00 | 0.00  |
-| 2026-08-24 | Return airport taxi    | Transport | 1936.78 | 80.88 |
-
-<span class="dim">$</span> check-reimbursement-gaps.mjs "Denver conference"
+| 2026-08-24 | Return airport taxi    | Transport | 1936.78 | 80.88 |</pre>
+      <div class="peek" style="margin-top:12px;">Under the hood — skip if you don't care</div>
+      <pre><span class="dim">$</span> check-reimbursement-gaps.mjs "Denver conference"
 { "gaps": [], "complete": <span class="hit">true</span> }</pre>
       <div class="filed">filed to finances/reimbursements/</div>
     </div>
@@ -228,6 +230,7 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
       <p class="say">"Dori, what did we decide with the design team last time?"</p>
       <p class="say">"Dori, find anything about the annual-plan discount"</p>
       <p class="then">Exact-phrase recall hits a local <b>full-text index</b> instantly; a looser, paraphrased question falls back to <b>local semantic search</b> — embeddings run entirely on your machine, no API call.</p>
+      <div class="peek">Under the hood — skip if you don't care</div>
       <pre>last-meeting --person "design team"
 → 2026-08-19 · Decisions Log · Action Items <span class="dim">(3 open)</span></pre>
       <div class="filed">answered — no files opened by hand</div>
@@ -294,8 +297,8 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="tool-chip">Plain terminal</div>
   </div>
   <p style="font-size:0.9rem; color:var(--body-c); margin-top:16px; max-width:58ch;">
-    It's plain Node.js scripts, not a plugin tied to one product — any agent with shell
-    access recognizes the same trigger phrases and calls the same scripts. Switch tools
+    It's plain, inspectable scripts, not a plugin tied to one product — any of these
+    tools recognizes the same trigger phrases and does the same thing. Switch tools
     tomorrow and nothing here needs reconfiguring. There's no dashboard or website to
     check — you interact with it entirely inside whichever chat you already have open,
     and it uses that tool's own subscription. No new account, no added cost.
