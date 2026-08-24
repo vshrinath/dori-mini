@@ -51,7 +51,7 @@ Confirm the destination folder still exists rather than assuming — projects va
 - `suggested` (exactly one open trip ledger, no explicit name needed) → advisory only, confirm before appending.
 - `conflict`/`none` → a `ClarificationRecord` (domain `expense.route`) is written automatically. Still ask which trip before filing — never guess.
 
-Ledgers live at `finances/trips/<threadId>.md` (or `finances/reimbursements/<threadId>.md` once submitted) — never `entities/` or `projects/`, this is its own tree. `threadId` follows Dori's own `thread_<uuid>` shape (e.g. `thread_29c6b78e-0fd4-409c-91cc-c60a208934e1`) — generate one with `node -e "console.log('thread_' + crypto.randomUUID())"` when seeding a new ledger for a "create new trip" choice.
+Ledgers live at `finances/trips/<threadId>.md` (or `finances/reimbursements/<threadId>.md` once submitted) — never `entities/` or `projects/`, this is its own tree. `threadId` follows Dori's own `thread_<uuid>` shape (e.g. `thread_a1b2c3d4-e5f6-7890-abcd-ef1234567890`) — generate one with `node -e "console.log('thread_' + crypto.randomUUID())"` when seeding a new ledger for a "create new trip" choice.
 
 New ledger seed (frontmatter + empty table), produced by `expense-router.mjs`'s exported `buildTripLedgerSeed`:
 ```yaml
