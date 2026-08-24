@@ -9,13 +9,23 @@
 // newest-first, matching `sortInboxDecisions`.
 //
 // Usage: node list-inbox.mjs
-import { readdirSync, statSync } from 'node:fs';
+import { readdirSync, statSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { list as listClarifications } from './clarification-store.mjs';
 
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
 const INBOX_DIR = join(VAULT_ROOT, 'inbox');
+
+function frontmatterTitle(full) {
+  try {
+    const head = readFileSync(full, 'utf8').slice(0, 2000);
+    const m = head.match(/^title:\s*"?(.*?)"?\s*$/m);
+    return m?.[1] || null;
+  } catch {
+    return null;
+  }
+}
 
 function inboxFiles() {
   let entries;
@@ -31,7 +41,7 @@ function inboxFiles() {
       const stat = statSync(full);
       return {
         type: 'inbox_file',
-        title: e.name,
+        title: frontmatterTitle(full) || e.name,
         relPath: `inbox/${e.name}`,
         createdAt: new Date(stat.mtimeMs).toISOString(),
       };

@@ -33,19 +33,43 @@ function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
+// Real vaults accumulate exact-duplicate noise (e.g. a broken workflow re-filing the
+// same failure notice every run) — collapse identical titles to one line with a count
+// instead of listing each occurrence, and cap the distinct lines shown so one noisy
+// title can't push everything else off the page. Never drop the count silently.
+const MAX_DISTINCT_LINES = 8;
+
+function groupByTitle(items, titleOf) {
+  const counts = new Map();
+  for (const item of items) {
+    const t = titleOf(item);
+    counts.set(t, (counts.get(t) || 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+}
+
+function renderList(items, titleOf, emptyLabel) {
+  if (!items.length) return `<li class="empty">${emptyLabel}</li>`;
+  const grouped = groupByTitle(items, titleOf);
+  const shown = grouped.slice(0, MAX_DISTINCT_LINES);
+  const hiddenCount = grouped.length - shown.length;
+  const hiddenItems = grouped.slice(MAX_DISTINCT_LINES).reduce((sum, [, n]) => sum + n, 0);
+  let html = shown.map(([t, n]) => `<li>${esc(t)}${n > 1 ? ` <span class="count">×${n}</span>` : ''}</li>`).join('\n');
+  if (hiddenCount > 0) {
+    html += `\n<li class="empty">+ ${hiddenCount} more distinct item${hiddenCount === 1 ? '' : 's'} (${hiddenItems} total) — see list-inbox.mjs / list-tasks.mjs for the full list</li>`;
+  }
+  return html;
+}
+
 function renderHtml({ period, tasks, inbox }) {
-  const taskRows = tasks.length
-    ? tasks.map((t) => `<li>${esc(t.title)}${t.due ? ` — <span class="due">due ${esc(t.due)}</span>` : ''}</li>`).join('\n')
-    : '<li class="empty">Nothing open.</li>';
-  const inboxRows = inbox.length
-    ? inbox.map((i) => `<li>${esc(i.title)}</li>`).join('\n')
-    : '<li class="empty">Nothing pending.</li>';
+  const taskRows = renderList(tasks, (t) => t.title, 'Nothing open.');
+  const inboxRows = renderList(inbox, (i) => i.title, 'Nothing pending.');
   const title = period === 'morning' ? 'Morning digest' : 'End-of-day summary';
   return `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
 <style>
 body{font-family:-apple-system,sans-serif;max-width:640px;margin:40px auto;padding:0 20px;color:#1a1a1a}
 h1{font-size:1.4rem} h2{font-size:1rem;color:#555;margin-top:2rem}
-ul{padding-left:1.2rem} li{margin:.3rem 0} .empty{color:#999} .due{color:#a33}
+ul{padding-left:1.2rem} li{margin:.3rem 0} .empty{color:#999} .due{color:#a33} .count{color:#888;font-size:.85em}
 .date{color:#888;font-size:.9rem}
 </style></head><body>
 <h1>${title}</h1>
