@@ -117,7 +117,7 @@
 
 <nav class="topnav">
   <div class="wordmark">dori<span>capture</span></div>
-  <a class="back" href="getting-started.html">← Start here</a>
+  <a class="back" href="https://claude.ai/code/artifact/031b132d-4080-4009-bc71-a68a537e3c54">← Start here</a>
 </nav>
 
 <div class="container">
@@ -125,7 +125,9 @@
   <h1>Everything you can<br><span class="serif-pop">just say.</span></h1>
   <p class="lede">Every trigger below is something you'd type without thinking about
   which tool handles it — that's the point. <b>Your agent recognizes the shape of the
-  message</b> and reaches for the matching script.</p>
+  message</b> and reaches for the matching script. This mirrors Dori's own capture and
+  routing logic specifically — not the full executive-assistant experience, just the
+  parts that save you from filing things by hand.</p>
   <div class="flow">
     <div class="flow-step">you say it</div><span class="flow-arrow">→</span>
     <div class="flow-step">a script routes it</div><span class="flow-arrow">→</span>
@@ -143,10 +145,10 @@
   <p class="h2-sub">Built for someone whose day is already full — the point isn't a new habit, it's zero new habits.</p>
   <div class="day">
     <div class="moment"><time>8:40am</time><p>Someone shares a talk on the walk in. You paste the link and say <b>"grab this"</b> — by the time you're at your desk, it's a searchable transcript.</p></div>
-    <div class="moment"><time>11:15am</time><p>Out of a client call. Instead of writing notes, you just say <b>"turn this into minutes"</b> and keep moving to the next thing.</p></div>
+    <div class="moment"><time>11:15am</time><p>Out of a client call. Instead of writing notes, you say <b>"turn this into minutes"</b> — pasting the transcript, or letting a connected Fathom account supply it — and keep moving to the next thing.</p></div>
     <div class="moment"><time>1:30pm</time><p>Cab receipt lands in your gallery. You drop the photo in and say <b>"add this to the trip"</b> — no spreadsheet, no separate app.</p></div>
     <div class="moment"><time>4:00pm</time><p>Can't remember what you agreed to two weeks ago. You ask <b>"what did we decide with the design team?"</b> instead of scrolling through old docs.</p></div>
-    <div class="moment"><time>6:45pm</time><p>Nothing was filed by hand today. It's all just where it should be — because you talked, not because you organized.</p></div>
+    <div class="moment"><time>6:45pm</time><p>You ask <b>"Dori, give me a summary of the day"</b> — nothing was filed by hand, it's all just where it should be because you talked, not because you organized.</p></div>
   </div>
 
   <h2 id="youtube">Youtube link</h2>
@@ -161,6 +163,8 @@
   02:14  The core argument
   09:40  Where it breaks down
 upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks</span></pre>
+      <p class="then" style="margin-top:12px;">It also builds a small local HTML page (<code>serve-site.mjs</code>) you can click
+      open and browse your captures in — stored on your machine, nothing uploaded anywhere.</p>
       <div class="filed">saved to yt/</div>
     </div>
   </div>
@@ -243,7 +247,8 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="slip-body">
       <div class="say-label">You say</div>
       <p class="say">"Anything waiting on me?"</p>
-      <p class="then">When a capture could belong to more than one project — or none — it's held as a pending decision instead of guessing. <b>These survive across sessions</b>, so nothing quietly falls through.</p>
+      <p class="say">"What are my pending tasks?"</p>
+      <p class="then">When a capture could belong to more than one project — or none — it's held as a pending decision instead of guessing. <b>These survive across sessions</b>, so nothing quietly falls through. The tasks question pulls open action items straight from meeting minutes you've already captured.</p>
       <pre>2 unfiled captures
 1 pending clarification — "Denver notes.pdf" could match: acme-nonprofit, acme-events</pre>
     </div>
@@ -270,7 +275,7 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     </div>
   </div>
   <p style="font-size:0.9rem; color:var(--body-c); margin-top:18px; max-width:58ch;">
-    This is the short version. <a class="underline" style="text-decoration:underline; text-underline-offset:3px;" href="cost.html">The full technical breakdown →</a>
+    This is the short version. <a class="underline" style="text-decoration:underline; text-underline-offset:3px;" href="https://claude.ai/code/artifact/6d1962ef-73d2-487b-9b84-d45a2cc97872">The full technical breakdown →</a>
     covers the SQLite/FTS5 index, the local embedding model, RRF re-ranking, and a
     traced example of a real capture end to end.
   </p>
@@ -294,8 +299,8 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
 
   <div class="optional">
     <span class="tag">Optional, skip freely</span>
-    <div><b>Fathom</b> pulls meeting recordings straight from your account instead of you
-    pasting a transcript. <b>Tavily</b> looks up context on a new meeting attendee. Every
+    <div><b><a href="https://fathom.video" target="_blank" rel="noopener">Fathom</a></b> pulls meeting recordings straight from your account instead of you
+    pasting a transcript. <b><a href="https://tavily.com" target="_blank" rel="noopener">Tavily</a></b> looks up context on a new meeting attendee. Every
     other feature on this page works identically without either key.</div>
   </div>
 

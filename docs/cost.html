@@ -270,7 +270,11 @@
       <div>
         <h3>markitdown</h3>
         <p>Microsoft's open-source converter — turns PDF, DOCX, PPTX, and XLSX files
-        into clean Markdown locally, before anything is read or filed.</p>
+        into clean Markdown locally, before anything is read or filed. It reads
+        embedded text directly — a scanned, image-only PDF won't extract text this way
+        (there's no OCR step, no Tesseract dependency). A photographed receipt or bill
+        is instead read directly by the multimodal model itself, which is why that
+        path costs a small amount of model tokens rather than being free.</p>
         <a class="underline" href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener">github.com/microsoft/markitdown →</a>
       </div>
     </div>

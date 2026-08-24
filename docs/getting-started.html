@@ -164,13 +164,13 @@
 <div class="container">
 
   <div class="eyebrow"><span class="dot"></span> Before you do anything</div>
-  <h1>You already have everything<br>you need — <span class="serif-pop">just talk.</span></h1>
+  <h1>Supercharge the agent<br>you already have — <span class="serif-pop">no extra cost, zero lock-in.</span></h1>
   <p class="lede">
-    Dori Capture isn't a new app — it integrates with the coding agent you already
-    have open (<b>Claude Code, Codex CLI, Antigravity</b> — whichever it is) and
-    works identically across all of them. <b>There's no separate window, no
-    dashboard, no login.</b> You keep talking to the same chat you always do; it
-    just starts recognizing a pasted link, a dragged-in file, "I spent ₹300 on lunch."
+    Dori Capture integrates with the coding agent you already have open
+    (<b>Claude Code, Codex CLI, Antigravity</b> — whichever it is) and works
+    identically across all of them. You keep chatting exactly the way you
+    already do — <b>you just get to ask more precise, specific things</b> and
+    have them actually get filed, indexed, and remembered.
   </p>
 
   <div class="promise">
@@ -227,7 +227,11 @@
   </ol>
 
   <h2>Your vault, before and after</h2>
-  <p class="h2-sub">You start with almost nothing. It fills in as you actually use it — nothing is pre-built for you to browse.</p>
+  <p class="h2-sub">Your vault is your local home — five empty folders at first, filling in only as you actually use it.</p>
+  <p style="font-size:0.86rem; color:var(--muted); margin:-10px 0 20px;">
+    By default it's created at <code>~/dori-vault</code> — open that folder in Finder
+    or Explorer any time and look around. It's not a database you need this tool to read.
+  </p>
 
   <div class="tree-pair">
     <div class="tree-card">
@@ -265,7 +269,9 @@
     Every folder on the right came from something you just said in chat — nothing was
     scaffolded in advance. A new project folder, a new person file, a new trip ledger:
     each one is created the first time it's actually needed, and only after you'd
-    recognize what it's for.
+    recognize what it's for. The one exception is <code>inbox/</code> — it's there
+    from the start, and it's where anything ambiguous lands instead of being filed
+    wrong. Ask "anything in my inbox?" any time to triage it.
   </p>
 
   <div class="promise" style="margin-top:20px;">
@@ -285,33 +291,33 @@
   <div class="try-grid">
     <div class="try">
       <div class="icon">"</div>
-      <div><p class="say">Point it at a project you're already working on: "here are the files for the Acme redesign"</p>
-      <p class="why">It reads what's there and sets up a project folder around it — the fastest way to see it work with content you actually recognize.</p></div>
+      <div><p class="say">Create a project you're already working on and drop in the files related to it</p>
+      <p class="why">It reads what's there and sets up a scoped project folder — search later stays inside that project, so results won't mix with unrelated work.</p></div>
     </div>
     <div class="try">
       <div class="icon">"</div>
       <div><p class="say">Paste any YouTube link and say "grab this"</p>
-      <p class="why">You'll have a searchable transcript in your vault in under a minute — no video download, just the words.</p></div>
+      <p class="why">You'll have a searchable transcript in your vault in under a minute — it also builds a small local HTML page you can click open and browse, no video download needed.</p></div>
     </div>
     <div class="try">
       <div class="icon">"</div>
       <div><p class="say">Drag in a PDF or a photo of a receipt</p>
-      <p class="why">Watch it either convert to clean Markdown, or — if it looks like a bill — get proposed as an expense row.</p></div>
+      <p class="why">Watch it either convert to clean Markdown, or — if it looks like a bill — get proposed as an expense row. Not sure what it is? It asks, or leaves it in your inbox — say "anything in my inbox?" any time to triage.</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">Paste a meeting transcript and say "turn this into minutes" — or connect Fathom<sup>*</sup> and skip the pasting entirely</p>
+      <p class="why">Designed to minimize the work you do after a meeting — comes back as Attendees · Topics · Decisions Log · Action Items. <sup>*</sup>Fathom is optional: <a class="underline" href="https://fathom.video" target="_blank" rel="noopener">fathom.video</a>.</p></div>
     </div>
     <div class="try">
       <div class="icon">"</div>
       <div><p class="say">Mention someone from a meeting: "Priya Menon from Acme just joined"</p>
-      <p class="why">It looks them up and asks you to confirm before filing anything — a quick way to see the research flow.</p></div>
+      <p class="why">It looks them up and confirms before filing — and afterward you can ask things like "how many meetings have I had with Priya?" or "what did we discuss on August 15th?"</p></div>
     </div>
     <div class="try">
       <div class="icon">"</div>
-      <div><p class="say">Paste in a meeting transcript and say "turn this into minutes"</p>
-      <p class="why">Comes back as Attendees · Topics · Decisions Log · Action Items — structured, not a wall of text.</p></div>
-    </div>
-    <div class="try">
-      <div class="icon">"</div>
-      <div><p class="say">Set up Fathom sync if you use it</p>
-      <p class="why">Give it your Fathom API key once and it pulls unfiled recordings straight in — no more pasting transcripts by hand.</p></div>
+      <div><p class="say">Ask "what tasks are pending for me?" after a few meetings are filed</p>
+      <p class="why">Pulls open action items across your projects, not a guess — it's reading the same Action Items sections every meeting capture writes.</p></div>
     </div>
     <div class="try">
       <div class="icon">"</div>
@@ -322,8 +328,8 @@
 
   <div class="optional">
     <span class="tag">Optional, skip freely</span>
-    <div><b>Fathom</b> lets it pull meeting recordings straight from your account instead
-    of you pasting a transcript. <b>Tavily</b> lets it look up context on a new meeting
+    <div><b><a class="underline" href="https://fathom.video" target="_blank" rel="noopener">Fathom</a></b> lets it pull meeting recordings straight from your account instead
+    of you pasting a transcript. <b><a class="underline" href="https://tavily.com" target="_blank" rel="noopener">Tavily</a></b> lets it look up context on a new meeting
     attendee. Neither is required for anything else here — every other feature works
     identically without them.</div>
   </div>
