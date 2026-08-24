@@ -16,7 +16,9 @@
 // the DEDICATED number, not your primary one. Session is cached under
 // ~/.dori/whatsapp-session/ (shared with send-whatsapp.mjs — same linked account).
 //
-// Usage: node listen-whatsapp.mjs
+// Usage: node listen-whatsapp.mjs [--pair-only]
+//   --pair-only   exit right after the QR is scanned instead of listening forever —
+//                 used by setup.sh to pair inline during install.
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
@@ -105,10 +107,23 @@ async function handleMessage(sock, msg, processedIds) {
   await fileCapture({ text, urls, sock, msg, media });
 }
 
-async function connect() {
+async function connect({ pairOnly = false } = {}) {
   const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
   const sock = makeWASocket({ auth: state, logger: pino({ level: 'silent' }), printQRInTerminal: true });
   sock.ev.on('creds.update', saveCreds);
+
+  if (pairOnly) {
+    // setup.sh runs this inline during install so a non-technical user can scan the QR
+    // right there without needing to know to Ctrl+C — exit cleanly the moment pairing
+    // succeeds instead of settling into the normal always-on listener.
+    sock.ev.on('connection.update', ({ connection }) => {
+      if (connection === 'open') {
+        console.log('WhatsApp paired.');
+        process.exit(0);
+      }
+    });
+    return;
+  }
 
   const processedIds = loadProcessedIds();
   sock.ev.on('messages.upsert', async ({ messages }) => {
@@ -141,5 +156,6 @@ async function connect() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  await connect();
+  const pairOnly = process.argv.includes('--pair-only');
+  await connect({ pairOnly });
 }

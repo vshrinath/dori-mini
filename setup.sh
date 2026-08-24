@@ -135,6 +135,37 @@ wire_global() {
 # best-effort guess, harmless no-op if wrong since wire_global only acts when the dir exists.
 [ -d "$HOME/.antigravity" ] && wire_global "$HOME/.antigravity/AGENTS.md" "Antigravity"
 
+# --- WhatsApp channel (pair inline, then run in the background — macOS only) ---
+if [ "$(uname)" = "Darwin" ]; then
+  echo
+  echo "WhatsApp channel: text a dedicated number and Dori files whatever you send"
+  echo "(links, photos, notes) straight into your vault — no chat session needed."
+  echo "Needs a SPARE WhatsApp number, not your main one (see docs/guide.html for why)."
+  read -r -p "Set this up now? [y/N] " WA_REPLY
+  if [[ "$WA_REPLY" =~ ^[Yy]$ ]]; then
+    echo
+    echo "On the SPARE number's phone: WhatsApp > Settings > Linked Devices > Link a Device."
+    echo "A QR code will appear below — scan it now."
+    echo
+    if node listen-whatsapp.mjs --pair-only; then
+      echo "✓ WhatsApp paired"
+      WA_PLIST="$HOME/Library/LaunchAgents/com.dori.whatsapp-listener.plist"
+      sed -e "s|__NODE_PATH__|$(command -v node)|g" \
+          -e "s|__REPO_PATH__|$SCRIPT_DIR|g" \
+          -e "s|__HOME__|$HOME|g" \
+          "$SCRIPT_DIR/whatsapp-listener.plist.template" > "$WA_PLIST"
+      launchctl unload "$WA_PLIST" >/dev/null 2>&1 || true
+      launchctl load "$WA_PLIST"
+      echo "✓ WhatsApp listener running in the background (logs: ~/.dori/whatsapp-listener.log)"
+    else
+      echo "  Pairing didn't complete — skipped. Re-run 'node listen-whatsapp.mjs --pair-only' any time to retry."
+    fi
+  else
+    echo "  Skipped — set it up later: node listen-whatsapp.mjs --pair-only, then see"
+    echo "  whatsapp-listener.plist.template to run it in the background."
+  fi
+fi
+
 # --- morning/evening digest schedule (macOS only — launchd) ---
 if [ "$(uname)" = "Darwin" ]; then
   echo
