@@ -18,16 +18,18 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
 import pino from 'pino';
+import qrcodeTerminal from 'qrcode-terminal';
 
 const SESSION_DIR = join(homedir(), '.dori', 'whatsapp-session');
 
 export async function sendWhatsApp(message) {
   const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
-  const sock = makeWASocket({ auth: state, logger: pino({ level: 'silent' }), printQRInTerminal: true });
+  const sock = makeWASocket({ auth: state, logger: pino({ level: 'silent' }) });
   sock.ev.on('creds.update', saveCreds);
 
   await new Promise((resolve, reject) => {
-    sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
+    sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
+      if (qr) qrcodeTerminal.generate(qr, { small: true });
       if (connection === 'open') resolve();
       if (connection === 'close') {
         const code = lastDisconnect?.error?.output?.statusCode;

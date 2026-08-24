@@ -23,6 +23,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import makeWASocket, { useMultiFileAuthState, downloadMediaMessage, DisconnectReason } from '@whiskeysockets/baileys';
+import qrcodeTerminal from 'qrcode-terminal';
 import pino from 'pino';
 import { canonicalOutputPath, VAULT_ROOT } from './route-destination.mjs';
 
@@ -109,8 +110,14 @@ async function handleMessage(sock, msg, processedIds) {
 
 async function connect({ pairOnly = false } = {}) {
   const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
-  const sock = makeWASocket({ auth: state, logger: pino({ level: 'silent' }), printQRInTerminal: true });
+  const sock = makeWASocket({ auth: state, logger: pino({ level: 'silent' }) });
   sock.ev.on('creds.update', saveCreds);
+
+  // Baileys dropped its old built-in `printQRInTerminal` option — render it ourselves
+  // whenever one shows up (first pairing, or re-pairing after a logout).
+  sock.ev.on('connection.update', ({ qr }) => {
+    if (qr) qrcodeTerminal.generate(qr, { small: true });
+  });
 
   if (pairOnly) {
     // setup.sh runs this inline during install so a non-technical user can scan the QR
