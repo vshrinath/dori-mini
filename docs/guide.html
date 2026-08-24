@@ -138,7 +138,7 @@
   <nav class="toc">
     <a href="#day">A day with it</a><a href="#project">New project</a><a href="#youtube">YouTube</a><a href="#document">Documents</a>
     <a href="#meeting">Meetings</a><a href="#expense">Expenses</a><a href="#search">Search</a>
-    <a href="#person">Research</a><a href="#inbox">Inbox</a><a href="#tech">How it stays cheap</a>
+    <a href="#person">Research</a><a href="#inbox">Inbox</a><a href="#tasks">Tasks</a><a href="#tech">How it stays cheap</a>
     <a href="#tools">Cross-tool</a><a href="#trust">The promise</a>
   </nav>
 
@@ -239,7 +239,9 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
       <div class="say-label">You say</div>
       <p class="say">"Dori, what did we decide with the design team last time?"</p>
       <p class="say">"Dori, find anything about the annual-plan discount"</p>
-      <p class="then">Exact-phrase recall hits a local <b>full-text index</b> instantly; a looser, paraphrased question falls back to <b>local semantic search</b> — embeddings run entirely on your machine, no API call.</p>
+      <p class="say">"Dori, tell me about Priya"</p>
+      <p class="say">"Dori, what's the NDA status with Northwind?"</p>
+      <p class="then">Exact-phrase recall hits a local <b>full-text index</b> instantly; a looser, paraphrased question falls back to <b>local semantic search</b> — embeddings run entirely on your machine, no API call. This is also how you get info about someone <i>already</i> in your vault — different from Person research below, which is for someone new.</p>
       <div class="peek">Under the hood — skip if you don't care</div>
       <pre>last-meeting --person "design team"
 → 2026-08-19 · Decisions Log · Action Items <span class="dim">(3 open)</span></pre>
@@ -253,7 +255,7 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="slip-body">
       <div class="say-label">You say</div>
       <p class="say">"Dori, who's Priya Menon from Acme? — she just joined a meeting"</p>
-      <p class="then">Searches the open web for the right person — <b>always confirms</b> before filing, since common names collide. Nothing gets written until you say yes.</p>
+      <p class="then">Searches the open web for the right person — <b>always confirms</b> before filing, since common names collide. Nothing gets written until you say yes. This is only for someone new — if they're already in your vault, that's recall (above), not research.</p>
       <div class="filed">confirmed → entities/people/</div>
     </div>
   </div>
@@ -268,6 +270,20 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
       <p class="then">The <b>inbox</b> exists because filing something wrong is worse than not filing it at all: when a capture could belong to more than one project — or none — it's held here as a pending decision instead of guessed at. <b>These survive across sessions</b>, so nothing quietly falls through, and nothing gets surprise-filed somewhere you didn't expect.</p>
       <pre>2 unfiled captures
 1 pending clarification — "Denver notes.pdf" could match: acme-nonprofit, acme-events</pre>
+    </div>
+  </div>
+
+  <h2 id="tasks">Tasks</h2>
+  <div class="slip">
+    <div class="slip-head"><div><span class="sticker green">Recall</span><div class="slip-title">A different list from the inbox</div></div></div>
+    <div class="slip-body">
+      <div class="say-label">You say</div>
+      <p class="say">"Dori, what are my pending tasks?"</p>
+      <p class="then">Reads straight from the real task store, not something reconstructed from meeting notes — actual tracked to-dos, separate from the inbox above (which is about unfiled captures and ambiguous routing, not tasks).</p>
+      <div class="peek">Under the hood — skip if you don't care</div>
+      <pre><span class="dim">$</span> list-tasks.mjs open
+- [t_412] Send the v2 pricing page draft to legal <span class="dim">(due 2026-08-28)</span></pre>
+      <div class="filed">read-only — nothing filed</div>
     </div>
   </div>
 

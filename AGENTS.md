@@ -7,7 +7,8 @@ then run the matching script directly via `node <script>.mjs <args>` instead of
 reasoning the routing/search from scratch.
 
 - `route-destination.mjs` / `route-meeting.mjs` — where a capture or meeting file goes
-- `query-vault.mjs` — vault recall (last meeting, decisions); default output omits full document body
+- `query-vault.mjs` — vault recall (last meeting, decisions, "tell me about <person>", "what's the NDA with <org>"); default output omits full document body
+- `list-tasks.mjs` — open tasks from dori-engine's real task store ("what are my pending tasks")
 - `reindex-vault.mjs` / `semantic-index.mjs` — keyword / semantic search over the vault
 - `apply-template.mjs` — scaffold folders for a project
 - `clarification-store.mjs` / `list-inbox.mjs` — pending routing decisions, unrouted captures

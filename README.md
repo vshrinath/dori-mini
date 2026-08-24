@@ -22,8 +22,11 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   `projects.apply_template`.
 - **`clarification-store.mjs` / `list-inbox.mjs`** — durable pending-decision records
   and a minimal inbox view, for the parts of Dori's routing that need a human to decide.
-- **`query-vault.mjs`** — recall queries (last meeting with X, recent decisions) against
-  the FTS index without dumping full document bodies by default.
+- **`query-vault.mjs`** — recall queries (last meeting with X, recent decisions, info
+  already captured about a person or org) against the FTS index without dumping full
+  document bodies by default.
+- **`list-tasks.mjs`** — reads dori-engine's real task store directly (open/pending
+  tasks), separate from the inbox below.
 - **`query-ledger.mjs` / `expense-router.mjs` / `check-reimbursement-gaps.mjs`** — a
   personal expense-tracking flow: route a plain-text expense message to a trip ledger,
   read totals/outstanding rows back, and check a claim for missing dates/amounts/receipts

@@ -91,6 +91,8 @@ Calls Tavily's search API directly (`TAVILY_API_KEY` in this directory's `.env` 
 
 **Always disambiguate before using results** — common names return unrelated people (verified: a search for a workplace-design architect returned mostly a same-named textiles professor). Confirm the right person with the user, then summarize/append findings into their `entities/people/<slug>.md` file yourself — this script only fetches, it doesn't write.
 
+**This is not the same thing as recalling someone already in the vault.** "Who's Priya Menon from Acme, she just joined a meeting" → this branch (external web lookup, new person). "Tell me about Priya" or "what's the NDA status with Northwind" → vault recall (`query-vault.mjs search`/`last-meeting`, above) — the person already has a file and/or meeting history, you're retrieving what's already captured, not researching them.
+
 ## 6. Expense/bill message (mentions spending money, no document attached)
 
 When the user pastes/types a message that describes an expense ("spent $45 on lunch", "paid $120 for the taxi on the Denver trip") with no file attached — a receipt or invoice file attachment is document routing (branch 2) feeding `finance.attach_trip_receipt`, not this branch:
@@ -202,6 +204,14 @@ node ~/.claude/skills/dori/query-vault.mjs stats
 Compares each vault file's on-disk mtime against the indexed mtime (no live write/reconcile-debt tracker here, unlike the engine, so this recomputes it directly instead of reading a pushed flag). Reports `isStale`, and lists which files are unindexed or changed since last index — treat those as the actionable signal and run a full reindex before relying on recall for anything time-sensitive. The `orphaned` list (rows in the DB with no matching on-disk file under this script's `walkMd`, e.g. dotfiles it skips, or rows from other vault paths sharing the same portal.db) is expected noise, not a staleness signal on its own.
 
 To rebuild the whole index (e.g. after files changed outside this router): run the reindex script with no argument.
+
+## Tasks
+
+`list-tasks.mjs` reads dori-engine's real task store directly (`<vault>/.dori/tasks/records/*.json`) — same data the engine's own `tasks.list` action reads, just a synchronous local read instead of an MCP action call. Use for "what are my pending tasks", "what's due":
+```bash
+node ~/.claude/skills/dori/list-tasks.mjs [open|done|...] [--real]
+```
+Defaults to `open`. Pass `--real` to drop leftover e2e/debug/probe fixture tasks from engine test runs. This is a different thing from the inbox (`list-inbox.mjs`, below) — tasks are engine-tracked to-dos; the inbox is unfiled captures and ambiguous routing decisions waiting on a human.
 
 ## Semantic search (optional, for recall/paraphrase queries)
 
