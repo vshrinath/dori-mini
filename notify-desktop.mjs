@@ -4,6 +4,16 @@
 // mirror has no running server to fan out to WhatsApp/portal surfaces itself.
 // Uses `osascript` (built into macOS) — no dependency, no config.
 //
+// NOTE: `display notification` has no click-action parameter, so these can't be
+// clicked through to a specific page — clicking "Show" just brings Script Editor
+// forward (the process osascript runs as). Tried swapping to `terminal-notifier`
+// for a real `-open <url>` click target; its Homebrew build is only ad-hoc signed
+// with an unbound Info.plist, which macOS's UNUserNotificationCenter refuses to
+// grant permission to at all (confirmed via `codesign -dv` + `-diagnose`) — an
+// upstream packaging bug, not fixable from here. Callers that need the page to
+// actually open should open it directly (see digest.mjs) rather than relying on
+// the notification being clickable.
+//
 // Usage: node notify-desktop.mjs "message" ["title"]
 import { execFile } from 'node:child_process';
 

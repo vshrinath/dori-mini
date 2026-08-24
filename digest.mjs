@@ -154,7 +154,7 @@ export async function runDigest(period = 'morning', { whatsapp = false } = {}) {
 
   const summary = `${tasks.length} open task${tasks.length === 1 ? '' : 's'}, ${inbox.length} in inbox`;
   await notifyDesktop(summary, period === 'morning' ? 'Dori — morning digest' : 'Dori — end of day');
-  execFile('open', [filePath]);
+  execFile('open', [filePath]); // notification itself isn't clickable — see notify-desktop.mjs
 
   if (whatsapp) {
     const { sendWhatsApp } = await import('./send-whatsapp.mjs');
