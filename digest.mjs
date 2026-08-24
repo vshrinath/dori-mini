@@ -10,7 +10,7 @@
 // agent to) and re-run install-digest-schedule.mjs (not built yet) to apply.
 //
 // Usage: node digest.mjs [morning|evening] [--whatsapp]
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, readdirSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { execFile } from 'node:child_process';
@@ -126,12 +126,29 @@ function renderHtml({ period, tasks, inbox }) {
 </body></html>`;
 }
 
+// Only ever keep the latest file per period (morning/evening) — each run replaces
+// yesterday's, so this folder never grows past 2 files.
+function deletePreviousDigests(period) {
+  let entries;
+  try {
+    entries = readdirSync(DIGEST_DIR);
+  } catch {
+    return;
+  }
+  for (const name of entries) {
+    if (name.startsWith(`${period}-`) && name.endsWith('.html')) {
+      unlinkSync(join(DIGEST_DIR, name));
+    }
+  }
+}
+
 export async function runDigest(period = 'morning', { whatsapp = false } = {}) {
   const tasks = listTasks('open', { real: true });
   const inbox = buildInbox();
   const html = renderHtml({ period, tasks, inbox });
 
   mkdirSync(DIGEST_DIR, { recursive: true });
+  deletePreviousDigests(period);
   const filePath = join(DIGEST_DIR, `${period}-${new Date().toISOString().slice(0, 10)}.html`);
   writeFileSync(filePath, html);
 
