@@ -1,0 +1,8 @@
+node_modules/
+.env
+
+# Personal credentials feature: macOS-only (Keychain/pbcopy), and not something to
+# hand out even sanitized — excluded from the shared package entirely.
+credentials-lib.mjs
+credentials-store.mjs
+import-credentials.mjs
