@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd job for digest.mjs — fires once a day at a fixed time (StartCalendarInterval),
+  unlike whatsapp-listener.plist which stays running continuously.
+
+  Install one copy per period (morning, evening) — two separate plists, two labels:
+    cp digest-schedule.plist.template ~/Library/LaunchAgents/com.dori.digest-morning.plist
+    cp digest-schedule.plist.template ~/Library/LaunchAgents/com.dori.digest-evening.plist
+    # edit each: __PERIOD__, __HOUR__, __MINUTE__, and the two path placeholders
+    launchctl load ~/Library/LaunchAgents/com.dori.digest-morning.plist
+    launchctl load ~/Library/LaunchAgents/com.dori.digest-evening.plist
+
+  To change the time later (e.g. "Dori, move my morning digest to 8am"): edit the
+  Hour/Minute in the installed plist directly, then:
+    launchctl unload ~/Library/LaunchAgents/com.dori.digest-morning.plist
+    launchctl load ~/Library/LaunchAgents/com.dori.digest-morning.plist
+
+  Logs: ~/.dori/digest-__PERIOD__.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.dori.digest-__PERIOD__</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE_PATH__</string>
+    <string>__REPO_PATH__/digest.mjs</string>
+    <string>__PERIOD__</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__REPO_PATH__</string>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>__HOUR__</integer>
+    <key>Minute</key>
+    <integer>__MINUTE__</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.dori/digest-__PERIOD__.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.dori/digest-__PERIOD__.log</string>
+</dict>
+</plist>

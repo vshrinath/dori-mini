@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd job for listen-whatsapp.mjs — keeps the WhatsApp inbound listener running
+  in the background and restarts it if it crashes (KeepAlive), same role as pm2 plays
+  for dori-engine's own process, scoped to just this one script.
+
+  Install:
+    cp whatsapp-listener.plist.template ~/Library/LaunchAgents/com.dori.whatsapp-listener.plist
+    # edit the two __PLACEHOLDER__ paths below first
+    launchctl load ~/Library/LaunchAgents/com.dori.whatsapp-listener.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.dori.whatsapp-listener.plist
+    rm ~/Library/LaunchAgents/com.dori.whatsapp-listener.plist
+
+  Logs: ~/.dori/whatsapp-listener.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.dori.whatsapp-listener</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE_PATH__</string>
+    <string>__REPO_PATH__/listen-whatsapp.mjs</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__REPO_PATH__</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.dori/whatsapp-listener.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.dori/whatsapp-listener.log</string>
+</dict>
+</plist>

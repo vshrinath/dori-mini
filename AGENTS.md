@@ -12,6 +12,10 @@ reasoning the routing/search from scratch.
 - `reindex-vault.mjs` / `semantic-index.mjs` — keyword / semantic search over the vault
 - `apply-template.mjs` — scaffold folders for a project
 - `clarification-store.mjs` / `list-inbox.mjs` — pending routing decisions, unrouted captures
+- `notify-desktop.mjs` / `send-whatsapp.mjs` / `listen-whatsapp.mjs` / `digest.mjs` —
+  desktop notifications, a self-chat WhatsApp channel (dedicated secondary number,
+  Baileys), and a morning/evening digest page. These run unattended (launchd), not
+  routed by an agent session — help set them up on request, don't invoke them per-message.
 - `credentials-store.mjs` / `import-credentials.mjs` / `credentials-lib.mjs` — local encrypted
   key/password store (AES-256-GCM, key in macOS Keychain), present on this machine but not
   shipped in the public repo. For a request like "what is my X id/key" or "store this

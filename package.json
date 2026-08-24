@@ -4,6 +4,8 @@
   "type": "module",
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "pino": "^10.3.1",
     "rehype-stringify": "^10.0.1",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",

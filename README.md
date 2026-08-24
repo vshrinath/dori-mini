@@ -39,6 +39,15 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   your own `TAVILY_API_KEY`) — fetches only, doesn't auto-file.
 - **`build-site.mjs` / `serve-site.mjs`** — a minimal local mini-site to browse your
   `projects/`/`yt/` vault content in a browser.
+- **`notify-desktop.mjs`** — macOS desktop notification (`osascript`, no dependency).
+- **`send-whatsapp.mjs` / `listen-whatsapp.mjs`** — a self-chat WhatsApp channel (via
+  Baileys, on a dedicated secondary number). Outbound sends a message; the listener
+  files inbound links/text/media through the same routing everything else uses — no AI
+  step, since it runs unattended.
+- **`digest.mjs`** — a morning/evening summary (open tasks + inbox) as a static HTML
+  page, plus a desktop notification and an optional WhatsApp relay. Scheduled with
+  launchd, not a real engine feature (that needs a live scheduler + AI call) — this is
+  the mechanical version.
 
 **Not included**: a local encrypted credentials/secrets store this repo's author also
 built for themself — deliberately left out here since it's macOS-only (Keychain-backed)

@@ -213,6 +213,26 @@ node ~/.claude/skills/dori/list-tasks.mjs [open|done|...] [--real]
 ```
 Defaults to `open`. Pass `--real` to drop leftover e2e/debug/probe fixture tasks from engine test runs. This is a different thing from the inbox (`list-inbox.mjs`, below) — tasks are engine-tracked to-dos; the inbox is unfiled captures and ambiguous routing decisions waiting on a human.
 
+## Notifications and WhatsApp channel
+
+Local delivery primitives, not capture types — nothing here does any AI reasoning
+itself, since these run unattended (cron/launchd), not inside a chat session:
+
+- `notify-desktop.mjs "<message>" ["title"]` — macOS notification (`osascript`, no
+  dependency, no config).
+- `send-whatsapp.mjs "<message>"` — outbound self-chat message via Baileys (paired once
+  by QR scan; use a **dedicated secondary number**, not the user's primary one).
+- `listen-whatsapp.mjs` — long-lived inbound listener (same Baileys session). Files
+  whatever arrives — link, text, or media — through `route-destination.mjs`'s normal
+  rules, same as a pasted link or dropped file. No AI, no summarizing; ambiguous/no-
+  project captures land in `inbox/` like everything else. Meant to run continuously via
+  `whatsapp-listener.plist.template` (launchd), not invoked on demand.
+- `digest.mjs [morning|evening] [--whatsapp]` — gathers open tasks + inbox into a static
+  HTML page (opened directly, no localhost server needed), pings a desktop notification,
+  and optionally relays a one-line summary over WhatsApp. Scheduled via
+  `digest-schedule.plist.template` (launchd `StartCalendarInterval`) — to change the
+  time, edit the installed plist's Hour/Minute and reload it.
+
 ## Semantic search (optional, for recall/paraphrase queries)
 
 `semantic-index.mjs` in this directory is a second, separate cache — local embeddings (Transformers.js, no API key) + hybrid vector/FTS5 search with RRF fusion, mirroring `dori-engine/src/vector/sqlite-vector-store.ts` exactly (same schema, same model `Xenova/all-MiniLM-L6-v2`, same RRF_K=60). Use this instead of `reindex-vault.mjs`'s plain FTS when the query is conceptual/paraphrased rather than an exact keyword match. After writing a file into `dori-vault`, also run:
