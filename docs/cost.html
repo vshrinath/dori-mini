@@ -32,6 +32,7 @@
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
   ::selection { background: var(--amber); color: var(--navy); }
   a { color: var(--amber); }
+  a.underline { text-decoration: underline; text-underline-offset: 3px; font-size: 0.85rem; display: inline-block; margin-top: 8px; }
 
   .container { max-width: 780px; margin: 0 auto; padding: 0 24px 110px; }
   .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 780px; margin: 0 auto; }
@@ -224,6 +225,56 @@
     still free — before ever falling back to a broader question to the model. The
     model only sees the small, already-relevant result, never the whole vault.
   </p>
+
+  <h2>The open source it's built on</h2>
+  <p class="h2-sub">Nothing above is a proprietary black box — every piece is a widely-used, inspectable project. Check the source yourself.</p>
+  <div class="stack">
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Node.js — <code>node:sqlite</code> &amp; <code>node:crypto</code></h3>
+        <p>The FTS5 index and local database run on Node's own built-in SQLite module —
+        no separate database server, no extra dependency to install for this part.</p>
+        <a class="underline" href="https://github.com/nodejs/node" target="_blank" rel="noopener">github.com/nodejs/node →</a>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Transformers.js (<code>@huggingface/transformers</code>)</h3>
+        <p>Hugging Face's JavaScript port of Transformers — runs the local embedding
+        model entirely on your machine, no API key or network call needed at query time.</p>
+        <a class="underline" href="https://github.com/huggingface/transformers.js" target="_blank" rel="noopener">github.com/huggingface/transformers.js →</a>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Xenova/all-MiniLM-L6-v2</h3>
+        <p>The actual embedding model weights — a small, well-known sentence-embedding
+        model, loaded once and cached locally by Transformers.js.</p>
+        <a class="underline" href="https://huggingface.co/Xenova/all-MiniLM-L6-v2" target="_blank" rel="noopener">huggingface.co/Xenova/all-MiniLM-L6-v2 →</a>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>yt-dlp</h3>
+        <p>Pulls YouTube captions and the uploader's own chapter markers — the same
+        tool millions of people already use for downloading video/audio.</p>
+        <a class="underline" href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">github.com/yt-dlp/yt-dlp →</a>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>markitdown</h3>
+        <p>Microsoft's open-source converter — turns PDF, DOCX, PPTX, and XLSX files
+        into clean Markdown locally, before anything is read or filed.</p>
+        <a class="underline" href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener">github.com/microsoft/markitdown →</a>
+      </div>
+    </div>
+  </div>
 
   <h2>The promise, restated</h2>
   <div class="trust">
