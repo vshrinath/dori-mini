@@ -4,7 +4,8 @@
   launchd job for digest.mjs — fires once a day at a fixed time (StartCalendarInterval),
   unlike whatsapp-listener.plist which stays running continuously.
 
-  Install one copy per period (morning, evening) — two separate plists, two labels:
+  setup.sh installs this automatically (one copy per period) if you say yes to the
+  digest-schedule prompt. Manual install, if you skipped that or need a second machine:
     cp digest-schedule.plist.template ~/Library/LaunchAgents/com.dori.digest-morning.plist
     cp digest-schedule.plist.template ~/Library/LaunchAgents/com.dori.digest-evening.plist
     # edit each: __PERIOD__, __HOUR__, __MINUTE__, and the two path placeholders

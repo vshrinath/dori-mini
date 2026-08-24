@@ -135,6 +135,45 @@ wire_global() {
 # best-effort guess, harmless no-op if wrong since wire_global only acts when the dir exists.
 [ -d "$HOME/.antigravity" ] && wire_global "$HOME/.antigravity/AGENTS.md" "Antigravity"
 
+# --- morning/evening digest schedule (macOS only — launchd) ---
+if [ "$(uname)" = "Darwin" ]; then
+  echo
+  read -r -p "Set up automatic morning/evening digests (desktop notification + local summary page)? [y/N] " DIGEST_REPLY
+  if [[ "$DIGEST_REPLY" =~ ^[Yy]$ ]]; then
+    read -r -p "  Morning digest time (HH:MM, 24h, default 07:00): " MORNING_TIME
+    MORNING_TIME="${MORNING_TIME:-07:00}"
+    read -r -p "  Evening digest time (HH:MM, 24h, default 18:00): " EVENING_TIME
+    EVENING_TIME="${EVENING_TIME:-18:00}"
+
+    NODE_ABS="$(command -v node)"
+    LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
+    mkdir -p "$LAUNCH_AGENTS_DIR"
+
+    install_digest_job() {
+      local period="$1" time="$2"
+      local hour minute plist
+      hour=$((10#${time%%:*}))
+      minute=$((10#${time##*:}))
+      plist="$LAUNCH_AGENTS_DIR/com.dori.digest-$period.plist"
+      sed -e "s|__NODE_PATH__|$NODE_ABS|g" \
+          -e "s|__REPO_PATH__|$SCRIPT_DIR|g" \
+          -e "s|__PERIOD__|$period|g" \
+          -e "s|__HOUR__|$hour|g" \
+          -e "s|__MINUTE__|$minute|g" \
+          -e "s|__HOME__|$HOME|g" \
+          "$SCRIPT_DIR/digest-schedule.plist.template" > "$plist"
+      launchctl unload "$plist" >/dev/null 2>&1 || true
+      launchctl load "$plist"
+      echo "✓ $period digest scheduled for $time (edit $plist + \`launchctl unload/load\` it to change the time)"
+    }
+    install_digest_job morning "$MORNING_TIME"
+    install_digest_job evening "$EVENING_TIME"
+  else
+    echo "  Skipped — run 'node digest.mjs morning' by hand any time, or install it later"
+    echo "  yourself following digest-schedule.plist.template."
+  fi
+fi
+
 echo
 echo "== Setup complete =="
 echo "Add this to your shell profile so VAULT_ROOT is set in new terminals:"
