@@ -130,6 +130,11 @@
   .try .say { font-family: var(--font-serif); font-style: italic; font-size: 1.1rem; color: var(--ink); margin: 0 0 4px; }
   .try .why { font-size: 0.86rem; color: var(--muted); margin: 0; }
 
+  .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
+  .trust-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px 18px; }
+  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+  .trust-item p { margin: 0; font-size: 0.87rem; color: var(--body-c); line-height: 1.55; }
+
   .optional {
     margin-top: 20px; padding: 16px 20px; border: 1.5px dashed var(--line); border-radius: var(--r-md);
     font-size: 0.9rem; color: var(--body-c);
@@ -153,7 +158,7 @@
 
 <nav class="topnav">
   <div class="wordmark">dori<span>capture</span></div>
-  <a class="to-guide" href="guide.html">The full guide →</a>
+  <a class="to-guide" href="https://claude.ai/code/artifact/da35dc7a-9f95-4ea2-aaa9-db9cffb8d138">The full guide →</a>
 </nav>
 
 <div class="container">
@@ -175,6 +180,12 @@
     subscription — it runs on whichever Claude/Codex plan you already pay for.
     If you never ran the install command again, every file it's ever written
     would still open in a normal text editor. <a class="underline" href="#lockin">More on that below.</a></div>
+  </div>
+
+  <div class="trust">
+    <div class="trust-item"><div class="label">No new subscription</div><p>Runs on the Claude/Codex/etc. plan you already pay for — no separate bill.</p></div>
+    <div class="trust-item"><div class="label">No hidden API spend</div><p>Search, routing, and indexing run locally — tokens are only spent on genuine reasoning.</p></div>
+    <div class="trust-item"><div class="label">Inspectable, not a black box</div><p>Every script is plain and short — see exactly what runs and why, any time.</p></div>
   </div>
 
   <h2>What the install command actually does</h2>
@@ -336,7 +347,7 @@
       That's everything you need to get moving. The full guide covers every capture
       type in depth, plus how it stays fast and cheap to run.
     </div>
-    <a class="btn-amber" href="guide.html">Read the full guide →</a>
+    <a class="btn-amber" href="https://claude.ai/code/artifact/da35dc7a-9f95-4ea2-aaa9-db9cffb8d138">Read the full guide →</a>
   </div>
 
 </div>
