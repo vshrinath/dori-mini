@@ -54,28 +54,75 @@ function renderList(items, titleOf, emptyLabel) {
   const shown = grouped.slice(0, MAX_DISTINCT_LINES);
   const hiddenCount = grouped.length - shown.length;
   const hiddenItems = grouped.slice(MAX_DISTINCT_LINES).reduce((sum, [, n]) => sum + n, 0);
-  let html = shown.map(([t, n]) => `<li>${esc(t)}${n > 1 ? ` <span class="count">×${n}</span>` : ''}</li>`).join('\n');
+  let html = shown
+    .map(([t, n]) => `<li class="row"><span class="row-title">${esc(t)}</span>${n > 1 ? `<span class="count">×${n}</span>` : ''}</li>`)
+    .join('\n');
   if (hiddenCount > 0) {
-    html += `\n<li class="empty">+ ${hiddenCount} more distinct item${hiddenCount === 1 ? '' : 's'} (${hiddenItems} total) — see list-inbox.mjs / list-tasks.mjs for the full list</li>`;
+    html += `\n<li class="row more">+ ${hiddenItems} more item${hiddenItems === 1 ? '' : 's'} like this</li>`;
   }
   return html;
 }
 
 function renderHtml({ period, tasks, inbox }) {
-  const taskRows = renderList(tasks, (t) => t.title, 'Nothing open.');
-  const inboxRows = renderList(inbox, (i) => i.title, 'Nothing pending.');
-  const title = period === 'morning' ? 'Morning digest' : 'End-of-day summary';
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
+  const taskRows = renderList(tasks, (t) => t.title, 'Nothing open — you’re caught up.');
+  const inboxRows = renderList(inbox, (i) => i.title, 'Nothing waiting on you.');
+  const isMorning = period === 'morning';
+  const title = isMorning ? 'Morning digest' : 'End-of-day summary';
+  const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${title} — Dori</title>
 <style>
-body{font-family:-apple-system,sans-serif;max-width:640px;margin:40px auto;padding:0 20px;color:#1a1a1a}
-h1{font-size:1.4rem} h2{font-size:1rem;color:#555;margin-top:2rem}
-ul{padding-left:1.2rem} li{margin:.3rem 0} .empty{color:#999} .due{color:#a33} .count{color:#888;font-size:.85em}
-.date{color:#888;font-size:.9rem}
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@1&display=swap');
+  :root {
+    --amber: #f0a80e; --amber-soft: #ffd978;
+    --navy: #1a1f4e;
+    --canvas: #fcfbf7; --canvas2: #f3f1ea; --card: #ffffff;
+    --ink: #0e1626; --muted: #6b7280; --body-c: #4a5568;
+    --coral: #d05436;
+    --line: rgba(14,22,38,0.1);
+    --font-display: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: "Instrument Serif", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
+      --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
+      --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  main { max-width: 620px; margin: 0 auto; padding: 56px 24px 80px; }
+  .eyebrow { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); margin-bottom: 10px; }
+  .eyebrow .glyph { font-size: 1rem; }
+  h1 { font-family: var(--font-display); font-weight: 780; letter-spacing: -0.03em; font-size: clamp(2rem, 6vw, 2.6rem); line-height: 1.05; margin: 0 0 6px; text-wrap: balance; }
+  .date { font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); margin: 0 0 44px; }
+  section + section { margin-top: 40px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 4px; }
+  h2 { font-family: var(--font-display); font-weight: 740; letter-spacing: -0.01em; font-size: 1.15rem; margin: 0; }
+  .section-count { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li.row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  li.row:last-child { border-bottom: none; }
+  .row-title { color: var(--body-c); font-size: 0.98rem; }
+  .count { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); flex-shrink: 0; }
+  li.more { color: var(--muted); font-style: italic; font-family: var(--font-serif); font-size: 1.05rem; justify-content: flex-start; }
+  li.empty { color: var(--muted); font-family: var(--font-serif); font-style: italic; font-size: 1.1rem; padding: 14px 0; }
 </style></head><body>
-<h1>${title}</h1>
-<p class="date">${new Date().toDateString()}</p>
-<h2>Open tasks</h2><ul>${taskRows}</ul>
-<h2>Inbox</h2><ul>${inboxRows}</ul>
+<main>
+  <div class="eyebrow"><span class="glyph">${isMorning ? '☀' : '☽'}</span> ${title}</div>
+  <h1>${isMorning ? 'What’s ahead today' : 'How today wrapped up'}</h1>
+  <p class="date">${dateStr}</p>
+  <section>
+    <div class="section-head"><h2>Your tasks</h2><span class="section-count">${tasks.length}</span></div>
+    <ul>${taskRows}</ul>
+  </section>
+  <section>
+    <div class="section-head"><h2>Waiting on you</h2><span class="section-count">${inbox.length}</span></div>
+    <ul>${inboxRows}</ul>
+  </section>
+</main>
 </body></html>`;
 }
 
