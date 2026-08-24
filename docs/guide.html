@@ -155,7 +155,7 @@
     <div class="slip-body">
       <div class="say-label">You say</div>
       <p class="say">"Grab this — youtube.com/watch?v=…"</p>
-      <p class="then">Pulls captions <b>and</b> the uploader's own chapters via <code>yt-dlp</code> — chapter titles are used verbatim as headings, never invented. No video download unless you ask for one.</p>
+      <p class="then">Pulls captions <b>and</b> the uploader's own chapters via <a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener"><code>yt-dlp</code></a> — chapter titles are used verbatim as headings, never invented. No video download unless you ask for one.</p>
       <pre>chapters: 6
   00:00  Cold open
   02:14  The core argument
@@ -171,7 +171,7 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="slip-body">
       <div class="say-label">You say</div>
       <p class="say">"Here are the board minutes from Tuesday" <span style="opacity:.6">(.docx attached)</span></p>
-      <p class="then">Converts locally via <code>markitdown</code>, then figures out <b>where it belongs</b> — an existing project if one matches, otherwise your inbox. It asks before filing anywhere new.</p>
+      <p class="then">Converts locally via <a href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener"><code>markitdown</code></a> into Markdown — plain text with light structure, the format an agent can read at the lowest token cost — then figures out <b>where it belongs</b> — an existing project if one matches, otherwise your inbox. It asks before filing anywhere new.</p>
       <pre><span class="dim">$</span> route-destination.mjs document acme-nonprofit
 { "relPath": <span class="hit">"projects/acme-nonprofit/2026-08-24-ec-minutes.md"</span> }</pre>
       <div class="filed">filed to projects/</div>
@@ -269,19 +269,27 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
       <div><h3>Recall never re-reads your whole vault</h3><p><code>query-vault.mjs</code> returns metadata and named sections by default — not full document bodies — so asking "what did we decide" doesn't mean re-loading every meeting you've ever had.</p></div>
     </div>
   </div>
+  <p style="font-size:0.9rem; color:var(--body-c); margin-top:18px; max-width:58ch;">
+    This is the short version. <a class="underline" style="text-decoration:underline; text-underline-offset:3px;" href="cost.html">The full technical breakdown →</a>
+    covers the SQLite/FTS5 index, the local embedding model, RRF re-ranking, and a
+    traced example of a real capture end to end.
+  </p>
 
   <h2 id="tools">Set up once, works everywhere</h2>
-  <p class="h2-sub">The install wires it into whichever of these you already use — no separate setup per tool.</p>
+  <p class="h2-sub">The install wires it into whichever of these you already use — no separate setup per tool, and no separate UI of its own.</p>
   <div class="tool-row">
     <div class="tool-chip">Claude Code</div>
     <div class="tool-chip">Codex CLI</div>
+    <div class="tool-chip">Antigravity</div>
     <div class="tool-chip">Grok Build</div>
     <div class="tool-chip">Plain terminal</div>
   </div>
   <p style="font-size:0.9rem; color:var(--body-c); margin-top:16px; max-width:58ch;">
     It's plain Node.js scripts, not a plugin tied to one product — any agent with shell
     access recognizes the same trigger phrases and calls the same scripts. Switch tools
-    tomorrow and nothing here needs reconfiguring.
+    tomorrow and nothing here needs reconfiguring. There's no dashboard or website to
+    check — you interact with it entirely inside whichever chat you already have open,
+    and it uses that tool's own subscription. No new account, no added cost.
   </p>
 
   <div class="optional">
@@ -296,6 +304,8 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     <div class="trust-item"><div class="label">Everything is local</div><p>Your Markdown files are the source of truth. Search indexes and caches are disposable — delete them and they rebuild from the vault itself.</p></div>
     <div class="trust-item"><div class="label">Nothing auto-guesses</div><p>An ambiguous destination goes to your inbox, not a best guess. You confirm new people, new projects, and new trips before anything's filed.</p></div>
     <div class="trust-item"><div class="label">Plain scripts, no server</div><p>Every capture type is a small Node script your agent already knows when to run — inspectable, editable, nothing hidden behind an API.</p></div>
+    <div class="trust-item"><div class="label">No lock-in</div><p>Stop using it tomorrow and every file it ever wrote is still a plain Markdown file on your disk — openable, searchable, portable, with or without this tool installed.</p></div>
+    <div class="trust-item"><div class="label">No added cost</div><p>Runs on the Claude/Codex/etc. subscription you already have. There's no separate product bill to sign up for.</p></div>
   </div>
 
   <footer><span>Dori Capture</span><span>github.com/vshrinath/dori-capture</span></footer>

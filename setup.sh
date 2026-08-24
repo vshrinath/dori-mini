@@ -10,12 +10,29 @@ echo "== dori setup =="
 echo
 
 # --- Node.js 24+ (required for node:sqlite) ---
-NODE_MAJOR=$(node --version 2>/dev/null | sed 's/^v//' | cut -d. -f1 || echo 0)
-if [ "$NODE_MAJOR" -lt 24 ] 2>/dev/null; then
+node_major() { node --version 2>/dev/null | sed 's/^v//' | cut -d. -f1 || echo 0; }
+NODE_MAJOR=$(node_major)
+if [ "${NODE_MAJOR:-0}" -lt 24 ] 2>/dev/null; then
   echo "✗ Node.js 24+ required (found: $(node --version 2>/dev/null || echo 'not installed'))."
-  echo "  Install via nvm:  nvm install 24 && nvm use 24"
-  echo "  Or download from: https://nodejs.org"
-  exit 1
+  if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    read -r -p "  Install with nvm ('nvm install 24 && nvm use 24')? [y/N] " reply
+    if [[ "$reply" =~ ^[Yy]$ ]]; then
+      # shellcheck disable=SC1091
+      . "$HOME/.nvm/nvm.sh"
+      nvm install 24 && nvm use 24
+    fi
+  elif command -v brew >/dev/null 2>&1; then
+    read -r -p "  Install with 'brew install node'? [y/N] " reply
+    if [[ "$reply" =~ ^[Yy]$ ]]; then
+      brew install node
+    fi
+  fi
+  NODE_MAJOR=$(node_major)
+  if [ "${NODE_MAJOR:-0}" -lt 24 ] 2>/dev/null; then
+    echo "  Still need Node 24+ — install nvm (https://github.com/nvm-sh/nvm) or from"
+    echo "  https://nodejs.org, then re-run this script."
+    exit 1
+  fi
 fi
 echo "✓ Node.js $(node --version)"
 
@@ -114,6 +131,9 @@ wire_global() {
 [ -d "$HOME/.claude" ] && wire_global "$HOME/.claude/CLAUDE.md" "Claude Code"
 [ -d "$HOME/.codex" ] && wire_global "$HOME/.codex/AGENTS.md" "Codex CLI"
 [ -d "$HOME/.grok" ] && wire_global "$HOME/.grok/AGENTS.md" "Grok Build"
+# Antigravity's config directory isn't independently confirmed (it's a very new tool) —
+# best-effort guess, harmless no-op if wrong since wire_global only acts when the dir exists.
+[ -d "$HOME/.antigravity" ] && wire_global "$HOME/.antigravity/AGENTS.md" "Antigravity"
 
 echo
 echo "== Setup complete =="

@@ -161,18 +161,20 @@
   <div class="eyebrow"><span class="dot"></span> Before you do anything</div>
   <h1>You already have everything<br>you need — <span class="serif-pop">just talk.</span></h1>
   <p class="lede">
-    Dori Capture watches for the kind of thing you already type without thinking —
-    a pasted link, a dragged-in file, "I spent ₹300 on lunch." <b>There's no app to
-    open and nothing to upload anywhere.</b> This page tells you exactly what one
-    install command does, and what to try the moment it's done.
+    Dori Capture isn't a new app — it integrates with the coding agent you already
+    have open (<b>Claude Code, Codex CLI, Antigravity</b> — whichever it is) and
+    works identically across all of them. <b>There's no separate window, no
+    dashboard, no login.</b> You keep talking to the same chat you always do; it
+    just starts recognizing a pasted link, a dragged-in file, "I spent ₹300 on lunch."
   </p>
 
   <div class="promise">
     <div class="mark">＊</div>
     <div><b>The whole promise, up front:</b> everything it creates is a plain
-    file on your own computer. No account, no cloud sync, no server. If you never
-    ran the install command again, every file it's ever written would still open
-    in a normal text editor.</div>
+    file on your own computer. No account, no cloud sync, no server, and no new
+    subscription — it runs on whichever Claude/Codex plan you already pay for.
+    If you never ran the install command again, every file it's ever written
+    would still open in a normal text editor. <a class="underline" href="#lockin">More on that below.</a></div>
   </div>
 
   <h2>What the install command actually does</h2>
@@ -207,9 +209,10 @@
     rebuilds from it.</li>
     <li><b>Asks for two optional API keys</b> (Fathom, Tavily) — skip both if you don't
     have them. See "what's optional" below.</li>
-    <li><b>Wires itself into your agent</b> — Claude Code, Codex CLI, or Grok Build,
-    whichever you already have. This is the only reason it needs to touch anything
-    outside its own folder.</li>
+    <li><b>Wires itself into your agent</b> — Claude Code, Codex CLI, Antigravity, or
+    Grok Build, whichever you already have. This is the only reason it needs to touch
+    anything outside its own folder, and it's also the entire "interface" — there is
+    no separate app or website to learn.</li>
   </ol>
 
   <h2>Your vault, before and after</h2>
@@ -254,10 +257,26 @@
     recognize what it's for.
   </p>
 
+  <div class="promise" style="margin-top:20px;">
+    <div class="mark">✎</div>
+    <div><b>What's a Markdown file?</b> A <code>.md</code> file is plain text with a
+    few light symbols for structure (<code>#</code> for a heading, <code>-</code> for
+    a bullet) — it opens in any text editor, and pastes cleanly into Word or Google
+    Docs with formatting intact. It's used here because it's the cheapest format for
+    an AI agent to read: no parsing overhead, no proprietary structure, just words —
+    which is also why it's what most coding agents already read and write natively.
+    <a class="underline" href="https://en.wikipedia.org/wiki/Markdown" target="_blank" rel="noopener">More on Wikipedia →</a></div>
+  </div>
+
   <h2>Try this first</h2>
-  <p class="h2-sub">Three things to say right after setup — pick whichever matches something you'd genuinely do today.</p>
+  <p class="h2-sub">Seven things to say right after setup — pick whichever matches something you'd genuinely do today.</p>
 
   <div class="try-grid">
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">Point it at a project you're already working on: "here are the files for the Acme redesign"</p>
+      <p class="why">It reads what's there and sets up a project folder around it — the fastest way to see it work with content you actually recognize.</p></div>
+    </div>
     <div class="try">
       <div class="icon">"</div>
       <div><p class="say">Paste any YouTube link and say "grab this"</p>
@@ -267,6 +286,21 @@
       <div class="icon">"</div>
       <div><p class="say">Drag in a PDF or a photo of a receipt</p>
       <p class="why">Watch it either convert to clean Markdown, or — if it looks like a bill — get proposed as an expense row.</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">Mention someone from a meeting: "Priya Menon from Acme just joined"</p>
+      <p class="why">It looks them up and asks you to confirm before filing anything — a quick way to see the research flow.</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">Paste in a meeting transcript and say "turn this into minutes"</p>
+      <p class="why">Comes back as Attendees · Topics · Decisions Log · Action Items — structured, not a wall of text.</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">Set up Fathom sync if you use it</p>
+      <p class="why">Give it your Fathom API key once and it pulls unfiled recordings straight in — no more pasting transcripts by hand.</p></div>
     </div>
     <div class="try">
       <div class="icon">"</div>
@@ -281,6 +315,20 @@
     of you pasting a transcript. <b>Tavily</b> lets it look up context on a new meeting
     attendee. Neither is required for anything else here — every other feature works
     identically without them.</div>
+  </div>
+
+  <h2 id="lockin">No lock-in</h2>
+  <p class="h2-sub">Uninstall it tomorrow, keep everything it made.</p>
+  <div class="promise">
+    <div class="mark">⇥</div>
+    <div>Delete this tool entirely and your vault — every transcript, every minutes
+    doc, every ledger row — is still just a folder of Markdown files on your own
+    disk. Nothing here locks content into a format only it can read. The two open-source
+    tools it leans on for conversion are worth knowing by name, too:
+    <a class="underline" href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener">markitdown</a>
+    (documents → Markdown) and
+    <a class="underline" href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a>
+    (YouTube transcripts) — both widely used, both auditable, neither controlled by this project.</div>
   </div>
 
   <div class="cta-row">
