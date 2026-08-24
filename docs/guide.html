@@ -136,7 +136,7 @@
   </div>
 
   <nav class="toc">
-    <a href="#day">A day with it</a><a href="#youtube">YouTube</a><a href="#document">Documents</a>
+    <a href="#day">A day with it</a><a href="#project">New project</a><a href="#youtube">YouTube</a><a href="#document">Documents</a>
     <a href="#meeting">Meetings</a><a href="#expense">Expenses</a><a href="#search">Search</a>
     <a href="#person">Research</a><a href="#inbox">Inbox</a><a href="#tech">How it stays cheap</a>
     <a href="#tools">Cross-tool</a><a href="#trust">The promise</a>
@@ -150,6 +150,20 @@
     <div class="moment"><time>1:30pm</time><p>Cab receipt lands in your gallery. You drop the photo in and say <b>"add this to the trip"</b> — no spreadsheet, no separate app.</p></div>
     <div class="moment"><time>4:00pm</time><p>Can't remember what you agreed to two weeks ago. You ask <b>"Dori, what did we decide with the design team?"</b> instead of scrolling through old docs.</p></div>
     <div class="moment"><time>6:45pm</time><p>You ask <b>"Dori, give me a summary of the day"</b> — nothing was filed by hand, it's all just where it should be because you talked, not because you organized.</p></div>
+  </div>
+
+  <h2 id="project">New project</h2>
+  <div class="slip">
+    <div class="slip-head"><div><span class="sticker purple">Capture · setup</span><div class="slip-title">Files become a scoped project folder</div></div></div>
+    <div class="slip-body">
+      <div class="say-label">You say</div>
+      <p class="say">"Dori, start a new project for me" <span style="opacity:.6">(with the relevant files attached)</span></p>
+      <p class="then">Creates <code>projects/&lt;name&gt;/</code> with folders that fit what you gave it — docs/notes/references for general work, or invoices/meetings/deliverables for client work, and a few other presets. <b>Additive only</b> — it only ever creates folders, never moves, deletes, or overwrites anything already there.</p>
+      <div class="peek">Under the hood — skip if you don't care</div>
+      <pre><span class="dim">$</span> apply-template.mjs acme-nonprofit engine.client
+{ "created": <span class="hit">["invoices", "meetings", "deliverables", "docs"]</span> }</pre>
+      <div class="filed">created → projects/acme-nonprofit/</div>
+    </div>
   </div>
 
   <h2 id="youtube">Youtube link</h2>
