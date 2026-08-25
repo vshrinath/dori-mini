@@ -83,6 +83,10 @@ async function fileCapture({ text, urls, sock, msg, media }) {
 
 async function handleMessage(sock, msg, processedIds) {
   if (msg.key.fromMe) return; // messages we sent ourselves (e.g. via send-whatsapp.mjs) aren't inbound captures
+  // DM-only was always the intent (dedicated number, no allowlist complexity needed) but
+  // was never actually enforced — group JIDs end in @g.us and were processed identically
+  // to a real DM, filing and replying to every group member's messages. Block outright.
+  if (msg.key.remoteJid?.endsWith('@g.us')) return;
   const id = msg.key.id;
   if (processedIds.has(id)) return;
   processedIds.add(id);
