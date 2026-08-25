@@ -26,6 +26,10 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   file exactly like anyone else's, just marked `is_self: true` — mirrors real Dori's
   `isSelf` flag. `route-meeting.mjs` excludes whoever is marked this way from attendee-vote
   matching automatically.
+- **`brand-store.mjs`** — a brand someone is launching or works for, distinct from the
+  legal organization (`org-store.mjs`) behind it — theming fields (colors/fonts/logo,
+  borrowed from `dori-portal`'s real `BrandConfig`) in frontmatter, guidelines/positioning
+  as free-text body, same shape as every other vault entity.
 - **`clarification-store.mjs` / `list-inbox.mjs` / `resolve-inbox.mjs`** — durable
   pending-decision records, a minimal inbox view, and a resolve command (move a filed
   item into a project, or archive it) for the parts of Dori's routing that need a human

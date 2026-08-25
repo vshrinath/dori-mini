@@ -108,6 +108,18 @@ node ~/.claude/skills/dori/self-store.mjs get
 ```
 Mirrors real Dori's `isSelf` flag exactly — your profile is a person file at `entities/people/<slug>.md`, same shape as anyone else's, just marked `is_self: true`. Not a separate file type: `route-meeting.mjs` now excludes whoever is marked `is_self` from attendee-vote matching automatically (mirrors `if (p.isSelf) continue` in the real router), so once this is set you don't need to pass `--self` by name on every call. At most one file carries the mark — `set` clears it off any other file first, same guard real Dori applies.
 
+## Brands (a brand someone is launching or works for)
+
+When the user wants to track a brand — their own, or one they're building — distinct from the legal organization behind it (a company can have several brands; a person can be shaping one before any company exists):
+```bash
+node ~/.claude/skills/dori/brand-store.mjs set "Dori" [--owner <person-or-org-slug>] [--company <legal name>] [--primary <#hex>] [--accent <#hex>] [--font-display <name>] [--font-body <name>] [--logo <path-or-url>]
+node ~/.claude/skills/dori/brand-store.mjs get "Dori"
+node ~/.claude/skills/dori/brand-store.mjs list
+```
+No vault entity for this exists in `dori-engine` to mirror (checked `entities.ts` — no `brand` type). The only real "brand" concept is `dori-portal`'s `BrandConfig` (`lib/brand.ts`) — pure document/slide theming (colors/fonts/logo), stored outside the vault, no guidelines or description. This borrows those exact field names for the theming half, stored instead at `entities/brands/<slug>.md` alongside everything else. `set` only ever touches the frontmatter block and merges onto whatever's already there — it never drops a field you set earlier just because this call didn't mention it, and never touches the body.
+
+**The actual guidelines/positioning/voice belong in the file's body, not a flag** — same frontmatter-plus-prose shape as every other vault entity. Edit `entities/brands/<slug>.md` directly for that; `set` seeds a placeholder "## Guidelines" heading the first time, nothing more.
+
 ## 5b. Organization / account (only on a structured affiliation assertion)
 
 When a message ties a person to a company with an actual role or title — "Anita, CFO at Meridian", "Anita is the CFO at Meridian" — not a bare mention of a company name in passing:
