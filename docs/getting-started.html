@@ -203,15 +203,20 @@
 <span class="ok">✓</span> vault skeleton created
 <span class="ask">? Fathom API key (optional):</span> <span class="dim">[Enter to skip]</span>
 <span class="ask">? Tavily API key (optional):</span> <span class="dim">[Enter to skip]</span>
-<span class="ok">✓</span> wired into Claude Code</pre>
+<span class="ok">✓</span> wired into Claude Code
+<span class="ask">? Set up the WhatsApp channel? [y/N]</span> <span class="dim">(macOS only, optional)</span>
+<span class="ask">? Set up morning/evening digests? [y/N]</span> <span class="dim">(macOS only, optional)</span></pre>
   </div>
 
   <ol class="steps">
     <li><b>Checks Node.js</b> — the one real requirement. Everything else is a plain script,
     nothing to compile.</li>
-    <li><b>Installs one small dependency</b> — a local search model (a few hundred MB,
-    downloaded once, runs entirely on your machine — this is what makes "find that thing
-    I was thinking about" work later, even when your wording doesn't match exactly).</li>
+    <li><b>Installs its dependencies</b> — standard open-source npm libraries, same as any
+    Node project. The only one worth knowing about by size: a local search model (a few
+    hundred MB, downloaded once, runs entirely on your machine — this is what makes "find
+    that thing I was thinking about" work later, even when your wording doesn't match
+    exactly). Search itself uses SQLite, which ships built into Node — nothing extra to
+    install for that part.</li>
     <li><b>Offers two optional tools</b> — <code>yt-dlp</code> and <code>markitdown</code>,
     for pulling YouTube transcripts and converting documents. Skip either and those two
     features just won't fire; nothing else is affected.</li>
@@ -224,6 +229,11 @@
     Grok Build, whichever you already have. This is the only reason it needs to touch
     anything outside its own folder, and it's also the entire "interface" — there is
     no separate app or website to learn.</li>
+    <li><b>Offers to pair the WhatsApp channel</b> (macOS only) — say no and skip it
+    entirely, or say yes and scan a QR code right there in the terminal. <a class="underline" href="https://claude.ai/code/artifact/6c4ece7e-8611-49a2-ba2f-cfa75a905e63">What it needs, and why it's safe →</a></li>
+    <li><b>Offers to schedule morning/evening digests</b> (macOS only) — a local summary
+    page plus a desktop notification, at times you pick. Say no and run it by hand later
+    any time instead.</li>
   </ol>
 
   <h2>Your vault, before and after</h2>
