@@ -173,6 +173,32 @@ node ~/.claude/skills/dori/query-ledger.mjs show "<threadId or trip name>"
 ```
 Mirrors `trip-ledger.ts`'s `parseTripLedger` column-matching exactly (including BUG-010: a row missing a date/amount is retained and flagged `incomplete`, never silently dropped). Read-only — use this instead of grepping ledger tables by hand.
 
+## Decisions (any captured note, not just meeting minutes)
+
+A meeting's "### Decisions Log" (via `mom-prompt.md`, branch 3) already captures decisions made in a meeting — this is for everything else: a standalone note, a pasted message, a voice-note transcript, anything that isn't already routed as a meeting transcript, YouTube video, document, or expense. Mirrors `decisions.capture` (decision-record.ts) — real Dori classifies every capture this way, not just meetings.
+
+When you're about to file a piece of freeform text ≥30 characters as a note (not one of branches 1–7 above), classify it first — run this exact prompt (copied verbatim from `decisions-capture.ts`'s `buildPrompt`, in `decision-store.mjs`'s own `classifyPrompt` export) via the Agent tool with a cheap model (same spirit as branch 3's haiku compression pass):
+
+> Classify whether the following message or note contains a decision — a firm commitment to a specific course of action. Exploratory questions, suggestions, and discussions are NOT decisions.
+>
+> Return ONLY valid JSON, no markdown:
+> { "isDecision": true or false, "confidence": 0.0 to 1.0, "summary": "one sentence describing what was decided, or empty string if not a decision", "owner": "name of who made the decision, or null", "topics": ["up to 3 short topic tags"] }
+>
+> Message:
+> \<the text\>
+
+If `isDecision` is true and `confidence >= 0.8` (mirrors the real action's own gate — everything below it is silently skipped, never guessed into existence):
+```bash
+node ~/.claude/skills/dori/decision-store.mjs create --summary "<summary>" --confidence <n> [--owner "<name>"] [--topics a,b,c]
+```
+Otherwise don't call it at all — file the note normally and move on, same as the real action's `status: 'skipped', reason: 'not_a_decision'`.
+
+To recall or list decisions on file:
+```bash
+node ~/.claude/skills/dori/decision-store.mjs list [--status active|implemented|superseded|retracted]
+```
+Stored at `entities/decisions/<slug>.md`, same one-file-per-entity shape as everything else.
+
 ## 7. Credentials (store or look up a key, password, ID, token, etc.)
 
 Local encrypted key/value store — `credentials-store.mjs`, `import-credentials.mjs`, `credentials-lib.mjs` (this directory). AES-256-GCM (`node:crypto`), key held in the macOS Keychain (service `dori-credentials-store`), rows in plain `node:sqlite` at `~/.dori/credentials.sqlite`. Schema is `(service, field)` → secret (encrypted) or plaintext.

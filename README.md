@@ -51,6 +51,11 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   unions aliases (and, for orgs, the linked-people list), rewrites every known
   cross-reference vault-wide, archives the losing file instead of deleting it — mirrors
   `entities.merge`/`SqliteEntityStore.merge` (decision 0022).
+- **`decision-store.mjs`** — extends decision recall past meeting minutes to any
+  captured note: exports the same classification prompt `decisions.capture` uses (run
+  by the calling agent, since this mirror has no in-script model call), then files a
+  high-confidence result (`>= 0.8`, mirroring the real action's own gate) as a
+  `entities/decisions/<slug>.md` entity.
 - **`list-tasks.mjs` / `task-store.mjs`** — reads dori-engine's real task store directly
   (open/pending tasks), separate from the inbox below. `task-store.mjs` writes to that
   same store: a direct "add a task", or extracting tasks from a meeting's Action Items
