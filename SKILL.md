@@ -142,6 +142,13 @@ Mirrors `dori-engine`'s `accounts.ensure` action and the affiliation-evidence ba
 
 Resolves to an existing org by name if one exists (case-insensitive) and appends the linked person instead of duplicating — stored at `entities/organizations/<slug>.md`, same one-file-per-entity shape as `entities/people/*.md`. This is a different "account" than `query-ledger.mjs`'s trip ledgers — that's money, this is a company entity.
 
+**Duplicate person or org (two files for the same real-world entity — e.g. a name typo, or `ensure`'s exact-name match missed a variant)**: merge them, don't leave both on file.
+```bash
+node ~/.claude/skills/dori/entity-merge.mjs merge person <duplicate-slug> <canonical-slug>
+node ~/.claude/skills/dori/entity-merge.mjs merge org <duplicate-slug> <canonical-slug>
+```
+Mirrors `entities.merge`/`SqliteEntityStore.merge` (decision 0022: hard-to-reverse identity merge) for this vault's one-file-per-entity shape: the losing entity's display name is added to the survivor's `aliases`, an org merge unions both `people` lists, and every known cross-reference is rewritten vault-wide (`org-store.mjs`'s `people:` arrays, `brand-store.mjs`'s `owner:` field — the only two places a person/org slug is referenced anywhere in this vault). The losing file is never deleted — it's moved to `entities/<type>/merged/<slug>.md` with a `redirectTo:` field added, so nothing is lost and it simply stops appearing in any listing (every existing loader does a plain, non-recursive `readdir` of the parent directory). Pick the canonical slug carefully — this can't be undone by re-running it the other way, since the source is no longer where callers expect it.
+
 ## 6. Expense/bill message (mentions spending money, no document attached)
 
 When the user pastes/types a message that describes an expense ("spent $45 on lunch", "paid $120 for the taxi on the Denver trip") with no file attached — a receipt or invoice file attachment is document routing (branch 2's receipt sub-case, `attach-receipt.mjs`), not this branch:

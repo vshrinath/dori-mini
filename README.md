@@ -47,6 +47,10 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
 - **`org-store.mjs`** — creates/resolves an organization (Account) entity, gated by the
   same affiliation-evidence bar real Dori uses: a structured role/title assertion tying a
   person to the org, not a bare company-name mention — mirrors `accounts.ensure`.
+- **`entity-merge.mjs`** — merges a duplicate person or org file into a canonical one:
+  unions aliases (and, for orgs, the linked-people list), rewrites every known
+  cross-reference vault-wide, archives the losing file instead of deleting it — mirrors
+  `entities.merge`/`SqliteEntityStore.merge` (decision 0022).
 - **`list-tasks.mjs` / `task-store.mjs`** — reads dori-engine's real task store directly
   (open/pending tasks), separate from the inbox below. `task-store.mjs` writes to that
   same store: a direct "add a task", or extracting tasks from a meeting's Action Items
