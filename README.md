@@ -47,6 +47,10 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   a pasted transcript.
 - **`research-person.mjs`** — looks up a new meeting attendee via Tavily search (needs
   your own `TAVILY_API_KEY`) — fetches only, doesn't auto-file.
+- **`research-and-recommend.mjs`** — the same web research placed next to what you
+  already have: colleagues already in your vault at that company, an existing org
+  relationship (`org-store.mjs`), and related vault docs — a "what do I bring into this
+  conversation" brief, not just a bio.
 - **`build-site.mjs` / `serve-site.mjs`** — a minimal local mini-site to browse your
   `projects/`/`yt/` vault content in a browser.
 - **`notify-desktop.mjs`** — macOS desktop notification (`osascript`, no dependency).

@@ -93,6 +93,12 @@ Calls Tavily's search API directly (`TAVILY_API_KEY` in this directory's `.env` 
 
 **This is not the same thing as recalling someone already in the vault.** "Who's Priya Menon from Acme, she just joined a meeting" → this branch (external web lookup, new person). "Tell me about Priya" or "what's the NDA status with Northwind" → vault recall (`query-vault.mjs search`/`last-meeting`, above) — the person already has a file and/or meeting history, you're retrieving what's already captured, not researching them.
 
+**When the ask is "what do I bring into this conversation" rather than just "who is this"** — i.e. research plus your own prior context, not research alone:
+```bash
+node ~/.claude/skills/dori/research-and-recommend.mjs "Full Name" "Company" ["extra context"] [--project <slug>]
+```
+Same web research as above, placed next to what you already have: colleagues already in your vault at the same company (`org:` field on `entities/people/*.md`), an existing organization relationship if one's on file (`org-store.mjs`), and any vault docs already touching that company/project (`query-vault.mjs search`). Composes those three rather than duplicating any of them — no dedicated action for this exists in `dori-engine`/`dori-portal` to mirror (checked). Same identity-collision caveat applies, and the same rule: confirm before treating any of it as fact.
+
 ## 5b. Organization / account (only on a structured affiliation assertion)
 
 When a message ties a person to a company with an actual role or title — "Anita, CFO at Meridian", "Anita is the CFO at Meridian" — not a bare mention of a company name in passing:
