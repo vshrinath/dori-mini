@@ -1,4 +1,6 @@
-# dori
+# Dori Mini
+
+[![GitHub](https://img.shields.io/badge/github-vshrinath%2Fdori--mini-1a1f4e)](https://github.com/vshrinath/dori-mini)
 
 A local, portable mirror of [Dori](https://github.com/) engine's real capture-routing,
 meeting-routing, search, and inbox logic — implemented as plain Node.js scripts, so any
@@ -69,7 +71,7 @@ breakdown of exactly where — and where not — it spends model tokens.
 Requires Node.js 24+ (uses the built-in `node:sqlite` module).
 
 ```bash
-git clone <this-repo> dori
+git clone https://github.com/vshrinath/dori-mini dori
 cd dori
 ./setup.sh
 ```
