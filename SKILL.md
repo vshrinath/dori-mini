@@ -53,6 +53,12 @@ markitdown "<path>" > "<output>.md"
 
 Don't assume a project-specific convention (e.g. `references/<deck>/` + frontmatter catalog) unless the current directory already has one — check for an existing `references/` dir or import script first.
 
+**A receipt or invoice photo/PDF is different** — it's not converted to prose, it's read for a few fields and filed as a ledger row. `markitdown` can't OCR a photo, so read the image yourself (you're multimodal) and pull out the date, vendor/description, and total amount — this mirrors `finance-attach-trip-receipt.ts`'s real vision-extraction step, just done by you instead of a model call inside the action. Then:
+```bash
+node ~/.claude/skills/dori/attach-receipt.mjs "<path-to-receipt-file>" --date <YYYY-MM-DD> --desc "<vendor/description>" --amount <n> --thread <threadId>
+```
+Omit `--thread` if you don't know which trip it belongs to — the script lists open trip ledgers as candidates and records a `ClarificationRecord` (domain `finance.trip_receipt`) instead of guessing; ask the user in the same turn, same discipline as branch 6 below. Starting a brand-new trip: add `--trip "<display name>"` (and `--account <slug>` if relevant) so the seeded ledger carries a real name, not just the thread id. A rebooked/corrected receipt for something already on the ledger: pass `--booking-ref <ref>` (an exact match against an earlier row's ref auto-supersedes it, non-destructively — the old row stays for provenance) or `--supersedes <id>` from that earlier call's own `id` field. The script is idempotent per file — reruns on the same receipt don't duplicate the row. After it appends, reindex the ledger file like any other vault write (see "Vault index" below).
+
 ## 3. Meeting transcript (pasted text or a transcript file, with intent to produce minutes)
 
 If the transcript is ≥6000 characters (mirrors dori-engine's `COMPRESS_TRANSCRIPT_TOKEN_THRESHOLD = 1500` tokens, chars/4 estimate — `meeting-document.ts`), compress it first with a cheap model before extracting minutes with the main model — same two-tier split Dori's own engine uses (`fast` tier for compression, `reasoning` tier for extraction). Use the Agent tool with `model: "haiku"` and this exact system prompt (verbatim from `meeting-document.ts`, so behavior matches):
@@ -138,7 +144,7 @@ Resolves to an existing org by name if one exists (case-insensitive) and appends
 
 ## 6. Expense/bill message (mentions spending money, no document attached)
 
-When the user pastes/types a message that describes an expense ("spent $45 on lunch", "paid $120 for the taxi on the Denver trip") with no file attached — a receipt or invoice file attachment is document routing (branch 2) feeding `finance.attach_trip_receipt`, not this branch:
+When the user pastes/types a message that describes an expense ("spent $45 on lunch", "paid $120 for the taxi on the Denver trip") with no file attached — a receipt or invoice file attachment is document routing (branch 2's receipt sub-case, `attach-receipt.mjs`), not this branch:
 
 ```bash
 node ~/.claude/skills/dori/expense-router.mjs "<the message text>"

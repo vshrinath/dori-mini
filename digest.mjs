@@ -6,8 +6,9 @@
 // opens it directly (no localhost server — see docs/guide.html's "no server" rule),
 // and pings it through whichever channels are configured.
 //
-// Schedule/config lives in ~/.dori/digest-config.json — edit times there (or ask an
-// agent to) and re-run install-digest-schedule.mjs (not built yet) to apply.
+// Scheduling is launchd-based (see setup.sh / digest-schedule.plist.template) — to
+// change a time, edit the installed plist's Hour/Minute directly and
+// `launchctl unload/load` it (see SKILL.md's "Notifications and WhatsApp channel").
 //
 // Usage: node digest.mjs [morning|evening] [--whatsapp]
 import { mkdirSync, writeFileSync, readFileSync, readdirSync, unlinkSync } from 'node:fs';

@@ -55,12 +55,15 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
 - **`meeting-prep.mjs`** — assembles a pre-meeting brief (relevant prior meetings, pending
   tasks, known/unknown attendees) from local lookups only, no model call — mirrors
   `meeting.generate_brief` minus the LLM step.
-- **`query-ledger.mjs` / `expense-router.mjs` / `check-reimbursement-gaps.mjs` /
-  `close-trip.mjs`** — a personal expense-tracking flow: route a plain-text expense
-  message to a trip ledger, read totals/outstanding rows back, check a claim for missing
-  dates/amounts/receipts, and close out a trip into a reimbursement-package doc (plus a
-  forward-only draft → submitted → paid status move) — mirroring Dori's `trip-ledger.ts`
-  and consolidate-package logic exactly. No zip file: real Dori doesn't produce one either.
+- **`query-ledger.mjs` / `expense-router.mjs` / `attach-receipt.mjs` /
+  `check-reimbursement-gaps.mjs` / `close-trip.mjs`** — a personal expense-tracking flow:
+  route a plain-text expense message or a photographed/scanned receipt to a trip ledger,
+  read totals/outstanding rows back, check a claim for missing dates/amounts/receipts,
+  and close out a trip into a reimbursement-package doc (plus a forward-only draft →
+  submitted → paid status move) — mirroring Dori's `trip-ledger.ts` and
+  `finance-attach-trip-receipt.ts`/consolidate-package logic exactly (idempotent per
+  receipt, booking-ref/`supersedes` replacement marks the old row superseded rather than
+  deleting it). No zip file: real Dori doesn't produce one either.
 - **`fetch-fathom.mjs`** — pulls unfiled meetings straight from the Fathom API (needs
   your own `FATHOM_API_KEY`) and feeds them into the same meeting-routing/minutes flow as
   a pasted transcript.
