@@ -16,6 +16,7 @@
 // Usage: node send-whatsapp.mjs "message"
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { mkdirSync } from 'node:fs';
 import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import qrcodeTerminal from 'qrcode-terminal';
@@ -23,6 +24,7 @@ import qrcodeTerminal from 'qrcode-terminal';
 const SESSION_DIR = join(homedir(), '.dori', 'whatsapp-session');
 
 export async function sendWhatsApp(message) {
+  mkdirSync(SESSION_DIR, { recursive: true, mode: 0o700 }); // owner-only — see listen-whatsapp.mjs
   const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
   const sock = makeWASocket({ auth: state, logger: pino({ level: 'silent' }) });
   sock.ev.on('creds.update', saveCreds);

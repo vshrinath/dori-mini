@@ -32,6 +32,11 @@ const SESSION_DIR = join(homedir(), '.dori', 'whatsapp-session');
 const PROCESSED_IDS_FILE = join(SESSION_DIR, 'processed-ids.json');
 const URL_RE = /https?:\/\/\S+/g;
 
+// Owner-only — Baileys writes real session credentials here (can impersonate the
+// paired WhatsApp account if read). Created up front so a fresh pairing never briefly
+// exists at the default (world-readable) mode before this runs.
+mkdirSync(SESSION_DIR, { recursive: true, mode: 0o700 });
+
 // ponytail: flat JSON array capped at 500 ids, not a real dedup store — WhatsApp
 // redelivers on reconnect, and this is enough to survive that without a DB.
 function loadProcessedIds() {
