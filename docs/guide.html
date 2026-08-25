@@ -139,7 +139,7 @@
   <nav class="toc">
     <a href="#day">A day with it</a><a href="#project">New project</a><a href="#youtube">YouTube</a><a href="#document">Documents</a>
     <a href="#meeting">Meetings</a><a href="#expense">Expenses</a><a href="#search">Search</a>
-    <a href="#person">Research</a><a href="#inbox">Inbox</a><a href="#tasks">Tasks</a><a href="#whatsapp">WhatsApp</a><a href="#tech">How it stays cheap</a>
+    <a href="#person">Research</a><a href="#inbox">Inbox</a><a href="#tasks">Tasks</a><a href="#watched-inbox">Watched inbox</a><a href="#whatsapp">WhatsApp</a><a href="#tech">How it stays cheap</a>
     <a href="#tools">Cross-tool</a><a href="#trust">The promise</a>
   </nav>
 
@@ -284,7 +284,18 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
       <div class="peek">Under the hood — skip if you don't care</div>
       <pre><span class="dim">$</span> list-tasks.mjs open
 - [t_412] Send the v2 pricing page draft to legal <span class="dim">(due 2026-08-28)</span></pre>
-      <div class="filed">read-only — nothing filed</div>
+      <p class="then">You can also add one directly — <b>"Dori, add a task: send the pricing draft by Friday"</b> — or let it fill in on its own from a meeting's Action Items once minutes exist.</p>
+    </div>
+  </div>
+
+  <h2 id="watched-inbox">Watched inbox</h2>
+  <div class="slip">
+    <div class="slip-head"><div><span class="sticker coral">Optional · channel</span><div class="slip-title">Files arrive without you saying anything</div></div></div>
+    <div class="slip-body">
+      <div class="say-label">You drop a file into</div>
+      <p class="say">A real folder on your machine — Downloads, a scanner's save spot, wherever things already land</p>
+      <p class="then">Point it at a folder during install (or any time after) and it notices new files once they've actually stopped changing — no half-downloaded PDF gets grabbed mid-write. Nothing files itself: ask <b>"Dori, anything new in my inbox folder?"</b> to see what's arrived and where it likely goes, same "never guess" discipline as everything else here. Moving a file around inside the folder is recognized as the same item, not a duplicate; a real delete waits two minutes before it's treated as gone, so a slow move never gets misread.</p>
+      <div class="filed">optional — set up during install, or any time later</div>
     </div>
   </div>
 

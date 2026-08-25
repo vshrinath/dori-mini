@@ -295,7 +295,28 @@
       </div>
       <p class="say-line">Dori, what are my tasks?</p>
       <p class="say-why">Reads straight from your task store — open items, sorted by due
-      date. Read-only for now: it lists what's there, it doesn't add new ones.</p>
+      date.</p>
+    </div>
+
+    <div class="say-card">
+      <div class="say-head">
+        <div class="say-num">Add a task</div>
+        <button class="copy-btn" onclick="copyLine(this)">Copy</button>
+      </div>
+      <p class="say-line">Dori, add a task: [what] by [when]</p>
+      <p class="say-why">Same store as above — also fills in automatically from a meeting's
+      Action Items once minutes exist.</p>
+    </div>
+
+    <div class="say-card">
+      <div class="say-head">
+        <div class="say-num">Check the watched inbox</div>
+        <button class="copy-btn" onclick="copyLine(this)">Copy</button>
+      </div>
+      <p class="say-line">Dori, anything new in my inbox folder?</p>
+      <p class="say-why">If you set up a watched folder during install, this lists what
+      landed there since you last checked. Needs the optional setup step — see the full
+      guide if you skipped it.</p>
     </div>
 
   </div>
