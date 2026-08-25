@@ -167,8 +167,8 @@
 
   <ol class="steps">
     <li><b>Installs Node.js 24+ if you don't have it</b> — via <code>nvm</code>,
-    <code>brew</code>, or <code>apt</code>, whichever's available. The one real
-    requirement; everything else is a plain script, nothing to compile.</li>
+    <code>brew</code>, <code>apt</code>, or <code>pacman</code>, whichever's available. The
+    one real requirement; everything else is a plain script, nothing to compile.</li>
     <li><b>Installs its dependencies</b> — standard open-source npm libraries, same as any
     Node project. The only one worth knowing about by size: a local search model (a few
     hundred MB, downloaded once, runs entirely on your machine — this is what makes "find
@@ -176,8 +176,10 @@
     exactly). Search itself uses SQLite, which ships built into Node — nothing extra to
     install for that part.</li>
     <li><b>Installs <code>yt-dlp</code> and <code>markitdown</code> if missing</b> — for
-    pulling YouTube transcripts and converting documents, via <code>brew</code> or
-    <code>pip3</code>, whichever's available.</li>
+    pulling YouTube transcripts and converting documents, via <code>brew</code>,
+    <code>pacman</code>, or <code>pip3</code>, whichever's available (<code>markitdown</code>
+    isn't in Arch's official repos, so that one always falls back to <code>pip3</code>
+    there).</li>
     <li><b>Asks where your vault lives</b> — press Enter and it creates an empty one for
     you. This folder is the only thing that matters; everything else is disposable and
     rebuilds from it.</li>
