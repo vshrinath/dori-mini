@@ -51,6 +51,14 @@ function buildPrompt(message, history) {
   return `${SYSTEM_PROMPT}\n\nEarlier in this conversation:\n${transcript}\n\nNew message: ${message}`;
 }
 
+// launchd background jobs get a minimal PATH (no shell profile sourced), so `claude`/
+// `codex` installed via nvm/npm-global/homebrew into a user-local dir aren't found by
+// name alone. Append the common install locations rather than hardcoding one user's path.
+function execEnv() {
+  const extra = [join(homedir(), '.local/bin'), '/opt/homebrew/bin', '/usr/local/bin'];
+  return { ...process.env, PATH: `${process.env.PATH || ''}:${extra.join(':')}` };
+}
+
 function runClaude(prompt) {
   const allow = (script) => `Bash(node ${join(SCRIPTS_DIR, script)}:*)`;
   const args = [
@@ -58,7 +66,7 @@ function runClaude(prompt) {
     '--allowedTools', allow('query-vault.mjs'), allow('list-tasks.mjs'), allow('list-inbox.mjs'),
   ];
   return new Promise((resolve, reject) => {
-    execFile('claude', args, { cwd: SCRIPTS_DIR, timeout: TIMEOUT_MS }, (err, stdout) => {
+    execFile('claude', args, { cwd: SCRIPTS_DIR, timeout: TIMEOUT_MS, env: execEnv() }, (err, stdout) => {
       if (err) reject(err); else resolve(stdout.trim());
     });
   });
@@ -67,7 +75,7 @@ function runClaude(prompt) {
 function runCodex(prompt) {
   const args = ['exec', '--sandbox', 'read-only', prompt];
   return new Promise((resolve, reject) => {
-    execFile('codex', args, { cwd: SCRIPTS_DIR, timeout: TIMEOUT_MS }, (err, stdout) => {
+    execFile('codex', args, { cwd: SCRIPTS_DIR, timeout: TIMEOUT_MS, env: execEnv() }, (err, stdout) => {
       if (err) reject(err); else resolve(stdout.trim());
     });
   });
