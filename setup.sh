@@ -23,6 +23,8 @@ if [ "${NODE_MAJOR:-0}" -lt 24 ] 2>/dev/null; then
   elif command -v apt-get >/dev/null 2>&1; then
     curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
     sudo apt-get install -y nodejs
+  elif command -v pacman >/dev/null 2>&1; then
+    sudo pacman -Sy --noconfirm nodejs npm
   fi
   NODE_MAJOR=$(node_major)
   if [ "${NODE_MAJOR:-0}" -lt 24 ] 2>/dev/null; then
@@ -41,10 +43,10 @@ npm install --silent
 echo "✓ npm dependencies installed"
 
 # --- external CLI tools --- no prompt: install automatically via whichever of
-# brew/pip3 is actually present (pip3 is the one most non-coder Mac/Linux setups have
-# even without Homebrew, since Python usually ships preinstalled).
+# brew/pacman/pip3 is actually present (pip3 is the one most non-coder Mac/Linux setups
+# have even without Homebrew, since Python usually ships preinstalled).
 install_tool() {
-  local cmd="$1" pip_pkg="$2" brew_pkg="$3" purpose="$4"
+  local cmd="$1" pip_pkg="$2" brew_pkg="$3" pacman_pkg="$4" purpose="$5"
   if command -v "$cmd" >/dev/null 2>&1; then
     echo "✓ $cmd found ($purpose)"
     return
@@ -52,17 +54,21 @@ install_tool() {
   echo "$cmd not found ($purpose) — installing..."
   if command -v brew >/dev/null 2>&1; then
     brew install "$brew_pkg"
+  elif [ -n "$pacman_pkg" ] && command -v pacman >/dev/null 2>&1; then
+    sudo pacman -Sy --noconfirm "$pacman_pkg"
   elif command -v pip3 >/dev/null 2>&1; then
     pip3 install --user "$pip_pkg"
   else
-    echo "  No brew or pip3 found — install $cmd manually to use YouTube/document capture."
+    echo "  No brew, pacman package, or pip3 found — install $cmd manually to use YouTube/document capture."
     return
   fi
   command -v "$cmd" >/dev/null 2>&1 && echo "✓ $cmd installed" || echo "  Install may need a new shell to be on PATH — re-run this script after."
 }
 echo
-install_tool yt-dlp yt-dlp yt-dlp "YouTube transcript/download"
-install_tool markitdown markitdown markitdown "document → Markdown conversion"
+install_tool yt-dlp yt-dlp yt-dlp yt-dlp "YouTube transcript/download"
+# markitdown isn't in Arch's official repos — no safe non-interactive AUR install path,
+# so this one skips straight to pip3 there (empty pacman_pkg).
+install_tool markitdown markitdown markitdown "" "document → Markdown conversion"
 
 # --- vault path ---
 echo

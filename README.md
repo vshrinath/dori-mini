@@ -110,9 +110,10 @@ cd dori
 ```
 
 `setup.sh` will:
-1. Install Node 24+ automatically if you don't have it (via `nvm`, `brew`, or `apt`).
+1. Install Node 24+ automatically if you don't have it (via `nvm`, `brew`, `apt`, or `pacman`).
 2. Run `npm install` (pulls in local embedding model support — a few hundred MB, one-time).
-3. Install `yt-dlp` and `markitdown` automatically if missing (via `brew` or `pip3`), for
+3. Install `yt-dlp` and `markitdown` automatically if missing (via `brew`, `pacman`, or `pip3`
+   — `markitdown` isn't in Arch's official repos, so that one always uses `pip3` there), for
    YouTube/document capture.
 4. Ask for your Dori vault path (defaults to creating a fresh one) and your name (required
    — used so meeting notes can recognize and skip you when matching attendees).
