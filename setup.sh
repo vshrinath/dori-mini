@@ -215,12 +215,12 @@ echo "  source $CONFIG_FILE"
 echo "  node route-destination.mjs youtube"
 
 # --- open the start-here guide, since a silent finish leaves you not knowing what to do next ---
-GUIDE="$(pwd)/docs/getting-started.html"
-if [ -f "$GUIDE" ]; then
-  echo
-  echo "Opening the guide — see it for what to try first..."
-  if command -v open >/dev/null 2>&1; then open "$GUIDE"
-  elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$GUIDE"
-  else echo "  (couldn't auto-open — open $GUIDE yourself)"
-  fi
+# Hosted at mini.mydori.app (same content as docs/getting-started.html, kept there as one
+# canonical copy) so links out to the rest of the guide always resolve, online or off a clone.
+GUIDE="https://mini.mydori.app/docs/getting-started"
+echo
+echo "Opening the guide — see it for what to try first..."
+if command -v open >/dev/null 2>&1; then open "$GUIDE"
+elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$GUIDE"
+else echo "  (couldn't auto-open — open $GUIDE yourself, or docs/getting-started.html in this repo)"
 fi
