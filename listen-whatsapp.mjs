@@ -64,6 +64,11 @@ function mediaKind(message) {
   return null;
 }
 
+function deriveTitle(text, kind) {
+  if (text) return text.trim().replace(/\s+/g, ' ').slice(0, 80).replace(/"/g, '\\"');
+  return kind === 'document' ? 'WhatsApp attachment' : 'WhatsApp capture';
+}
+
 async function fileCapture({ text, urls, sock, msg, media }) {
   const isYouTube = urls.some((u) => /youtube\.com|youtu\.be/.test(u));
   const kind = media ? 'document' : isYouTube ? 'youtube' : urls.length ? 'url' : 'text';
@@ -73,6 +78,7 @@ async function fileCapture({ text, urls, sock, msg, media }) {
 
   const sender = msg.key.remoteJid;
   const timestamp = new Date((Number(msg.messageTimestamp) || Date.now() / 1000) * 1000).toISOString();
+  const title = deriveTitle(text, kind);
 
   let mediaLine = '';
   if (media) {
@@ -81,7 +87,7 @@ async function fileCapture({ text, urls, sock, msg, media }) {
     mediaLine = `media: ${mediaRelPath}\n`;
   }
 
-  const frontmatter = `---\ndate: '${timestamp.slice(0, 10)}'\nsource: whatsapp\nsender: ${sender}\n${mediaLine}---\n\n`;
+  const frontmatter = `---\ntitle: "${title}"\ndate: '${timestamp.slice(0, 10)}'\nsource: whatsapp\nsender: ${sender}\n${mediaLine}---\n\n`;
   writeFileSync(absolutePath, frontmatter + (text || '(no text — see media)') + '\n');
   console.log(`Filed: ${relPath}`);
 }
@@ -115,16 +121,30 @@ async function handleMessage(sock, msg, processedIds) {
   }
 
   if (!text && !media) return; // nothing capturable (reactions, status updates, etc.)
-  await fileCapture({ text, urls, sock, msg, media });
 
   const chatJid = msg.key.remoteJid;
+  const isPureConversation = !media && urls.length === 0 && !!text; // no link/attachment to route, just talk
+  let answered = false;
+
   if (needsReply(text, urls)) {
     try {
       const reply = await answerMessage(chatJid, text);
-      if (reply) await sock.sendMessage(chatJid, { text: reply });
+      if (reply) {
+        await sock.sendMessage(chatJid, { text: reply });
+        answered = true;
+      }
     } catch (err) {
-      console.error(`Reply failed for ${id}: ${err.message}`); // filing above already succeeded either way
+      console.error(`Reply failed for ${id}: ${err.message}`);
     }
+  }
+
+  // Only file what still needs a human decision: real captures (a link or attachment)
+  // always need routing, but a plain question Dori already answered has nothing left
+  // "waiting on you" — filing it too would just compete for attention with things that
+  // actually do. Unanswered conversation (no reply CLI configured, or the call failed)
+  // still gets filed as a fallback so nothing silently vanishes.
+  if (!isPureConversation || !answered) {
+    await fileCapture({ text, urls, sock, msg, media });
   }
 }
 
