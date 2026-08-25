@@ -20,8 +20,10 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   hybrid vector/FTS search with the same RRF fusion Dori's vector store uses.
 - **`apply-template.mjs`** — additive-only project folder scaffolding, mirroring
   `projects.apply_template`.
-- **`clarification-store.mjs` / `list-inbox.mjs`** — durable pending-decision records
-  and a minimal inbox view, for the parts of Dori's routing that need a human to decide.
+- **`clarification-store.mjs` / `list-inbox.mjs` / `resolve-inbox.mjs`** — durable
+  pending-decision records, a minimal inbox view, and a resolve command (move a filed
+  item into a project, or archive it) for the parts of Dori's routing that need a human
+  to decide.
 - **`query-vault.mjs`** — recall queries (last meeting with X, recent decisions, info
   already captured about a person or org) against the FTS index without dumping full
   document bodies by default.

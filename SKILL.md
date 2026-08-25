@@ -264,3 +264,9 @@ Records are created automatically by `route-meeting.mjs` and `expense-router.mjs
 node ~/.claude/skills/dori/clarification-store.mjs resolve <id> --choice <candidateId>
 node ~/.claude/skills/dori/clarification-store.mjs dismiss <id>
 ```
+That covers clarifications — the OTHER inbox source (`inbox_file` items, bare captures with no project) has its own resolve command, `resolve-inbox.mjs`. Once the user says where a filed item goes (or that it should be dropped):
+```bash
+node ~/.claude/skills/dori/resolve-inbox.mjs move <inbox-filename> <projectPath>
+node ~/.claude/skills/dori/resolve-inbox.mjs archive <inbox-filename>
+```
+`move` relocates the file into `projects/<projectPath>/` — and if it has a `media:` sidecar (e.g. a WhatsApp photo capture), moves that too and rewrites the reference. `archive` moves it to `inbox/.archive/` (reversible, not deleted) rather than removing it outright.
