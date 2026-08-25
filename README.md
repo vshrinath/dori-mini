@@ -22,6 +22,10 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   hybrid vector/FTS search with the same RRF fusion Dori's vector store uses.
 - **`apply-template.mjs`** — additive-only project folder scaffolding, mirroring
   `projects.apply_template`.
+- **`self-store.mjs`** — your own profile (name, role, org, projects), stored as a person
+  file exactly like anyone else's, just marked `is_self: true` — mirrors real Dori's
+  `isSelf` flag. `route-meeting.mjs` excludes whoever is marked this way from attendee-vote
+  matching automatically.
 - **`clarification-store.mjs` / `list-inbox.mjs` / `resolve-inbox.mjs`** — durable
   pending-decision records, a minimal inbox view, and a resolve command (move a filed
   item into a project, or archive it) for the parts of Dori's routing that need a human

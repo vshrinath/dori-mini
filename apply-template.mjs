@@ -15,6 +15,10 @@
 //   projectPath: path under projects/, e.g. "acme-widgets" or "acme-widgets/lms"
 //   templateKey: engine.default | engine.software | engine.client | engine.research
 //                | portal.standard | portal.minimal | portal.full | portal.catalogue
+//
+// No dedicated "personal" preset exists in the real catalogue — checked
+// template-record.ts's BUILTIN_TEMPLATES directly. For personal/non-client work,
+// `engine.default` (docs/notes/references, no invoices/deliverables) is the real fit.
 import { mkdirSync, existsSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';

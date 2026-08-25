@@ -55,16 +55,19 @@ function loadPeople() {
     const fm = parseFrontmatter(readFileSync(join(PEOPLE_DIR, f), 'utf-8'));
     const name = (fm.name || f.replace(/\.md$/, '')).replace(/^["']|["']$/g, '');
     const projects = (fm.projects?.match(/"([^"]+)"/g) || []).map((s) => s.replace(/"/g, ''));
-    people.push({ name, projects, file: f });
+    const isSelf = fm.is_self === 'true' || fm.isSelf === 'true';
+    people.push({ name, projects, file: f, isSelf });
   }
   return people;
 }
 
-// This vault's entities/people/*.md have no isSelf flag (unlike Dori's engine entity
-// store) — self is simply absent from the directory. Pass --self if that ever changes.
+// Mirrors real Dori's `if (p.isSelf) continue` in meeting-router.ts/meeting-route.ts —
+// a person file marked is_self: true (self-store.mjs) is excluded automatically. --self
+// (a plain name match) still works too, for a vault with no self-store entry yet.
 function matchPerson(attendeeName, people, selfName) {
   const norm = normalize(attendeeName);
   if (selfName && norm === normalize(selfName)) return null;
+  if (people.some((p) => p.isSelf && normalize(p.name) === norm)) return null;
   const withProjects = people.filter((p) => p.projects.length > 0);
   const exact = withProjects.find((p) => normalize(p.name) === norm);
   if (exact) return exact;
