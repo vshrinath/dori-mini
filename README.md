@@ -29,8 +29,14 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
 - **`query-vault.mjs`** — recall queries (last meeting with X, recent decisions, info
   already captured about a person or org) against the FTS index without dumping full
   document bodies by default.
+- **`org-store.mjs`** — creates/resolves an organization (Account) entity, gated by the
+  same affiliation-evidence bar real Dori uses: a structured role/title assertion tying a
+  person to the org, not a bare company-name mention — mirrors `accounts.ensure`.
 - **`list-tasks.mjs`** — reads dori-engine's real task store directly (open/pending
   tasks), separate from the inbox below.
+- **`meeting-prep.mjs`** — assembles a pre-meeting brief (relevant prior meetings, pending
+  tasks, known/unknown attendees) from local lookups only, no model call — mirrors
+  `meeting.generate_brief` minus the LLM step.
 - **`query-ledger.mjs` / `expense-router.mjs` / `check-reimbursement-gaps.mjs`** — a
   personal expense-tracking flow: route a plain-text expense message to a trip ledger,
   read totals/outstanding rows back, and check a claim for missing dates/amounts/receipts

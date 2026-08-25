@@ -93,6 +93,19 @@ Calls Tavily's search API directly (`TAVILY_API_KEY` in this directory's `.env` 
 
 **This is not the same thing as recalling someone already in the vault.** "Who's Priya Menon from Acme, she just joined a meeting" → this branch (external web lookup, new person). "Tell me about Priya" or "what's the NDA status with Northwind" → vault recall (`query-vault.mjs search`/`last-meeting`, above) — the person already has a file and/or meeting history, you're retrieving what's already captured, not researching them.
 
+## 5b. Organization / account (only on a structured affiliation assertion)
+
+When a message ties a person to a company with an actual role or title — "Anita, CFO at Meridian", "Anita is the CFO at Meridian" — not a bare mention of a company name in passing:
+
+```bash
+node ~/.claude/skills/dori/org-store.mjs ensure "Meridian" --person "Anita Sharma" --evidence "Anita Sharma, CFO at Meridian" --role vendor --person-slug anita-sharma
+node ~/.claude/skills/dori/org-store.mjs list
+```
+
+Mirrors `dori-engine`'s `accounts.ensure` action and the affiliation-evidence bar it's gated on (decision 0015) — the same four regex patterns real Dori uses to decide whether text actually asserts an affiliation, not just co-occurrence. **This is the whole point of the gate**: if `--evidence` doesn't clear the bar, `ensure` returns `affiliation_evidence_not_cleared` and writes nothing — every passing company name in a transcript must not spawn a record. `--role` is one of `client`/`vendor`/`partner`/`employer`/`none`. Skip `--evidence`/`--person` entirely with `--no-evidence` only when the input is already structured (e.g. a form field), not as a way around the bar.
+
+Resolves to an existing org by name if one exists (case-insensitive) and appends the linked person instead of duplicating — stored at `entities/organizations/<slug>.md`, same one-file-per-entity shape as `entities/people/*.md`. This is a different "account" than `query-ledger.mjs`'s trip ledgers — that's money, this is a company entity.
+
 ## 6. Expense/bill message (mentions spending money, no document attached)
 
 When the user pastes/types a message that describes an expense ("spent $45 on lunch", "paid $120 for the taxi on the Denver trip") with no file attached — a receipt or invoice file attachment is document routing (branch 2) feeding `finance.attach_trip_receipt`, not this branch:
@@ -212,6 +225,14 @@ To rebuild the whole index (e.g. after files changed outside this router): run t
 node ~/.claude/skills/dori/list-tasks.mjs [open|done|...] [--real]
 ```
 Defaults to `open`. Pass `--real` to drop leftover e2e/debug/probe fixture tasks from engine test runs. This is a different thing from the inbox (`list-inbox.mjs`, below) — tasks are engine-tracked to-dos; the inbox is unfiled captures and ambiguous routing decisions waiting on a human.
+
+## Meeting prep (before an upcoming meeting, on request)
+
+When the user asks to prep for a meeting ("what should I know before the call with Anita and Sam", "prep me for the Meridian sync"):
+```bash
+node ~/.claude/skills/dori/meeting-prep.mjs "Attendee One,Attendee Two" [--project <slug>]
+```
+Mirrors `dori-engine`'s `meeting.generate_brief` action minus the LLM step — it assembles the same three lookups (prior meetings relevant to these attendees, pending tasks scoped to the project/attendees, which attendees are already known) and prints a brief directly, no model call. Same cross-project isolation the real action enforces: no `--project` means no prior meetings are cited at all (fail closed, never guess which project a meeting belongs to) and tasks fall back to attendee-owned only, never the whole vault.
 
 ## Notifications and WhatsApp channel
 
