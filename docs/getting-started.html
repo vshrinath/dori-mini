@@ -193,14 +193,15 @@
 
   <div class="term">
     <div class="term-bar"><i></i><i></i><i></i></div>
-    <pre>$ curl -fsSL .../install.sh | bash
+    <pre>$ curl -fsSL https://mini.mydori.app/install.sh | sh
 
-<span class="ok">✓</span> Node.js 24 found
+<span class="ok">✓</span> Node.js 24 found <span class="dim">(installs it automatically if missing)</span>
 <span class="ok">✓</span> npm dependencies installed <span class="dim">(local search model, one-time)</span>
-<span class="ok">✓</span> yt-dlp found <span class="dim">(or offers to install it)</span>
-<span class="ok">✓</span> markitdown found <span class="dim">(or offers to install it)</span>
+<span class="ok">✓</span> yt-dlp found <span class="dim">(installs it automatically if missing)</span>
+<span class="ok">✓</span> markitdown found <span class="dim">(installs it automatically if missing)</span>
 <span class="ask">? Path to your vault:</span> <span class="dim">[Enter = creates one for you]</span>
 <span class="ok">✓</span> vault skeleton created
+<span class="ask">? Your name:</span> <span class="dim">(required — for meeting-attendee matching)</span>
 <span class="ask">? Fathom API key (optional):</span> <span class="dim">[Enter to skip]</span>
 <span class="ask">? Tavily API key (optional):</span> <span class="dim">[Enter to skip]</span>
 <span class="ok">✓</span> wired into Claude Code
@@ -209,20 +210,23 @@
   </div>
 
   <ol class="steps">
-    <li><b>Checks Node.js</b> — the one real requirement. Everything else is a plain script,
-    nothing to compile.</li>
+    <li><b>Installs Node.js 24+ if you don't have it</b> — via <code>nvm</code>,
+    <code>brew</code>, or <code>apt</code>, whichever's available. The one real
+    requirement; everything else is a plain script, nothing to compile.</li>
     <li><b>Installs its dependencies</b> — standard open-source npm libraries, same as any
     Node project. The only one worth knowing about by size: a local search model (a few
     hundred MB, downloaded once, runs entirely on your machine — this is what makes "find
     that thing I was thinking about" work later, even when your wording doesn't match
     exactly). Search itself uses SQLite, which ships built into Node — nothing extra to
     install for that part.</li>
-    <li><b>Offers two optional tools</b> — <code>yt-dlp</code> and <code>markitdown</code>,
-    for pulling YouTube transcripts and converting documents. Skip either and those two
-    features just won't fire; nothing else is affected.</li>
+    <li><b>Installs <code>yt-dlp</code> and <code>markitdown</code> if missing</b> — for
+    pulling YouTube transcripts and converting documents, via <code>brew</code> or
+    <code>pip3</code>, whichever's available.</li>
     <li><b>Asks where your vault lives</b> — press Enter and it creates an empty one for
     you. This folder is the only thing that matters; everything else is disposable and
     rebuilds from it.</li>
+    <li><b>Asks your name</b> — the one required question. Used so meeting notes can
+    automatically recognize and skip you when matching who attended.</li>
     <li><b>Asks for two optional API keys</b> (Fathom, Tavily) — skip both if you don't
     have them. See "what's optional" below.</li>
     <li><b>Wires itself into your agent</b> — Claude Code, Codex CLI, Antigravity, or
