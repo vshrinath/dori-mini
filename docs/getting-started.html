@@ -100,6 +100,7 @@
     background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
     padding: 18px 20px;
   }
+  .say-unit + .say-unit { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); }
   .say-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
   .say-num {
     font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
@@ -195,14 +196,26 @@
     </div>
 
     <div class="say-card">
-      <div class="say-head">
-        <div class="say-num">3 · Create your profile</div>
-        <button class="copy-btn" onclick="copyLine(this)">Copy</button>
+      <div class="say-unit">
+        <div class="say-head">
+          <div class="say-num">3 · Create your profile</div>
+          <button class="copy-btn" onclick="copyLine(this)">Copy</button>
+        </div>
+        <p class="say-line">Dori, create my profile: I'm [Name], [Role] at [Company]</p>
+        <p class="say-why">Or drop in a CV or your LinkedIn profile as a PDF first, and ask
+        it to fill this in from that instead of typing it out. On your LinkedIn profile, open
+        the <b>Resources</b> button (below your name) and pick <b>Save to PDF</b> — it opens in
+        a new tab, ready to drag in.</p>
       </div>
-      <p class="say-line">Dori, create my profile: I'm [Name], [Role] at [Company]</p>
-      <p class="say-why">Or drop in a CV or your LinkedIn profile as a PDF first, and ask
-      it to fill this in from that instead of typing it out. (LinkedIn:
-      <a class="underline" href="https://www.linkedin.com/help/linkedin/answer/a541960" target="_blank" rel="noopener">how to save yours as a PDF →</a>)</p>
+      <div class="say-unit">
+        <div class="say-head">
+          <div class="say-num">Also worth adding</div>
+          <button class="copy-btn" onclick="copyLine(this)">Copy</button>
+        </div>
+        <p class="say-line">Dori, my LinkedIn is [profile URL]</p>
+        <p class="say-why">Saves it alongside your profile, so it's there the next time
+        anything needs it.</p>
+      </div>
     </div>
 
     <div class="say-card">
@@ -221,10 +234,10 @@
         <button class="copy-btn" onclick="copyLine(this)">Copy</button>
       </div>
       <p class="say-line">Dori, who's [Name] from [Company]?</p>
-      <p class="say-why">Works today for free, using your agent's own web search. Add a
+      <p class="say-why">Works today for free, using your agent's own web search. Add a free
       <a class="underline" href="https://app.tavily.com" target="_blank" rel="noopener">Tavily</a>
-      key later (optional, small per-search cost) for a version that links what it finds
-      straight into your vault instead of just answering in chat.</p>
+      key later (1,000 searches/month, no card required) for a version that links what it
+      finds straight into your vault instead of just answering in chat.</p>
     </div>
 
     <div class="say-card">
@@ -318,7 +331,7 @@ function fallbackCopy(text) {
   document.body.removeChild(ta);
 }
 function copyLine(btn) {
-  var line = btn.closest('.say-card').querySelector('.say-line').textContent;
+  var line = btn.closest('.say-unit, .say-card').querySelector('.say-line').textContent;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(line).then(function () { flashCopied(btn); }, function () {
       fallbackCopy(line);
