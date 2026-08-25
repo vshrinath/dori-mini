@@ -79,9 +79,10 @@ and not something to hand out even in sanitized form.
 
 ## Read this first
 
-[Getting started](https://mini.mydori.app/docs/getting-started) — `setup.sh` opens it in
-your browser automatically once it's done. It explains what the install actually did, what
-your vault looks like before and after real use, and seven things to try first.
+[Quick start](https://mini.mydori.app/docs/getting-started) — `setup.sh` opens it in your
+browser automatically once it's done. Six copy-paste lines to say to your agent, right
+after install. [How it works](https://mini.mydori.app/docs/how-it-works) explains what the
+install actually did, and what your vault looks like before and after real use.
 [The full guide](https://mini.mydori.app/docs/guide) covers every capture type in depth,
 plus how it stays cheap and fast to run. [Cost breakdown](https://mini.mydori.app/docs/cost)
 is the deeper technical breakdown of exactly where — and where not — it spends model tokens.
