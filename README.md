@@ -29,7 +29,9 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
 - **`brand-store.mjs`** — a brand someone is launching or works for, distinct from the
   legal organization (`org-store.mjs`) behind it — theming fields (colors/fonts/logo,
   borrowed from `dori-portal`'s real `BrandConfig`) in frontmatter, guidelines/positioning
-  as free-text body, same shape as every other vault entity.
+  as free-text body, same shape as every other vault entity. `context` prints the whole
+  thing as one block for an agent to read before writing brand-aware copy — no rendering
+  pipeline, the brand just feeds the agent's own writing.
 - **`clarification-store.mjs` / `list-inbox.mjs` / `resolve-inbox.mjs`** — durable
   pending-decision records, a minimal inbox view, and a resolve command (move a filed
   item into a project, or archive it) for the parts of Dori's routing that need a human

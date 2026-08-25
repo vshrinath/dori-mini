@@ -16,6 +16,7 @@
 //   node brand-store.mjs set "Dori" [--owner <person-or-org-slug>] [--company <legal name>]
 //     [--primary <#hex>] [--accent <#hex>] [--font-display <name>] [--font-body <name>] [--logo <path-or-url>]
 //   node brand-store.mjs get "Dori"
+//   node brand-store.mjs context "Dori"   # frontmatter + guidelines body, as a prompt block
 //   node brand-store.mjs list
 //
 // The guidelines/description prose isn't a CLI flag — like every other vault file, edit the
@@ -69,6 +70,22 @@ export function getBrand(name) {
   return loadBrands().find((b) => (b.name || b.slug).toLowerCase() === norm) || null;
 }
 
+// Full frontmatter + guidelines body, formatted as a ready-to-paste prompt block — for an
+// agent asked to "write in this brand's voice" to read before generating text. No renderer,
+// no theming pipeline: brand-aware content generation here just means feeding this into the
+// agent's own context, not injecting theme tokens into a rendered document like dori-portal does.
+export function getBrandContext(name) {
+  const brand = getBrand(name);
+  if (!brand) return null;
+  const raw = readFileSync(join(BRANDS_DIR, `${brand.slug}.md`), 'utf-8');
+  const { body } = parseFrontmatter(raw);
+  const facts = Object.entries(brand)
+    .filter(([k]) => k !== 'slug')
+    .map(([k, v]) => `- ${k}: ${v}`)
+    .join('\n');
+  return `# Brand: ${brand.name}\n\n${facts}\n${body}`.trim() + '\n';
+}
+
 // Merges onto whatever frontmatter already exists — a `set` that only passes --logo must
 // not silently drop owner/company/colors/fonts set by an earlier call. Body is left alone
 // entirely; this only ever touches the frontmatter block.
@@ -106,6 +123,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (!name) { console.error('Usage: node brand-store.mjs get "<Brand Name>"'); process.exit(1); }
     const brand = getBrand(name);
     console.log(brand ? JSON.stringify(brand, null, 2) : `No brand named "${name}" on file.`);
+  } else if (cmd === 'context') {
+    const [name] = rest;
+    if (!name) { console.error('Usage: node brand-store.mjs context "<Brand Name>"'); process.exit(1); }
+    const ctx = getBrandContext(name);
+    console.log(ctx || `No brand named "${name}" on file.`);
   } else if (cmd === 'set') {
     const [name] = rest;
     if (!name) {
@@ -118,7 +140,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const result = setBrand(name, fields);
     console.log(JSON.stringify(result, null, 2));
   } else {
-    console.error('Usage: node brand-store.mjs set "<Brand Name>" ...\n   or: node brand-store.mjs get "<Brand Name>"\n   or: node brand-store.mjs list');
+    console.error('Usage: node brand-store.mjs set "<Brand Name>" ...\n   or: node brand-store.mjs get "<Brand Name>"\n   or: node brand-store.mjs context "<Brand Name>"\n   or: node brand-store.mjs list');
     process.exit(1);
   }
 }
