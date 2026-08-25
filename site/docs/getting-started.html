@@ -1,0 +1,402 @@
+<title>Dori Mini — Start Here</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@1&display=swap');
+
+  :root {
+    --amber: #f0a80e;
+    --amber-soft: #ffd978;
+    --amber-hover: #ffbb1f;
+    --navy: #1a1f4e;
+    --navy-deep: #131737;
+    --canvas: #fcfbf7;
+    --canvas2: #f3f1ea;
+    --ink: #0e1626;
+    --muted: #6b7280;
+    --body-c: #4a5568;
+    --green: #2a9c5c;
+    --coral: #d05436;
+    --card: #ffffff;
+    --line: rgba(14,22,38,0.1);
+    --r-md: 16px;
+    --r-lg: 28px;
+    --font-display: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: "Instrument Serif", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
+      --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
+      --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
+    --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
+    --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--amber); color: var(--navy); }
+  a { color: var(--amber); text-decoration: none; }
+  a.underline { text-decoration: underline; text-underline-offset: 3px; }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 0 24px 100px; }
+
+  .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 760px; margin: 0 auto; }
+  .wordmark { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--ink); letter-spacing: -0.03em; }
+  .wordmark span { color: var(--amber); }
+  .topnav .to-guide { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
+
+  .serif-pop { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--amber); }
+
+  .eyebrow {
+    font-family: var(--font-display); font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--green);
+    display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
+  }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+  h1 {
+    font-family: var(--font-display); font-weight: 780; letter-spacing: -0.03em;
+    font-size: clamp(2.1rem, 5.2vw, 3.2rem); line-height: 1.06; margin: 0 0 18px; text-wrap: balance;
+  }
+  .lede { font-size: 1.15rem; color: var(--body-c); max-width: 56ch; margin: 0 0 8px; }
+  .lede b { color: var(--ink); font-weight: 700; }
+
+  .promise {
+    margin: 32px 0 0; padding: 18px 20px; background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--r-md); font-size: 0.95rem; color: var(--body-c); display: flex; gap: 12px; align-items: flex-start;
+  }
+  .promise .mark { color: var(--amber); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; line-height: 1.4; }
+  .promise b { color: var(--ink); }
+
+  h2 {
+    font-family: var(--font-display); font-weight: 740; letter-spacing: -0.02em;
+    font-size: clamp(1.4rem, 3vw, 1.9rem); margin: 64px 0 8px; text-wrap: balance;
+  }
+  .h2-sub { color: var(--muted); font-size: 0.95rem; margin: 0 0 24px; max-width: 56ch; }
+
+  /* terminal-style log card, echoing the site's own "shot" browser-chrome */
+  .term {
+    background: var(--navy-deep); border-radius: var(--r-md); overflow: hidden;
+    box-shadow: 0 12px 32px rgba(19,23,55,0.25);
+  }
+  .term-bar { display: flex; gap: 6px; padding: 12px 16px; background: rgba(255,255,255,0.04); }
+  .term-bar i { width: 10px; height: 10px; border-radius: 50%; }
+  .term-bar i:nth-child(1) { background: var(--coral); }
+  .term-bar i:nth-child(2) { background: var(--amber); }
+  .term-bar i:nth-child(3) { background: var(--green); }
+  .term pre {
+    margin: 0; padding: 18px 20px 22px; font-family: var(--font-mono); font-size: 12.5px;
+    line-height: 1.8; color: #d9deee; overflow-x: auto;
+  }
+  .term .ok { color: #7bd68f; }
+  .term .ask { color: var(--amber-soft); }
+  .term .dim { color: #8590ab; }
+
+  .steps { list-style: none; margin: 20px 0 0; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 0 0 20px 40px; font-size: 0.95rem; color: var(--body-c);
+  }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: -1px;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--canvas2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700;
+    font-size: 12px; color: var(--navy);
+  }
+  :root:not([data-theme="light"]) .steps li::before { color: var(--amber-soft); }
+  :root[data-theme="dark"] .steps li::before { color: var(--amber-soft); }
+  .steps li b { color: var(--ink); }
+  .steps li code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
+
+  .tree-pair { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px; }
+  @media (min-width: 620px) { .tree-pair { grid-template-columns: 1fr 1fr; } }
+  .tree-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px 20px; }
+  .tree-label { font-family: var(--font-display); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .tree-label.now { color: var(--green); }
+  .tree { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.85; color: var(--body-c); white-space: pre; }
+  .tree .new { color: var(--green); font-weight: 600; }
+  .tree .dim { color: var(--muted); }
+
+  .try-grid { display: grid; gap: 14px; margin-top: 20px; }
+  .try {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 18px 20px; display: flex; gap: 16px; align-items: flex-start;
+  }
+  .try .icon { font-family: var(--font-serif); font-style: italic; font-size: 1.6rem; color: var(--amber); line-height: 1; margin-top: 2px; }
+  .try .say { font-family: var(--font-serif); font-style: italic; font-size: 1.1rem; color: var(--ink); margin: 0 0 4px; }
+  .try .why { font-size: 0.86rem; color: var(--muted); margin: 0; }
+
+  .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
+  .trust-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px 18px; }
+  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+  .trust-item p { margin: 0; font-size: 0.87rem; color: var(--body-c); line-height: 1.55; }
+
+  .optional {
+    margin-top: 20px; padding: 16px 20px; border: 1.5px dashed var(--line); border-radius: var(--r-md);
+    font-size: 0.9rem; color: var(--body-c);
+  }
+  .optional .tag {
+    display: inline-block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral); background: rgba(208,84,54,0.12);
+    padding: 3px 9px; border-radius: 20px; margin-bottom: 8px;
+  }
+
+  .cta-row { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .btn-amber {
+    font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; color: var(--navy);
+    background: var(--amber); padding: 12px 22px; border-radius: 999px; display: inline-block;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.18); transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  .btn-amber:hover { background: var(--amber-hover); transform: translateY(-2px) rotate(-1deg); box-shadow: 0 8px 20px rgba(240,168,14,0.4); }
+
+  footer { max-width: 760px; margin: 0 auto; padding: 30px 24px 40px; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+</style>
+
+<nav class="topnav">
+  <div class="wordmark">dori<span>mini</span></div>
+  <a class="to-guide" href="https://claude.ai/code/artifact/da35dc7a-9f95-4ea2-aaa9-db9cffb8d138">The full guide →</a>
+</nav>
+
+<div class="container">
+
+  <div class="eyebrow"><span class="dot"></span> Get started in 5 min</div>
+  <h1>Supercharge the agent<br>you already have — <span class="serif-pop">no extra cost, zero lock-in.</span></h1>
+  <p class="lede">
+    Dori Mini integrates with the AI assistant you already chat with
+    (<b>Claude Code, Codex CLI, Antigravity</b> — whichever it is) and works
+    identically across all of them. You keep chatting exactly the way you
+    already do — <b>you just get to ask more precise, specific things</b> and
+    have them actually get filed, indexed, and remembered.
+  </p>
+
+  <div class="promise">
+    <div class="mark">＊</div>
+    <div><b>The whole promise, up front:</b> everything it creates is a plain
+    file on your own computer. No account, no cloud sync, no server, and no new
+    subscription — it runs on whichever Claude/Codex plan you already pay for.
+    If you never ran the install command again, every file it's ever written
+    would still open in a normal text editor. <a class="underline" href="#lockin">More on that below.</a></div>
+  </div>
+
+  <div class="trust">
+    <div class="trust-item"><div class="label">No new subscription</div><p>Runs on the Claude/Codex/etc. plan you already pay for — no separate bill.</p></div>
+    <div class="trust-item"><div class="label">No hidden API spend</div><p>Search, routing, and indexing run locally — tokens are only spent on genuine reasoning.</p></div>
+    <div class="trust-item"><div class="label">Inspectable, not a black box</div><p>Every script is plain and short — see exactly what runs and why, any time.</p></div>
+  </div>
+
+  <h2>What the install command actually does</h2>
+  <p class="h2-sub">One line, run once. Here's what happens behind it — nothing hidden.</p>
+
+  <div class="term">
+    <div class="term-bar"><i></i><i></i><i></i></div>
+    <pre>$ curl -fsSL .../install.sh | bash
+
+<span class="ok">✓</span> Node.js 24 found
+<span class="ok">✓</span> npm dependencies installed <span class="dim">(local search model, one-time)</span>
+<span class="ok">✓</span> yt-dlp found <span class="dim">(or offers to install it)</span>
+<span class="ok">✓</span> markitdown found <span class="dim">(or offers to install it)</span>
+<span class="ask">? Path to your vault:</span> <span class="dim">[Enter = creates one for you]</span>
+<span class="ok">✓</span> vault skeleton created
+<span class="ask">? Fathom API key (optional):</span> <span class="dim">[Enter to skip]</span>
+<span class="ask">? Tavily API key (optional):</span> <span class="dim">[Enter to skip]</span>
+<span class="ok">✓</span> wired into Claude Code
+<span class="ask">? Set up the WhatsApp channel? [y/N]</span> <span class="dim">(macOS only, optional)</span>
+<span class="ask">? Set up morning/evening digests? [y/N]</span> <span class="dim">(macOS only, optional)</span></pre>
+  </div>
+
+  <ol class="steps">
+    <li><b>Checks Node.js</b> — the one real requirement. Everything else is a plain script,
+    nothing to compile.</li>
+    <li><b>Installs its dependencies</b> — standard open-source npm libraries, same as any
+    Node project. The only one worth knowing about by size: a local search model (a few
+    hundred MB, downloaded once, runs entirely on your machine — this is what makes "find
+    that thing I was thinking about" work later, even when your wording doesn't match
+    exactly). Search itself uses SQLite, which ships built into Node — nothing extra to
+    install for that part.</li>
+    <li><b>Offers two optional tools</b> — <code>yt-dlp</code> and <code>markitdown</code>,
+    for pulling YouTube transcripts and converting documents. Skip either and those two
+    features just won't fire; nothing else is affected.</li>
+    <li><b>Asks where your vault lives</b> — press Enter and it creates an empty one for
+    you. This folder is the only thing that matters; everything else is disposable and
+    rebuilds from it.</li>
+    <li><b>Asks for two optional API keys</b> (Fathom, Tavily) — skip both if you don't
+    have them. See "what's optional" below.</li>
+    <li><b>Wires itself into your agent</b> — Claude Code, Codex CLI, Antigravity, or
+    Grok Build, whichever you already have. This is the only reason it needs to touch
+    anything outside its own folder, and it's also the entire "interface" — there is
+    no separate app or website to learn.</li>
+    <li><b>Offers to pair the WhatsApp channel</b> (macOS only) — say no and skip it
+    entirely, or say yes and scan a QR code right there in the terminal. Runs on
+    <a class="underline" href="https://github.com/WhiskeySockets/Baileys" target="_blank" rel="noopener">Baileys</a>,
+    an unofficial but widely used library for connecting your own WhatsApp account as a
+    channel — not something built or run by WhatsApp itself. <a class="underline" href="https://claude.ai/code/artifact/6c4ece7e-8611-49a2-ba2f-cfa75a905e63">What it needs, and why it's safe →</a></li>
+    <li><b>Offers to schedule morning/evening digests</b> (macOS only) — a local summary
+    page plus a desktop notification, at times you pick. Say no and run it by hand later
+    any time instead.</li>
+  </ol>
+
+  <h2>Your vault, before and after</h2>
+  <p class="h2-sub">Your vault is your local home — five empty folders at first, filling in only as you actually use it.</p>
+  <p style="font-size:0.86rem; color:var(--muted); margin:-10px 0 20px;">
+    By default it's created at <code>~/dori-vault</code> (the <code>~</code> just
+    means "your home folder") — open it in Finder or Explorer any time and look
+    around. It's not a database you need this tool to read.
+  </p>
+
+  <div class="tree-pair">
+    <div class="tree-card">
+      <div class="tree-label">Right after install</div>
+      <div class="tree">dori-vault/
+├── inbox/
+├── entities/
+│   ├── people/
+│   └── projects/
+├── projects/
+├── yt/
+└── references/
+    └── clippings/</div>
+    </div>
+    <div class="tree-card">
+      <div class="tree-label now">A week of normal use</div>
+      <div class="tree">dori-vault/
+├── inbox/
+├── entities/
+│   ├── people/
+│   │   └── <span class="new">priya-menon.md</span>
+│   └── projects/
+├── projects/
+│   └── <span class="new">acme-nonprofit/</span>
+│       └── meetings/
+├── yt/
+│   └── <span class="new">2026-08-24-the-core-argument.md</span>
+├── finances/
+│   └── <span class="new">trips/denver-conference.md</span>
+└── references/
+    └── clippings/</div>
+    </div>
+  </div>
+  <p style="font-size:0.86rem; color:var(--muted); margin-top:14px;">
+    Every folder on the right came from something you just said in chat — nothing was
+    scaffolded in advance. A new project folder, a new person file, a new trip ledger:
+    each one is created the first time it's actually needed, and only after you'd
+    recognize what it's for. The one exception is <code>inbox/</code> — it's there
+    from the start, and it's where anything ambiguous lands instead of being filed
+    wrong. Ask "anything in my inbox?" any time to triage it.
+  </p>
+
+  <div class="promise" style="margin-top:20px;">
+    <div class="mark">✎</div>
+    <div><b>What's a Markdown file?</b> A <code>.md</code> file is plain text with a
+    few light symbols for structure (<code>#</code> for a heading, <code>-</code> for
+    a bullet) — it opens in any text editor, and pastes cleanly into Word or Google
+    Docs with formatting intact. It's used here because it's the cheapest format for
+    an AI agent to read: no parsing overhead, no proprietary structure, just words —
+    which is also why it's what most AI assistants already read and write natively.
+    <a class="underline" href="https://en.wikipedia.org/wiki/Markdown" target="_blank" rel="noopener">More on Wikipedia →</a></div>
+  </div>
+
+  <div class="promise" style="margin-bottom:28px;">
+    <div class="mark">◆</div>
+    <div><b>One rule:</b> start a message with <b>"Dori"</b> and it steps in. Links and files just work on their own.</div>
+  </div>
+
+  <h2>Try this first</h2>
+  <p class="h2-sub">Seven things to say right after setup — pick whichever matches something you'd genuinely do today.</p>
+
+  <div class="try-grid">
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">"Dori, start a new project for me — here are the files."</p>
+      <p class="why">Say it while attaching whatever you're already working on. It reads what's there and sets up a scoped project folder — search later stays inside that project, so results won't mix with unrelated work.</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">Paste a YouTube link — it reacts on its own, no "Dori" needed</p>
+      <p class="why">You'll have a searchable transcript in your vault in under a minute — it also builds a small local HTML page you can click open and browse, no video download needed.</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">Drag in a PDF or a photo of a receipt — same thing, it just reacts</p>
+      <p class="why">Watch it either convert to clean Markdown, or — if it looks like a bill — get proposed as an expense row. Not sure what it is? It asks, or leaves it in your inbox — "Dori, anything in my inbox?" any time to triage.</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">"Dori, turn this into minutes" <span style="opacity:.6">(with a transcript pasted in)</span></p>
+      <p class="why">Designed to minimize the work you do after a meeting — comes back as Attendees · Topics · Decisions Log · Action Items, each item tagged with who owns it.</p>
+      <p class="why" style="margin-top:8px;">Connect Fathom<sup>*</sup> instead and skip the pasting entirely. <sup>*</sup>Fathom is optional: <a class="underline" href="https://fathom.video" target="_blank" rel="noopener">fathom.video</a>.</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">"Dori, who's Priya Menon from Acme?" <span style="opacity:.6">(she just joined a meeting)</span></p>
+      <p class="why">It looks them up and confirms before filing — and afterward you can ask things like "Dori, how many meetings have I had with Priya?" or "Dori, what did we discuss on August 15th?"</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">"Dori, what do I need to resolve?"</p>
+      <p class="why">Lists what's sitting in your <b>inbox</b> — captures it couldn't confidently file on its own, usually because a new document could belong to more than one project. It's not a bug, it's a safeguard: rather than guess and file something in the wrong place, it holds it here and asks you. Nothing sits there silently — check any time, or just wait until it's mentioned. (Separately, "Dori, what are my pending tasks?" pulls your actual tracked to-dos — a different list from the inbox.)</p></div>
+    </div>
+    <div class="try">
+      <div class="icon">"</div>
+      <div><p class="say">"Dori, what did I decide about ___?" for something you actually discussed recently</p>
+      <p class="why">It'll come back empty the very first time — that's expected. Capture a couple of things, then ask again.</p></div>
+    </div>
+  </div>
+
+  <div class="optional">
+    <span class="tag">Optional, skip freely</span>
+    <div><b><a class="underline" href="https://fathom.video" target="_blank" rel="noopener">Fathom</a></b> lets it pull meeting recordings straight from your account instead
+    of you pasting a transcript. <b><a class="underline" href="https://tavily.com" target="_blank" rel="noopener">Tavily</a></b> lets it look up context on a new meeting
+    attendee. Neither is required for anything else here — every other feature works
+    identically without them.</div>
+  </div>
+
+  <div class="optional">
+    <span class="tag">Optional, skip freely</span>
+    <div>"Dori, we need a brand for ___" sets one up — a company you work for, or one you're
+    building. It starts with just a name and, if you give them, colors and fonts. The part
+    that actually shapes writing is the guidelines underneath: open
+    <code>entities/brands/&lt;slug&gt;.md</code> and write in the voice, positioning, and
+    any real copy worth reusing — nothing fills that in on its own. Once it's there, "write
+    this in the ___ voice" reads it before writing instead of guessing.</div>
+  </div>
+
+  <h2 id="whatsapp">Optional: text it instead of chatting</h2>
+  <p class="h2-sub">Everything above needs a chat open with Claude or Codex. There's one exception.</p>
+  <div class="promise">
+    <div class="mark">✆</div>
+    <div>Pair a <b>spare</b> WhatsApp number (never your real one) and it becomes a second
+    door in — send it a link or a photo and it gets filed the same way, or ask it a real
+    question and it answers <b>read-only</b> from your vault, with nobody at the keyboard.
+    Groups are rejected outright, and a bare link never spends an AI call. Skip this during
+    setup and nothing else here changes. <a class="underline" href="https://claude.ai/code/artifact/6c4ece7e-8611-49a2-ba2f-cfa75a905e63">Full details, and why it's safe →</a></div>
+  </div>
+
+  <h2 id="lockin">No lock-in</h2>
+  <p class="h2-sub">Uninstall it tomorrow, keep everything it made.</p>
+  <div class="promise">
+    <div class="mark">⇥</div>
+    <div>Delete this tool entirely and your vault — every transcript, every minutes
+    doc, every ledger row — is still just a folder of Markdown files on your own
+    disk. Nothing here locks content into a format only it can read. The two open-source
+    tools it leans on for conversion are worth knowing by name, too:
+    <a class="underline" href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener">markitdown</a>
+    (documents → Markdown) and
+    <a class="underline" href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a>
+    (YouTube transcripts) — both widely used, both auditable, neither controlled by this project.</div>
+  </div>
+
+  <div class="cta-row">
+    <div style="font-size:0.92rem; color:var(--body-c); max-width:38ch;">
+      That's everything you need to get moving. The full guide covers every capture
+      type in depth, plus how it stays fast and cheap to run.
+    </div>
+    <a class="btn-amber" href="https://claude.ai/code/artifact/da35dc7a-9f95-4ea2-aaa9-db9cffb8d138">Read the full guide →</a>
+  </div>
+
+</div>
+
+<footer>Dori Mini · github.com/vshrinath/dori-mini</footer>

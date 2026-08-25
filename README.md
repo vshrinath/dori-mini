@@ -91,6 +91,12 @@ breakdown of exactly where — and where not — it spends model tokens.
 Requires Node.js 24+ (uses the built-in `node:sqlite` module).
 
 ```bash
+curl -fsSL https://mini.mydori.app/install.sh | sh
+```
+
+...or clone it directly if you'd rather inspect it first:
+
+```bash
 git clone https://github.com/vshrinath/dori-mini dori
 cd dori
 ./setup.sh

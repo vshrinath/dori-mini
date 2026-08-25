@@ -1,0 +1,291 @@
+<title>How Dori Mini Optimizes Cost</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@1&display=swap');
+
+  :root {
+    --amber: #f0a80e; --amber-soft: #ffd978; --amber-hover: #ffbb1f;
+    --navy: #1a1f4e; --navy-deep: #131737;
+    --canvas: #fcfbf7; --canvas2: #f3f1ea; --card: #ffffff;
+    --ink: #0e1626; --muted: #6b7280; --body-c: #4a5568;
+    --green: #2a9c5c; --coral: #d05436; --blue: #4a6dd8; --purple: #8a54cc;
+    --line: rgba(14,22,38,0.1);
+    --r-md: 16px; --r-lg: 28px;
+    --font-display: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: "Instrument Serif", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
+      --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
+      --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
+    --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
+    --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--amber); color: var(--navy); }
+  a { color: var(--amber); }
+  a.underline { text-decoration: underline; text-underline-offset: 3px; font-size: 0.85rem; display: inline-block; margin-top: 8px; }
+
+  .container { max-width: 780px; margin: 0 auto; padding: 0 24px 110px; }
+  .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 780px; margin: 0 auto; }
+  .wordmark { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; letter-spacing: -0.03em; }
+  .wordmark span { color: var(--amber); }
+  .topnav .back { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
+  .serif-pop { font-family: var(--font-serif); font-style: italic; color: var(--amber); }
+
+  h1 { font-family: var(--font-display); font-weight: 780; letter-spacing: -0.03em; font-size: clamp(2.1rem, 5.2vw, 3.2rem); line-height: 1.05; margin: 0 0 18px; text-wrap: balance; }
+  .lede { font-size: 1.12rem; color: var(--body-c); max-width: 58ch; margin: 0 0 8px; }
+  .lede b { color: var(--ink); }
+
+  .cost-badge {
+    margin: 28px 0 0; padding: 16px 20px; background: rgba(42,156,92,0.1); border: 1px solid rgba(42,156,92,0.3);
+    border-radius: var(--r-md); font-size: 0.94rem; color: var(--body-c); display: flex; gap: 12px; align-items: flex-start;
+  }
+  .cost-badge .mark { color: var(--green); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
+  .cost-badge b { color: var(--ink); }
+
+  h2 { font-family: var(--font-display); font-weight: 740; letter-spacing: -0.02em; font-size: clamp(1.4rem, 3vw, 1.85rem); margin: 60px 0 8px; text-wrap: balance; }
+  .h2-sub { color: var(--muted); font-size: 0.94rem; margin: 0 0 24px; max-width: 58ch; }
+
+  .compare { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 22px; }
+  @media (min-width: 600px) { .compare { grid-template-columns: 1fr 1fr; } }
+  .compare-card { border-radius: var(--r-md); padding: 20px; }
+  .compare-card.bad { background: rgba(208,84,54,0.07); border: 1px solid rgba(208,84,54,0.25); }
+  .compare-card.good { background: rgba(42,156,92,0.07); border: 1px solid rgba(42,156,92,0.25); }
+  .compare-card .tag { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; display: block; }
+  .compare-card.bad .tag { color: var(--coral); }
+  .compare-card.good .tag { color: var(--green); }
+  .compare-card p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.6; }
+  .compare-card p b { color: var(--ink); }
+
+  .stack { display: flex; flex-direction: column; gap: 14px; margin-top: 22px; }
+  .layer { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px 22px; display: grid; grid-template-columns: 46px 1fr; gap: 16px; }
+  .layer .glyph { font-family: var(--font-serif); font-style: italic; font-size: 1.9rem; color: var(--amber); line-height: 1; }
+  .layer h3 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 720; margin: 0 0 6px; }
+  .layer p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.6; }
+  .layer p code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
+  .layer .cost-tag {
+    display: inline-block; margin-top: 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    color: var(--green); background: rgba(42,156,92,0.12); padding: 3px 9px; border-radius: 20px;
+  }
+  .layer .cost-tag.sometimes { color: var(--amber); background: rgba(240,168,14,0.14); }
+
+  .trace { background: var(--navy-deep); border-radius: var(--r-md); overflow: hidden; margin-top: 22px; box-shadow: 0 12px 32px rgba(19,23,55,0.25); }
+  .trace-bar { display: flex; gap: 6px; padding: 12px 16px; background: rgba(255,255,255,0.04); }
+  .trace-bar i { width: 10px; height: 10px; border-radius: 50%; }
+  .trace-bar i:nth-child(1) { background: var(--coral); }
+  .trace-bar i:nth-child(2) { background: var(--amber); }
+  .trace-bar i:nth-child(3) { background: var(--green); }
+  .trace-body { padding: 4px 0 14px; }
+  .trace-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 12px 20px; align-items: baseline; border-top: 1px solid rgba(255,255,255,0.06); }
+  .trace-row:first-child { border-top: none; }
+  .trace-row .what { font-family: var(--font-mono); font-size: 12.5px; color: #d9deee; }
+  .trace-row .cost { font-family: var(--font-mono); font-size: 11px; font-weight: 500; white-space: nowrap; }
+  .trace-row .cost.free { color: #7bd68f; }
+  .trace-row .cost.cheap { color: var(--amber-soft); }
+  .trace-row .cost.main { color: #f0a4a4; }
+
+  .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+  .trust-item p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.55; }
+
+  footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  @media (max-width: 560px) { .layer { grid-template-columns: 1fr; } }
+</style>
+
+<nav class="topnav">
+  <div class="wordmark">dori<span>mini</span></div>
+  <a class="back" href="guide.html">← Back to the guide</a>
+</nav>
+
+<div class="container">
+
+  <h1>Most of this costs<br><span class="serif-pop">nothing to run.</span></h1>
+  <p class="lede">The naive way to build something like this would ask a language model
+  to reason about every routing decision, every search, every "where does this go?"
+  question. <b>Dori Mini is built the other way around</b> — the model gets called
+  only where judgment genuinely can't be avoided.</p>
+
+  <div class="cost-badge">
+    <div class="mark">＊</div>
+    <div><b>No separate bill, either.</b> This isn't a hosted product with its own
+    metering — it's scripts your existing coding agent runs. If you already pay for
+    Claude Code, Codex, or similar, that subscription is the only cost. There's nothing
+    additional to sign up for.</div>
+  </div>
+
+  <h2>The naive version vs. this one</h2>
+  <div class="compare">
+    <div class="compare-card bad">
+      <span class="tag">The expensive default</span>
+      <p>Every capture, every search, every "which folder does this belong in" gets
+      sent to the model to reason about from scratch — including re-reading large
+      chunks of your vault just to answer a simple recall question.</p>
+    </div>
+    <div class="compare-card good">
+      <span class="tag">What this does instead</span>
+      <p>Deterministic code handles routing and search first. The model is reserved
+      for the handful of things that actually need judgment — summarizing, disambiguating,
+      extracting minutes.</p>
+    </div>
+  </div>
+
+  <h2>The stack, layer by layer</h2>
+  <p class="h2-sub">What each piece is, and whether it ever touches a model at all.</p>
+
+  <div class="stack">
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>SQLite + FTS5 full-text index</h3>
+        <p>Every vault file gets indexed into a local <code>node:sqlite</code> database
+        with an FTS5 virtual table (porter-stemmed) the moment it's written. An exact
+        or near-exact recall question — "what did we decide about the pricing page" —
+        is answered by a plain SQL query against this index.</p>
+        <span class="cost-tag">zero model cost</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Local embedding model</h3>
+        <p>When a question is paraphrased rather than exact-match ("that thing about
+        the annual discount"), a small embedding model (<code>Xenova/all-MiniLM-L6-v2</code>,
+        via Transformers.js) runs <b>on your machine</b> to generate a vector and compare
+        it against the vault. No API key, no network call.</p>
+        <span class="cost-tag">zero model cost</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Hybrid search with reciprocal rank fusion</h3>
+        <p>Rather than asking a model to re-rank candidate results, FTS and vector
+        search results are merged with RRF (<code>k=60</code>) — a well-known,
+        deterministic formula for combining two ranked lists into one. This is the
+        "re-ranking" step, and it's arithmetic, not an inference call.</p>
+        <span class="cost-tag">zero model cost</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Deterministic routing scripts</h3>
+        <p>"Is this an expense message?", "which category — food, transport, lodging?",
+        "does this document belong to an existing project?" — all of these are plain
+        code (keyword lists, folder-matching logic) mirroring Dori's own real routing
+        rules, not a model guessing from scratch on every message.</p>
+        <span class="cost-tag">zero model cost</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Two-tier model use for long transcripts</h3>
+        <p>A meeting transcript over roughly 1,500 tokens is compressed first by a
+        small, fast model — cutting filler while keeping every decision, number, and
+        action item verbatim — and only <i>then</i> handed to the larger model for
+        actual extraction. You pay the expensive model to reason, not to read filler.</p>
+        <span class="cost-tag sometimes">cheap model, only past the length threshold</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>No server, no hosted backend</h3>
+        <p>Every piece above runs as a script your agent invokes directly on your
+        machine. There's no backend metering requests, no usage dashboard to check —
+        the only spend that exists is whatever your agent subscription already covers.</p>
+        <span class="cost-tag">zero additional infrastructure</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>A capture, traced end to end</h2>
+  <p class="h2-sub">What actually happens, step by step, when you ask a recall question.</p>
+  <div class="trace">
+    <div class="trace-bar"><i></i><i></i><i></i></div>
+    <div class="trace-body">
+      <div class="trace-row"><span class="what">"What did we decide with the design team?"</span><span class="cost free">— nothing yet</span></div>
+      <div class="trace-row"><span class="what">query-vault.mjs runs a keyword search against the FTS5 index</span><span class="cost free">free</span></div>
+      <div class="trace-row"><span class="what">a strong match is found — Decisions Log + Action Items returned</span><span class="cost free">free</span></div>
+      <div class="trace-row"><span class="what">the model reads the ~200-word result and answers in plain language</span><span class="cost main">main model, ~200 words</span></div>
+    </div>
+  </div>
+  <p style="font-size:0.86rem; color:var(--muted); margin-top:14px;">
+    If the FTS search had come up empty, the next step would be local semantic search —
+    still free — before ever falling back to a broader question to the model. The
+    model only sees the small, already-relevant result, never the whole vault.
+  </p>
+
+  <h2>The open source it's built on</h2>
+  <p class="h2-sub">Nothing above is a proprietary black box — every piece is a widely-used, inspectable project. Check the source yourself.</p>
+  <div class="stack">
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Node.js — <code>node:sqlite</code> &amp; <code>node:crypto</code></h3>
+        <p>The FTS5 index and local database run on Node's own built-in SQLite module —
+        no separate database server, no extra dependency to install for this part.</p>
+        <a class="underline" href="https://github.com/nodejs/node" target="_blank" rel="noopener">github.com/nodejs/node →</a>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Transformers.js (<code>@huggingface/transformers</code>)</h3>
+        <p>Hugging Face's JavaScript port of Transformers — runs the local embedding
+        model entirely on your machine, no API key or network call needed at query time.</p>
+        <a class="underline" href="https://github.com/huggingface/transformers.js" target="_blank" rel="noopener">github.com/huggingface/transformers.js →</a>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>Xenova/all-MiniLM-L6-v2</h3>
+        <p>The actual embedding model weights — a small, well-known sentence-embedding
+        model, loaded once and cached locally by Transformers.js.</p>
+        <a class="underline" href="https://huggingface.co/Xenova/all-MiniLM-L6-v2" target="_blank" rel="noopener">huggingface.co/Xenova/all-MiniLM-L6-v2 →</a>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>yt-dlp</h3>
+        <p>Pulls YouTube captions and the uploader's own chapter markers — the same
+        tool millions of people already use for downloading video/audio.</p>
+        <a class="underline" href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">github.com/yt-dlp/yt-dlp →</a>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="glyph">§</div>
+      <div>
+        <h3>markitdown</h3>
+        <p>Microsoft's open-source converter — turns PDF, DOCX, PPTX, and XLSX files
+        into clean Markdown locally, before anything is read or filed. It reads
+        embedded text directly — a scanned, image-only PDF won't extract text this way
+        (there's no OCR step, no Tesseract dependency). A photographed receipt or bill
+        is instead read directly by the multimodal model itself, which is why that
+        path costs a small amount of model tokens rather than being free.</p>
+        <a class="underline" href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener">github.com/microsoft/markitdown →</a>
+      </div>
+    </div>
+  </div>
+
+  <h2>The promise, restated</h2>
+  <div class="trust">
+    <div class="trust-item"><div class="label">No new subscription</div><p>Piggybacks entirely on the coding agent you already pay for. There's no Dori Mini bill.</p></div>
+    <div class="trust-item"><div class="label">No hidden API spend</div><p>Search, routing, and indexing run locally with zero API calls — the only tokens spent are the ones you'd expect for genuine reasoning.</p></div>
+    <div class="trust-item"><div class="label">Inspectable, not a black box</div><p>Every script here is plain, short, and readable — you can see exactly what ran and why.</p></div>
+  </div>
+
+  <footer><span>Dori Mini</span><span>github.com/vshrinath/dori-mini</span></footer>
+</div>

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dori Mini — memory for the agent you already use</title>
+<meta name="description" content="A local, portable mirror of Dori's capture-routing, search, and inbox logic — plain Node.js scripts, no server, no new subscription.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@1&display=swap');
+
+  :root {
+    --amber: #f0a80e;
+    --amber-soft: #ffd978;
+    --amber-hover: #ffbb1f;
+    --navy: #1a1f4e;
+    --navy-deep: #131737;
+    --canvas: #fcfbf7;
+    --canvas2: #f3f1ea;
+    --ink: #0e1626;
+    --muted: #6b7280;
+    --body-c: #4a5568;
+    --green: #2a9c5c;
+    --coral: #d05436;
+    --card: #ffffff;
+    --line: rgba(14,22,38,0.1);
+    --r-md: 16px;
+    --r-lg: 28px;
+    --font-display: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: "Instrument Serif", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
+      --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
+      --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
+    --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
+    --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--amber); color: var(--navy); }
+  a { color: var(--amber); text-decoration: none; }
+  a.underline { text-decoration: underline; text-underline-offset: 3px; }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 0 24px 100px; }
+
+  .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 760px; margin: 0 auto; }
+  .wordmark { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--ink); letter-spacing: -0.03em; }
+  .wordmark span { color: var(--amber); }
+  .topnav .navlinks { display: flex; gap: 20px; }
+  .topnav a.navlink { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
+  .topnav a.navlink:hover { color: var(--amber); }
+
+  .serif-pop { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--amber); }
+
+  .eyebrow {
+    font-family: var(--font-display); font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--green);
+    display: flex; align-items: center; gap: 8px; margin: 40px 0 18px;
+  }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+  h1 {
+    font-family: var(--font-display); font-weight: 780; letter-spacing: -0.03em;
+    font-size: clamp(2.1rem, 5.2vw, 3.2rem); line-height: 1.06; margin: 0 0 18px; text-wrap: balance;
+  }
+  .lede { font-size: 1.15rem; color: var(--body-c); max-width: 56ch; margin: 0 0 8px; }
+  .lede b { color: var(--ink); font-weight: 700; }
+
+  .term {
+    margin-top: 32px;
+    background: var(--navy-deep); border-radius: var(--r-md); overflow: hidden;
+    box-shadow: 0 12px 32px rgba(19,23,55,0.25);
+  }
+  .term-bar { display: flex; gap: 6px; padding: 12px 16px; background: rgba(255,255,255,0.04); }
+  .term-bar i { width: 10px; height: 10px; border-radius: 50%; }
+  .term-bar i:nth-child(1) { background: var(--coral); }
+  .term-bar i:nth-child(2) { background: var(--amber); }
+  .term-bar i:nth-child(3) { background: var(--green); }
+  .term pre {
+    margin: 0; padding: 18px 20px 22px; font-family: var(--font-mono); font-size: 13px;
+    line-height: 1.8; color: #d9deee; overflow-x: auto;
+  }
+  .term .dim { color: #8590ab; }
+  .copy-hint { margin: 10px 2px 0; font-size: 0.82rem; color: var(--muted); }
+
+  h2 {
+    font-family: var(--font-display); font-weight: 740; letter-spacing: -0.02em;
+    font-size: clamp(1.4rem, 3vw, 1.9rem); margin: 64px 0 8px; text-wrap: balance;
+  }
+  .h2-sub { color: var(--muted); font-size: 0.95rem; margin: 0 0 24px; max-width: 56ch; }
+
+  .flow { display: grid; gap: 10px; margin-top: 20px; }
+  .flow-row {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 14px 18px; display: flex; align-items: center; gap: 12px; font-size: 0.95rem;
+  }
+  .flow-row .from { color: var(--body-c); }
+  .flow-row .arrow { color: var(--amber); font-family: var(--font-display); font-weight: 700; }
+  .flow-row .to { color: var(--ink); font-weight: 600; }
+
+  .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
+  .trust-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px 18px; }
+  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+  .trust-item p { margin: 0; font-size: 0.87rem; color: var(--body-c); line-height: 1.55; }
+
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 20px; }
+  .doc-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 18px 20px; display: block;
+  }
+  .doc-card .t { font-family: var(--font-display); font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .doc-card .d { font-size: 0.85rem; color: var(--muted); }
+  .doc-card:hover { border-color: var(--amber); }
+
+  .cta-row { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .btn-amber {
+    font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; color: var(--navy);
+    background: var(--amber); padding: 12px 22px; border-radius: 999px; display: inline-block;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.18); transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  .btn-amber:hover { background: var(--amber-hover); transform: translateY(-2px) rotate(-1deg); box-shadow: 0 8px 20px rgba(240,168,14,0.4); }
+
+  footer { max-width: 760px; margin: 0 auto; padding: 30px 24px 40px; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wordmark">dori<span>mini</span></div>
+  <div class="navlinks">
+    <a class="navlink" href="/docs/getting-started.html">Get started</a>
+    <a class="navlink" href="https://github.com/vshrinath/dori-mini" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="eyebrow"><span class="dot"></span> Unofficial · local · yours</div>
+  <h1>Memory for the agent<br>you already have — <span class="serif-pop">not another one to run.</span></h1>
+  <p class="lede">
+    Dori Mini is a local, portable mirror of <a class="underline" href="https://mydori.app" target="_blank" rel="noopener">Dori</a>'s
+    capture-routing, search, and inbox logic — plain Node.js scripts your existing
+    <b>Claude Code, Codex CLI, or Antigravity</b> session can call directly. <b>No server, no account, no new subscription.</b>
+  </p>
+
+  <div class="term">
+    <div class="term-bar"><i></i><i></i><i></i></div>
+    <pre><span class="dim">$</span> curl -fsSL https://mini.mydori.app/install.sh | sh</pre>
+  </div>
+  <p class="copy-hint">Reads before it runs anything — clones the repo, then hands off to its own <code>setup.sh</code> for the rest.</p>
+
+  <div class="trust">
+    <div class="trust-item"><div class="label">No new subscription</div><p>Runs on the Claude/Codex/etc. plan you already pay for.</p></div>
+    <div class="trust-item"><div class="label">No hidden API spend</div><p>Search, routing, and indexing run locally — tokens only spent on real reasoning.</p></div>
+    <div class="trust-item"><div class="label">Plain files, yours</div><p>Everything it writes is Markdown on your own machine. No lock-in.</p></div>
+  </div>
+
+  <h2>What it actually does</h2>
+  <p class="h2-sub">Not a guess at what Dori does — every script mirrors specific real source.</p>
+  <div class="flow">
+    <div class="flow-row"><span class="from">YouTube link</span><span class="arrow">→</span><span class="to">searchable transcript</span></div>
+    <div class="flow-row"><span class="from">PDF, DOCX, receipt photo</span><span class="arrow">→</span><span class="to">filed Markdown, or an expense row</span></div>
+    <div class="flow-row"><span class="from">Pasted meeting transcript</span><span class="arrow">→</span><span class="to">attendees, decisions, action items</span></div>
+    <div class="flow-row"><span class="from">"What did we agree with X?"</span><span class="arrow">→</span><span class="to">an answer, linked to source</span></div>
+  </div>
+
+  <h2>Read this next</h2>
+  <div class="doc-grid">
+    <a class="doc-card" href="/docs/getting-started.html"><div class="t">Getting started</div><div class="d">What the install actually does, and seven things to try first.</div></a>
+    <a class="doc-card" href="/docs/guide.html"><div class="t">Full guide</div><div class="d">Every capture type in depth, plus how it stays cheap to run.</div></a>
+    <a class="doc-card" href="/docs/cost.html"><div class="t">Cost breakdown</div><div class="d">Exactly where — and where not — it spends model tokens.</div></a>
+    <a class="doc-card" href="/docs/whatsapp.html"><div class="t">WhatsApp channel</div><div class="d">Optional: text it instead of chatting.</div></a>
+  </div>
+
+  <div class="cta-row">
+    <div style="color:var(--muted); font-size:0.9rem;">Requires Node.js 24+. Works alongside a Dori vault, or an empty one you create fresh.</div>
+    <a class="btn-amber" href="https://github.com/vshrinath/dori-mini" target="_blank" rel="noopener">View on GitHub →</a>
+  </div>
+
+</div>
+
+<footer>dori mini — unofficial, not affiliated with or supported by the Dori team beyond sharing an author. github.com/vshrinath/dori-mini</footer>
+
+</body>
+</html>
