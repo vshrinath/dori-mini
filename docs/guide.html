@@ -98,7 +98,8 @@
   .tech-item code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 5px; border-radius: 4px; }
 
   .tool-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-  .tool-chip { font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; }
+  .tool-chip { font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; color: var(--ink); text-decoration: none; }
+  a.tool-chip:hover { border-color: var(--amber); color: var(--amber); }
 
   .optional { margin-top: 20px; padding: 16px 20px; border: 1.5px dashed var(--line); border-radius: var(--r-md); font-size: 0.9rem; color: var(--body-c); }
   .optional .tag { display: inline-block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral); background: rgba(208,84,54,0.12); padding: 3px 9px; border-radius: 20px; margin-bottom: 8px; }
@@ -330,10 +331,10 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
   <h2 id="tools">Set up once, works everywhere</h2>
   <p class="h2-sub">The install wires it into whichever of these you already use — no separate setup per tool, and no separate UI of its own.</p>
   <div class="tool-row">
-    <div class="tool-chip">Claude Code</div>
-    <div class="tool-chip">Codex CLI</div>
-    <div class="tool-chip">Antigravity</div>
-    <div class="tool-chip">Grok Build</div>
+    <a class="tool-chip" href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a>
+    <a class="tool-chip" href="https://developers.openai.com/codex/cli/" target="_blank" rel="noopener">Codex CLI</a>
+    <a class="tool-chip" href="https://antigravity.google/" target="_blank" rel="noopener">Antigravity</a>
+    <a class="tool-chip" href="https://x.ai/grok" target="_blank" rel="noopener">Grok Build</a>
     <div class="tool-chip">Plain terminal</div>
   </div>
   <p style="font-size:0.9rem; color:var(--body-c); margin-top:16px; max-width:58ch;">
