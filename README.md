@@ -19,7 +19,12 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
 - **`reindex-vault.mjs`** — full-text search cache (SQLite FTS5), schema-matched to
   Dori's own `vault_documents` table.
 - **`semantic-index.mjs`** — local embeddings (no API key, runs via Transformers.js) +
-  hybrid vector/FTS search with the same RRF fusion Dori's vector store uses.
+  hybrid vector/FTS search with the same RRF fusion Dori's vector store uses. A full
+  reindex also prunes rows for files no longer on disk, mirroring dori-engine's
+  `reconcileSearchIndex()`.
+- **`sync-vault.mjs`** — `git pull` on the vault repo, then a full reindex of both the
+  FTS and semantic caches — mirrors dori-engine's git-sync-triggered reconcile, for when
+  someone else's push deletes or edits files your local index doesn't know about yet.
 - **`apply-template.mjs`** — additive-only project folder scaffolding, mirroring
   `projects.apply_template`.
 - **`self-store.mjs`** — your own profile (name, role, org, projects), stored as a person

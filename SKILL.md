@@ -315,6 +315,14 @@ node ~/.claude/skills/dori/semantic-index.mjs search "<natural language query>" 
 ```
 First run per session pays a one-time model load (~a few seconds); do a full reindex (`... index` with no path) only after bulk external changes to the vault, not per-file. For a specific meeting or person, prefer `query-vault.mjs last-meeting` before semantic search.
 
+A full reindex (no path argument) also prunes: any indexed row whose file no longer exists on disk gets deleted from both the FTS and vector tables, mirroring dori-engine's `reconcileSearchIndex()` — a single-file reindex never prunes, same rule `reindex-vault.mjs` already follows.
+
+If the vault is a git repo someone else also pushes to, external changes (a file deleted or edited by a `git pull`) never go through this router's own write path, so nothing else notices them. Run this after every pull instead of a bare `git pull`:
+```bash
+node ~/.claude/skills/dori/sync-vault.mjs
+```
+Pulls the vault repo (no-op if it isn't a git repo), then runs a full `reindex-vault.mjs` and a full `semantic-index.mjs index` — mirrors dori-engine's `git-sync.ts`, which calls `maybeReconcileVaultSearchIndex()` after every successful pull for the same reason.
+
 ## Mini-site (browse projects/, yt/, and structured records locally)
 
 ```bash

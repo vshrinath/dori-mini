@@ -209,6 +209,29 @@ async function cmdIndex(onlyFile) {
   const insertVector = db.prepare('INSERT INTO search_vectors (chunk_id, embedding) VALUES (?, ?)');
   const insertFts = db.prepare('INSERT INTO search_fts (text, chunk_id) VALUES (?, ?)');
   const setFtsRowid = db.prepare('UPDATE search_chunks SET fts_rowid = ? WHERE chunk_id = ?');
+  const deleteFileMtime = db.prepare('DELETE FROM indexed_files WHERE source_path = ?');
+
+  // Mirrors dori-engine's reconcileSearchIndex (src/vector/reconcile.ts): a full run
+  // (no onlyFile) sees every current file, so it's safe to prune rows for paths no
+  // longer on disk — deleted, moved, or removed by a git pull that never went through
+  // this script's own write path. search_vectors cascades on chunk delete (FK ON DELETE
+  // CASCADE), so no separate vector cleanup is needed. A single-file run has no such
+  // full picture, so it never prunes — same rule reindex-vault.mjs already follows.
+  let pruned = 0;
+  if (!onlyFile) {
+    const currentRelPaths = new Set(targets.map((f) => relative(VAULT_ROOT, f)));
+    const staleRelPaths = db.prepare('SELECT source_path FROM indexed_files').all()
+      .map((r) => r.source_path)
+      .filter((p) => !currentRelPaths.has(p));
+    for (const relPath of staleRelPaths) {
+      for (const { fts_rowid } of getFtsRowidsForPath.all(relPath, VAULT_ID)) {
+        deleteFtsByRowid.run(fts_rowid);
+      }
+      deleteChunksForPath.run(relPath, VAULT_ID);
+      deleteFileMtime.run(relPath);
+      pruned++;
+    }
+  }
 
   let filesIndexed = 0, filesSkipped = 0, chunksWritten = 0;
   for (const file of targets) {
@@ -246,7 +269,7 @@ async function cmdIndex(onlyFile) {
     setFileMtime.run(relPath, mtimeMs);
     filesIndexed++;
   }
-  console.log(`Indexed ${filesIndexed} files (${chunksWritten} chunks), skipped ${filesSkipped} unchanged — db: ${DB_PATH}`);
+  console.log(`Indexed ${filesIndexed} files (${chunksWritten} chunks), skipped ${filesSkipped} unchanged, pruned ${pruned} stale files — db: ${DB_PATH}`);
 }
 
 async function cmdSearch(query, limit) {
