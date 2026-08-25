@@ -103,13 +103,15 @@ cd dori
 ```
 
 `setup.sh` will:
-1. Check your Node version.
+1. Install Node 24+ automatically if you don't have it (via `nvm`, `brew`, or `apt`).
 2. Run `npm install` (pulls in local embedding model support — a few hundred MB, one-time).
-3. Check for `yt-dlp` and `markitdown`, and offer to install them (via `brew` or `pip3`)
-   if you want YouTube/document capture. Everything else works without them.
-4. Ask for your Dori vault path — or create an empty one if you don't have one yet.
+3. Install `yt-dlp` and `markitdown` automatically if missing (via `brew` or `pip3`), for
+   YouTube/document capture.
+4. Ask for your Dori vault path (defaults to creating a fresh one) and your name (required
+   — used so meeting notes can recognize and skip you when matching attendees).
 5. Wire itself into whichever of Claude Code / Codex CLI / Grok Build you have installed,
    so those tools discover it automatically instead of you having to invoke it by hand.
+6. On macOS only: offer WhatsApp pairing and automatic digest scheduling, both optional.
 
 ## Usage
 

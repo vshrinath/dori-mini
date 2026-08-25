@@ -1,36 +1,33 @@
 #!/usr/bin/env bash
-# Bootstraps dori for a new machine: checks/reports dependencies,
-# installs the one npm dependency, offers to install the two external CLI
-# tools if missing, and creates an empty vault skeleton if the user doesn't
-# have a Dori vault yet.
+# Bootstraps dori for a new machine, minimal prompts: auto-installs Node 24+, npm deps,
+# and yt-dlp/markitdown if missing (no y/n gate — just picks the best available method),
+# asks only for a vault path (defaulted) and a name (required, for meeting-attendee
+# matching), and creates an empty vault skeleton if the user doesn't have one yet.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 echo "== dori setup =="
 echo
 
-# --- Node.js 24+ (required for node:sqlite) ---
+# --- Node.js 24+ (required for node:sqlite) --- no prompt: just get it the best way available.
 node_major() { node --version 2>/dev/null | sed 's/^v//' | cut -d. -f1 || echo 0; }
 NODE_MAJOR=$(node_major)
 if [ "${NODE_MAJOR:-0}" -lt 24 ] 2>/dev/null; then
-  echo "✗ Node.js 24+ required (found: $(node --version 2>/dev/null || echo 'not installed'))."
+  echo "Node.js 24+ required (found: $(node --version 2>/dev/null || echo 'not installed')) — installing..."
   if [ -s "$HOME/.nvm/nvm.sh" ]; then
-    read -r -p "  Install with nvm ('nvm install 24 && nvm use 24')? [y/N] " reply
-    if [[ "$reply" =~ ^[Yy]$ ]]; then
-      # shellcheck disable=SC1091
-      . "$HOME/.nvm/nvm.sh"
-      nvm install 24 && nvm use 24
-    fi
+    # shellcheck disable=SC1091
+    . "$HOME/.nvm/nvm.sh"
+    nvm install 24 && nvm use 24
   elif command -v brew >/dev/null 2>&1; then
-    read -r -p "  Install with 'brew install node'? [y/N] " reply
-    if [[ "$reply" =~ ^[Yy]$ ]]; then
-      brew install node
-    fi
+    brew install node
+  elif command -v apt-get >/dev/null 2>&1; then
+    curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+    sudo apt-get install -y nodejs
   fi
   NODE_MAJOR=$(node_major)
   if [ "${NODE_MAJOR:-0}" -lt 24 ] 2>/dev/null; then
-    echo "  Still need Node 24+ — install nvm (https://github.com/nvm-sh/nvm) or from"
-    echo "  https://nodejs.org, then re-run this script."
+    echo "  Couldn't install Node 24+ automatically — install it from https://nodejs.org"
+    echo "  (or nvm: https://github.com/nvm-sh/nvm), then re-run this script."
     exit 1
   fi
 fi
@@ -43,34 +40,29 @@ echo "runtime, a few hundred MB, one-time)..."
 npm install --silent
 echo "✓ npm dependencies installed"
 
-# --- external CLI tools ---
-check_or_offer() {
+# --- external CLI tools --- no prompt: install automatically via whichever of
+# brew/pip3 is actually present (pip3 is the one most non-coder Mac/Linux setups have
+# even without Homebrew, since Python usually ships preinstalled).
+install_tool() {
   local cmd="$1" pip_pkg="$2" brew_pkg="$3" purpose="$4"
   if command -v "$cmd" >/dev/null 2>&1; then
     echo "✓ $cmd found ($purpose)"
     return
   fi
-  echo "✗ $cmd not found ($purpose)"
-  local install_cmd=""
+  echo "$cmd not found ($purpose) — installing..."
   if command -v brew >/dev/null 2>&1; then
-    install_cmd="brew install $brew_pkg"
+    brew install "$brew_pkg"
   elif command -v pip3 >/dev/null 2>&1; then
-    install_cmd="pip3 install --user $pip_pkg"
-  fi
-  if [ -n "$install_cmd" ]; then
-    read -r -p "  Install with '$install_cmd'? [y/N] " reply
-    if [[ "$reply" =~ ^[Yy]$ ]]; then
-      eval "$install_cmd"
-    else
-      echo "  Skipped — $cmd-dependent features won't work until installed."
-    fi
+    pip3 install --user "$pip_pkg"
   else
     echo "  No brew or pip3 found — install $cmd manually to use YouTube/document capture."
+    return
   fi
+  command -v "$cmd" >/dev/null 2>&1 && echo "✓ $cmd installed" || echo "  Install may need a new shell to be on PATH — re-run this script after."
 }
 echo
-check_or_offer yt-dlp yt-dlp yt-dlp "YouTube transcript/download"
-check_or_offer markitdown markitdown markitdown "document → Markdown conversion"
+install_tool yt-dlp yt-dlp yt-dlp "YouTube transcript/download"
+install_tool markitdown markitdown markitdown "document → Markdown conversion"
 
 # --- vault path ---
 echo
@@ -87,7 +79,13 @@ else
   echo "✓ using existing vault at $VAULT_PATH"
 fi
 
-read -r -p "Your name, as it appears in meeting attendee lists (used to skip yourself when matching attendees, optional): " SELF_NAME
+echo
+echo "Your name, exactly as it shows up in meeting attendee lists — used so meeting notes"
+echo "can automatically recognize and skip you when matching who's who."
+SELF_NAME=""
+while [ -z "$SELF_NAME" ]; do
+  read -r -p "Your name: " SELF_NAME
+done
 
 # --- optional API keys (Fathom sync, Tavily person-research) ---
 echo
@@ -164,6 +162,9 @@ if [ "$(uname)" = "Darwin" ]; then
     echo "  Skipped — set it up later: node listen-whatsapp.mjs --pair-only, then see"
     echo "  whatsapp-listener.plist.template to run it in the background."
   fi
+else
+  echo
+  echo "  (WhatsApp channel needs launchd — macOS only, skipped on $(uname))"
 fi
 
 # --- morning/evening digest schedule (macOS only — launchd) ---
@@ -203,6 +204,8 @@ if [ "$(uname)" = "Darwin" ]; then
     echo "  Skipped — run 'node digest.mjs morning' by hand any time, or install it later"
     echo "  yourself following digest-schedule.plist.template."
   fi
+else
+  echo "  (Automatic digest scheduling needs launchd — macOS only, skipped on $(uname))"
 fi
 
 echo
