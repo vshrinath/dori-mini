@@ -136,19 +136,20 @@
 <nav class="topnav">
   <div class="wordmark">dori<span>mini</span></div>
   <div class="navlinks">
-    <a class="navlink" href="/docs/getting-started.html">Get started</a>
+    <a class="navlink" href="/docs/getting-started">Get started</a>
     <a class="navlink" href="https://github.com/vshrinath/dori-mini" target="_blank" rel="noopener">GitHub</a>
   </div>
 </nav>
 
 <div class="container">
 
-  <div class="eyebrow"><span class="dot"></span> Unofficial · local · yours</div>
+  <div class="eyebrow"><span class="dot"></span> Local · frugal by design · yours</div>
   <h1>Memory for the agent<br>you already have — <span class="serif-pop">not another one to run.</span></h1>
   <p class="lede">
     Dori Mini is a local, portable mirror of <a class="underline" href="https://mydori.app" target="_blank" rel="noopener">Dori</a>'s
     capture-routing, search, and inbox logic — plain Node.js scripts your existing
-    <b>Claude Code, Codex CLI, or Antigravity</b> session can call directly. <b>No server, no account, no new subscription.</b>
+    <b>Claude Code, Codex CLI, or Antigravity</b> session can call directly. No server, no account,
+    no new subscription.
   </p>
 
   <div class="term">
@@ -156,12 +157,6 @@
     <pre><span class="dim">$</span> curl -fsSL https://mini.mydori.app/install.sh | sh</pre>
   </div>
   <p class="copy-hint">Reads before it runs anything — clones the repo, then hands off to its own <code>setup.sh</code> for the rest.</p>
-
-  <div class="trust">
-    <div class="trust-item"><div class="label">No new subscription</div><p>Runs on the Claude/Codex/etc. plan you already pay for.</p></div>
-    <div class="trust-item"><div class="label">No hidden API spend</div><p>Search, routing, and indexing run locally — tokens only spent on real reasoning.</p></div>
-    <div class="trust-item"><div class="label">Plain files, yours</div><p>Everything it writes is Markdown on your own machine. No lock-in.</p></div>
-  </div>
 
   <h2>What it actually does</h2>
   <p class="h2-sub">Not a guess at what Dori does — every script mirrors specific real source.</p>
@@ -172,12 +167,20 @@
     <div class="flow-row"><span class="from">"What did we agree with X?"</span><span class="arrow">→</span><span class="to">an answer, linked to source</span></div>
   </div>
 
+  <h2>Yours, and cheap to run</h2>
+  <p class="h2-sub">The two things worth knowing before you ask "how does this not cost a fortune."</p>
+  <div class="trust">
+    <div class="trust-item"><div class="label">Portable across agents</div><p>Everything it captures lives as plain Markdown in your own vault — not inside any one chat history. Switch from Claude to Codex to whatever's next and the memory comes with you.</p></div>
+    <div class="trust-item"><div class="label">Frugal by design</div><p>Filing, search, and routing run as deterministic local code — SQLite full-text search on your machine, no API call. The model only fires where judgment actually earns its keep.</p></div>
+  </div>
+  <p class="copy-hint"><a class="underline" href="/docs/cost">The full breakdown of where — and where not — it spends tokens →</a></p>
+
   <h2>Read this next</h2>
   <div class="doc-grid">
-    <a class="doc-card" href="/docs/getting-started.html"><div class="t">Getting started</div><div class="d">What the install actually does, and seven things to try first.</div></a>
-    <a class="doc-card" href="/docs/guide.html"><div class="t">Full guide</div><div class="d">Every capture type in depth, plus how it stays cheap to run.</div></a>
-    <a class="doc-card" href="/docs/cost.html"><div class="t">Cost breakdown</div><div class="d">Exactly where — and where not — it spends model tokens.</div></a>
-    <a class="doc-card" href="/docs/whatsapp.html"><div class="t">WhatsApp channel</div><div class="d">Optional: text it instead of chatting.</div></a>
+    <a class="doc-card" href="/docs/getting-started"><div class="t">Getting started</div><div class="d">What the install actually does, and seven things to try first.</div></a>
+    <a class="doc-card" href="/docs/guide"><div class="t">Full guide</div><div class="d">Every capture type in depth, plus how it stays cheap to run.</div></a>
+    <a class="doc-card" href="/docs/cost"><div class="t">Cost breakdown</div><div class="d">Exactly where — and where not — it spends model tokens.</div></a>
+    <a class="doc-card" href="/docs/whatsapp"><div class="t">WhatsApp channel</div><div class="d">Optional: text it instead of chatting.</div></a>
   </div>
 
   <div class="cta-row">
@@ -187,7 +190,7 @@
 
 </div>
 
-<footer>dori mini — unofficial, not affiliated with or supported by the Dori team beyond sharing an author. github.com/vshrinath/dori-mini</footer>
+<footer>dori mini — github.com/vshrinath/dori-mini</footer>
 
 </body>
 </html>
