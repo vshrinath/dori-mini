@@ -144,6 +144,20 @@ cd dori
    so those tools discover it automatically instead of you having to invoke it by hand.
 6. On macOS only: offer WhatsApp pairing and automatic digest scheduling, both optional.
 
+## Updating
+
+`install.sh` only handles a fresh install (it refuses to run if `~/dori` already exists) —
+to get new scripts/fixes into an existing install:
+```bash
+cd ~/dori   # or wherever you installed it
+./update.sh
+```
+Refuses to run over uncommitted local changes rather than silently overwriting them,
+`git pull --ff-only`s the rest, and re-runs `npm install` only if `package.json` actually
+changed. To newly opt into a launchd-scheduled feature that showed up in an update
+(WhatsApp, digests, the watched inbox), re-run `./setup.sh` — safe, but it re-asks every
+prompt from scratch, so re-enter your real vault path rather than hitting Enter through it.
+
 ## Usage
 
 Source the generated config once per shell (or add it to your shell profile):
