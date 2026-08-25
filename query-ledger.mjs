@@ -111,12 +111,14 @@ function totals(ledger) {
   };
 }
 
-function loadLedgers() {
+export function loadLedgers() {
   const out = [];
   for (const dir of [TRIPS_DIR, REIMBURSEMENTS_DIR]) {
     if (!existsSync(dir)) continue;
     for (const f of readdirSync(dir)) {
-      if (!f.endsWith('.md')) continue;
+      // generated packages (close-trip.mjs) carry the same trip/threadId
+      // frontmatter as their source ledger but no table — skip them.
+      if (!f.endsWith('.md') || f.endsWith('-reimbursement-package.md')) continue;
       const relPath = `finances/${dir === TRIPS_DIR ? 'trips' : 'reimbursements'}/${f}`;
       const raw = readFileSync(join(dir, f), 'utf-8');
       const threadId = (raw.match(/^threadId:\s*(.+)$/m) || [])[1]?.trim();

@@ -66,7 +66,9 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   relationship (`org-store.mjs`), and related vault docs — a "what do I bring into this
   conversation" brief, not just a bio.
 - **`build-site.mjs` / `serve-site.mjs`** — a minimal local mini-site to browse your
-  `projects/`/`yt/` vault content in a browser.
+  `projects/`/`yt/` vault content in a browser, plus (`build-tables.mjs`, built
+  automatically alongside) read-only tables of people, orgs, brands, tasks, and trip
+  ledgers — visual patterns borrowed from dori-portal's real UI, no new database.
 - **`notify-desktop.mjs`** — macOS desktop notification (`osascript`, no dependency).
 - **`send-whatsapp.mjs` / `listen-whatsapp.mjs`** — a self-chat WhatsApp channel (via
   Baileys, on a dedicated secondary number). Outbound sends a message; the listener

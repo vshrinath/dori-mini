@@ -2,7 +2,7 @@
 // Read-only view over dori-engine's task store (same files the `tasks.list` /
 // `tasks.create_many` MCP actions read/write): <vault>/.dori/tasks/records/*.json.
 //
-// Usage: node list-tasks.mjs [status] [--real]
+// Usage: node list-tasks.mjs [status|all] [--real]
 //   --real   drop e2e/debug/probe fixture tasks left over from test runs
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -27,7 +27,7 @@ export function listTasks(status = 'open', { real = false } = {}) {
   return entries
     .filter((e) => e.isFile() && e.name.endsWith('.json'))
     .map((e) => JSON.parse(readFileSync(join(TASKS_DIR, e.name), 'utf8')))
-    .filter((t) => t.status === status)
+    .filter((t) => status === 'all' || t.status === status)
     .filter((t) => !real || !isFixture(t))
     .sort((a, b) => (a.due || a.dueDate || '9999').localeCompare(b.due || b.dueDate || '9999'));
 }

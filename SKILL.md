@@ -315,13 +315,15 @@ node ~/.claude/skills/dori/semantic-index.mjs search "<natural language query>" 
 ```
 First run per session pays a one-time model load (~a few seconds); do a full reindex (`... index` with no path) only after bulk external changes to the vault, not per-file. For a specific meeting or person, prefer `query-vault.mjs last-meeting` before semantic search.
 
-## Mini-site (browse projects/ and yt/ locally)
+## Mini-site (browse projects/, yt/, and structured records locally)
 
 ```bash
 node ~/.claude/skills/dori/build-site.mjs
 node ~/.claude/skills/dori/serve-site.mjs
 ```
 Then open `http://localhost:8420/`. Serve it — do not open `_site/index.html` via `file://`: YouTube's embed player validates the page's origin/referrer on every load, and `file://` sends neither, which YouTube rejects with "Error 153: Video player configuration error" regardless of query params. Any http(s) origin, including localhost, satisfies the check.
+
+`build-site.mjs` also builds a **Data** section (`build-tables.mjs`, called automatically — no separate command) — read-only HTML tables over people, orgs, brands, tasks, and trip ledgers, at `_site/data/`. Same rule as the rest of the mini-site: nothing here writes back, every row reads straight from the same files the CLI scripts already use. Visual patterns (plain text-first tables, an outlined status pill rather than color-coded, "Waiting on X" as subtext, an invitational empty state instead of "No X found") are borrowed from dori-portal's own real UI (`accounts-table.tsx`, `tasks-workspace.tsx`, `finance-ledger.tsx`, `empty-state.tsx`), not invented.
 
 ## Inbox and clarifications
 

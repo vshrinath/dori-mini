@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 
 import { join, relative, basename } from 'node:path';
 import { homedir } from 'node:os';
 import { renderMarkdownToHtml, parseFrontmatter, escapeHtml, wrapStandalonePage } from './render-html.mjs';
+import { buildTables } from './build-tables.mjs';
 
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
 const SITE_ROOT = join(VAULT_ROOT, '_site');
@@ -156,6 +157,9 @@ function main() {
     total += buildDir(section, '', [home]);
     sectionLinks.push(`<li><a href="${section.key}/index.html">${escapeHtml(section.rootLabel)}</a></li>`);
   }
+
+  buildTables();
+  sectionLinks.push(`<li><a href="data/index.html">Data (people, orgs, brands, tasks, trips)</a></li>`);
 
   const landing = wrapStandalonePage(
     { title: 'Vault' },
