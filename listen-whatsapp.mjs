@@ -26,6 +26,7 @@ import makeWASocket, { useMultiFileAuthState, downloadMediaMessage, DisconnectRe
 import qrcodeTerminal from 'qrcode-terminal';
 import pino from 'pino';
 import { canonicalOutputPath, VAULT_ROOT } from './route-destination.mjs';
+import { answerMessage, needsReply } from './answer-whatsapp.mjs';
 
 const SESSION_DIR = join(homedir(), '.dori', 'whatsapp-session');
 const PROCESSED_IDS_FILE = join(SESSION_DIR, 'processed-ids.json');
@@ -106,6 +107,16 @@ async function handleMessage(sock, msg, processedIds) {
 
   if (!text && !media) return; // nothing capturable (reactions, status updates, etc.)
   await fileCapture({ text, urls, sock, msg, media });
+
+  const chatJid = msg.key.remoteJid;
+  if (needsReply(text, urls)) {
+    try {
+      const reply = await answerMessage(chatJid, text);
+      if (reply) await sock.sendMessage(chatJid, { text: reply });
+    } catch (err) {
+      console.error(`Reply failed for ${id}: ${err.message}`); // filing above already succeeded either way
+    }
+  }
 }
 
 async function connect({ pairOnly = false } = {}) {
