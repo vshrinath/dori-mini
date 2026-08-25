@@ -20,7 +20,12 @@ if [ -d "$DEST" ]; then
 fi
 
 echo "Cloning $REPO to $DEST ..."
-git clone --depth 1 "$REPO" "$DEST"
-
+# --no-cone sparse-checkout excludes site/ — that's this landing page and its own copy of
+# this script, not something an install needs to carry around.
+git clone --depth 1 --filter=blob:none --no-checkout "$REPO" "$DEST"
 cd "$DEST"
+git sparse-checkout init --no-cone
+git sparse-checkout set --no-cone '/*' '!/site'
+git checkout main
+
 exec ./setup.sh
