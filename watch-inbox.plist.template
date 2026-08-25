@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd job for watch-inbox.mjs — keeps the dropbox-folder watcher running in
+  the background and restarts it if it crashes (KeepAlive), same role
+  whatsapp-listener.plist.template plays for listen-whatsapp.mjs.
+
+  Install:
+    cp watch-inbox.plist.template ~/Library/LaunchAgents/com.dori.watch-inbox.plist
+    # edit the __PLACEHOLDER__ paths below first
+    launchctl load ~/Library/LaunchAgents/com.dori.watch-inbox.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.dori.watch-inbox.plist
+    rm ~/Library/LaunchAgents/com.dori.watch-inbox.plist
+
+  Logs: ~/.dori/watch-inbox.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.dori.watch-inbox</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE_PATH__</string>
+    <string>__REPO_PATH__/watch-inbox.mjs</string>
+    <string>watch</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>DORI_WATCH_DIR</key>
+    <string>__WATCH_DIR__</string>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>__REPO_PATH__</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.dori/watch-inbox.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.dori/watch-inbox.log</string>
+</dict>
+</plist>

@@ -341,6 +341,25 @@ itself, since these run unattended (cron/launchd), not inside a chat session:
   and optionally relays a one-line summary over WhatsApp. Scheduled via
   `digest-schedule.plist.template` (launchd `StartCalendarInterval`) — to change the
   time, edit the installed plist's Hour/Minute and reload it.
+- `watch-inbox.mjs watch` — long-lived poll loop over a real dropbox folder (Downloads,
+  a scanner's save folder — never the vault itself, that's rejected outright). Mirrors
+  `watcher/index.ts` + `pending-batch-store.ts`'s detection/triage half only: a file
+  isn't treated as arrived until it stops changing for 3s (same `stableMs` default real
+  Dori uses), and a same-name file reappearing at a verified-gone path is recognized as
+  a move rather than filed as a duplicate — not a content hash, an identity-proxy match
+  on filename+size+mtime, exactly like the real mechanism. It never files anything
+  itself; that's still `route-destination.mjs`/`attach-receipt.mjs`'s job. Scheduled via
+  `watch-inbox.plist.template` (launchd), `DORI_WATCH_DIR` sets which folder.
+
+"Dori, anything new in my inbox folder?":
+```bash
+node ~/.claude/skills/dori/watch-inbox.mjs list [--status detected|approved|ignored]
+```
+Read what a `detected` item's `suggestedDestination` says, tell the user what you'd do with it, then route it through the normal branch for that file type (document/receipt/expense above) — `approve`/`ignore` just mark it reviewed, they don't move or file anything:
+```bash
+node ~/.claude/skills/dori/watch-inbox.mjs approve <id>
+node ~/.claude/skills/dori/watch-inbox.mjs ignore <id>
+```
 
 ## Semantic search (optional, for recall/paraphrase queries)
 

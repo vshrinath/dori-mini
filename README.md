@@ -95,6 +95,12 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   page, plus a desktop notification and an optional WhatsApp relay. Scheduled with
   launchd, not a real engine feature (that needs a live scheduler + AI call) — this is
   the mechanical version.
+- **`watch-inbox.mjs`** — a passively watched dropbox folder (never the vault itself),
+  scoped down from `watcher/index.ts` + `pending-batch-store.ts` to detection/triage
+  only: 3s stability window, filename+size+mtime move detection (not a content hash —
+  that's a separate real-Dori dedup concern this doesn't need), a 2-minute grace period
+  before a missing file counts as a real delete. Scheduled with launchd, same pattern as
+  the WhatsApp listener.
 
 **Not included**: a local encrypted credentials/secrets store this repo's author also
 built for themself — deliberately left out here since it's macOS-only (Keychain-backed)

@@ -173,6 +173,37 @@ else
   echo "  (WhatsApp channel needs launchd — macOS only, skipped on $(uname))"
 fi
 
+# --- watched inbox folder (macOS only — launchd) ---
+if [ "$(uname)" = "Darwin" ]; then
+  echo
+  echo "Watched inbox: point it at a real dropbox folder (Downloads, a scanner's save"
+  echo "folder) and it'll notice new files once they stop changing, without you having"
+  echo "to paste or attach anything — 'Dori, anything new in my inbox?' lists them."
+  read -r -p "Set this up now? [y/N] " WATCH_REPLY
+  if [[ "$WATCH_REPLY" =~ ^[Yy]$ ]]; then
+    DEFAULT_WATCH_DIR="$HOME/Dori Inbox"
+    read -r -p "  Folder to watch (blank = $DEFAULT_WATCH_DIR): " WATCH_DIR_INPUT
+    WATCH_DIR="${WATCH_DIR_INPUT:-$DEFAULT_WATCH_DIR}"
+    WATCH_DIR="${WATCH_DIR/#\~/$HOME}"
+    mkdir -p "$WATCH_DIR"
+    WATCH_PLIST="$HOME/Library/LaunchAgents/com.dori.watch-inbox.plist"
+    sed -e "s|__NODE_PATH__|$(command -v node)|g" \
+        -e "s|__REPO_PATH__|$SCRIPT_DIR|g" \
+        -e "s|__WATCH_DIR__|$WATCH_DIR|g" \
+        -e "s|__HOME__|$HOME|g" \
+        "$SCRIPT_DIR/watch-inbox.plist.template" > "$WATCH_PLIST"
+    launchctl unload "$WATCH_PLIST" >/dev/null 2>&1 || true
+    launchctl load "$WATCH_PLIST"
+    echo "✓ Watching $WATCH_DIR in the background (logs: ~/.dori/watch-inbox.log)"
+  else
+    echo "  Skipped — set it up later: DORI_WATCH_DIR=<folder> node watch-inbox.mjs watch,"
+    echo "  or see watch-inbox.plist.template to run it in the background."
+  fi
+else
+  echo
+  echo "  (Watched inbox needs launchd — macOS only, skipped on $(uname))"
+fi
+
 # --- morning/evening digest schedule (macOS only — launchd) ---
 if [ "$(uname)" = "Darwin" ]; then
   echo
