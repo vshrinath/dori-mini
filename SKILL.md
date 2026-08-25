@@ -202,7 +202,13 @@ Either way, check for gaps first — real Dori's own submit action does **not** 
 node ~/.claude/skills/dori/check-reimbursement-gaps.mjs "<threadId or trip name>"
 ```
 
-Mirrors `finance-consolidate-trip-reimbursement.ts`'s gap logic exactly: for every reimbursable row, flags a missing date, missing/unreadable amount, no receipt attached (the common case for a voice-note or spoken expense filed via `expense-router.mjs` — it naturally lands with the Attachment column empty, no separate "mark it" step needed), a linked receipt that isn't actually in the vault, or no payer recorded. If `gaps` is non-empty, warn the user with the specific rows/issues before proceeding — don't submit silently.
+Mirrors `trip-ledger.ts`'s `detectClaimGaps` exactly (shared by both real consolidate and set-status actions): for every reimbursable row, flags a missing date, missing/unreadable amount, no receipt attached (the common case for a voice-note or spoken expense filed via `expense-router.mjs` — it naturally lands with the Attachment column empty, no separate "mark it" step needed), a linked receipt that isn't actually in the vault, or no payer recorded. If `gaps` is non-empty, warn the user with the specific rows/issues before proceeding — don't submit silently.
+
+**Closing/submitting a trip** ("close out the Denver trip", "submit this reimbursement", "mark it paid") — mirrors real Dori's `finance.consolidate_trip_reimbursement` (package doc) and `finance.set_reimbursement_status` (status transition) together:
+```bash
+node ~/.claude/skills/dori/close-trip.mjs "<threadId or trip name>" [--status submitted|paid]
+```
+Always writes/refreshes a `<threadId>-reimbursement-package.md` next to the ledger — a claim-items table, an excluded-rows table, the same gap list as above, and a plain "paste this into an email" handoff note. No zip: real Dori doesn't produce one either. `--status` is forward-only (`draft` → `submitted` → `paid`) and rejects backward/sideways moves, matching the real guard — gaps are reported but never block the transition, same as real Dori (submit and consolidate are deliberately separate actions).
 
 ## Ambiguous input
 
@@ -255,6 +261,19 @@ To rebuild the whole index (e.g. after files changed outside this router): run t
 node ~/.claude/skills/dori/list-tasks.mjs [open|done|...] [--real]
 ```
 Defaults to `open`. Pass `--real` to drop leftover e2e/debug/probe fixture tasks from engine test runs. This is a different thing from the inbox (`list-inbox.mjs`, below) — tasks are engine-tracked to-dos; the inbox is unfiled captures and ambiguous routing decisions waiting on a human.
+
+`task-store.mjs` writes to that same store — two ways in:
+
+- **"Dori, add a task: ..."** — a direct ask, no meeting involved:
+  ```bash
+  node ~/.claude/skills/dori/task-store.mjs add "<title>" [--due <date|relative>] [--owner <name>]
+  ```
+  `--due` accepts a literal `YYYY-MM-DD` or a relative term (`tomorrow`, `eod`, `eow`, `eom`, `next week`) — same set `tasks-create-many.ts`'s `resolveDeadline` accepts. Owner defaults to whoever `self-store.mjs` has on file.
+- **After minutes are written** — run this automatically once a meeting's `### Action Items` section exists (pasted transcript or Fathom sync), don't wait to be asked:
+  ```bash
+  node ~/.claude/skills/dori/task-store.mjs extract <meeting-minutes.md path, relative to vault>
+  ```
+  Mirrors `tasks.detect` + `tasks.create_many`'s real blocking rule: an item owned by the user becomes a task; an item owned by someone else is only created (as a `waiting` task) if one of the user's own action items names that person under "Depends on" — otherwise it's silently skipped, never guessed at. Re-running on the same file is safe — already-extracted items are deduped and skipped.
 
 ## Meeting prep (before an upcoming meeting, on request)
 

@@ -42,16 +42,20 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
 - **`org-store.mjs`** — creates/resolves an organization (Account) entity, gated by the
   same affiliation-evidence bar real Dori uses: a structured role/title assertion tying a
   person to the org, not a bare company-name mention — mirrors `accounts.ensure`.
-- **`list-tasks.mjs`** — reads dori-engine's real task store directly (open/pending
-  tasks), separate from the inbox below.
+- **`list-tasks.mjs` / `task-store.mjs`** — reads dori-engine's real task store directly
+  (open/pending tasks), separate from the inbox below. `task-store.mjs` writes to that
+  same store: a direct "add a task", or extracting tasks from a meeting's Action Items
+  section — mirrors `tasks.detect`'s real blocking rule (someone else's commitment only
+  becomes a task if it blocks one of yours), never guesses an owner.
 - **`meeting-prep.mjs`** — assembles a pre-meeting brief (relevant prior meetings, pending
   tasks, known/unknown attendees) from local lookups only, no model call — mirrors
   `meeting.generate_brief` minus the LLM step.
-- **`query-ledger.mjs` / `expense-router.mjs` / `check-reimbursement-gaps.mjs`** — a
-  personal expense-tracking flow: route a plain-text expense message to a trip ledger,
-  read totals/outstanding rows back, and check a claim for missing dates/amounts/receipts
-  before you mark it submitted — mirroring Dori's `trip-ledger.ts` and consolidate-package
-  gap logic.
+- **`query-ledger.mjs` / `expense-router.mjs` / `check-reimbursement-gaps.mjs` /
+  `close-trip.mjs`** — a personal expense-tracking flow: route a plain-text expense
+  message to a trip ledger, read totals/outstanding rows back, check a claim for missing
+  dates/amounts/receipts, and close out a trip into a reimbursement-package doc (plus a
+  forward-only draft → submitted → paid status move) — mirroring Dori's `trip-ledger.ts`
+  and consolidate-package logic exactly. No zip file: real Dori doesn't produce one either.
 - **`fetch-fathom.mjs`** — pulls unfiled meetings straight from the Fathom API (needs
   your own `FATHOM_API_KEY`) and feeds them into the same meeting-routing/minutes flow as
   a pasted transcript.

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Mirrors the gap-detection logic inside dori-engine's
-// finance.consolidate_trip_reimbursement action (finance-consolidate-trip-
-// reimbursement.ts:190-216) exactly — same checks, same wording, applied to
-// reimbursable rows only. That logic is real and already scoped/accepted
+// Mirrors dori-engine's detectClaimGaps (src/finance/trip-ledger.ts:341-359,
+// shared by finance.consolidate_trip_reimbursement and
+// finance.set_reimbursement_status) exactly — same checks, same wording,
+// applied to reimbursable rows only. That logic is real and already scoped/accepted
 // (docs/slices/trips-core/scenario.yaml: trip.expense.no-evidence-file,
 // trip.expense.incomplete-details, trip.reimbursement.claim-total).
 //
@@ -31,13 +31,15 @@ function normalize(s) {
   return (s || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
 }
 
-function findLedgerRelPath(target) {
+export function findLedgerRelPath(target) {
   const norm = normalize(target);
   for (const sub of ['finances/trips', 'finances/reimbursements']) {
     const dir = join(VAULT_ROOT, sub);
     if (!existsSync(dir)) continue;
     for (const f of readdirSync(dir)) {
-      if (!f.endsWith('.md')) continue;
+      // generated packages (close-trip.mjs) carry the same trip/threadId
+      // frontmatter as their source ledger — skip them or they'd shadow it.
+      if (!f.endsWith('.md') || f.endsWith('-reimbursement-package.md')) continue;
       const relPath = `${sub}/${f}`;
       const raw = readFileSync(join(VAULT_ROOT, relPath), 'utf-8');
       const threadId = (raw.match(/^threadId:\s*(.+)$/m) || [])[1]?.trim();
@@ -48,7 +50,7 @@ function findLedgerRelPath(target) {
   return null;
 }
 
-/** Mirrors finance-consolidate-trip-reimbursement.ts:190-216 exactly. */
+/** Mirrors trip-ledger.ts's detectClaimGaps exactly. */
 export function checkGaps(ledgerRelPath, raw) {
   const ledger = parseTripLedger(ledgerRelPath, raw);
   const claim = ledger.rows.filter((row) => row.reimbursable);
