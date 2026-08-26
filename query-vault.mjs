@@ -372,7 +372,11 @@ function toPrefixOrQuery(q) {
   if (tokens.length === 0) return '';
   const meaningful = tokens.filter((t) => !STOPWORDS.has(t.toLowerCase()));
   const kept = meaningful.length > 0 ? meaningful : tokens;
-  return kept.map((t) => `${t}*`).join(' OR ');
+  // Quote each token: an unquoted bareword containing '-' (e.g. "Go-Live") is
+  // misparsed by FTS5's own query-grammar (confirmed: throws "no such column")
+  // — a real bug in dori-portal's searchVaultDocumentsFts, mirrored here and
+  // fixed as a dori-mini prototype. Quoting preserves prefix-OR semantics.
+  return kept.map((t) => `"${t.replace(/"/g, '')}"*`).join(' OR ');
 }
 
 function searchDocs(db, q, limit) {

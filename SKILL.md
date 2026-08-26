@@ -406,13 +406,27 @@ prototype worth porting back if it holds up:
   ("when will X launch") can miss content that a closer phrasing ("X's proper launch")
   finds immediately — the gap isn't small (not found in the top 20 vs. tied for rank 1).
 
-**When to split a question into 2–3 targeted searches instead of one:**
-- It names or implies two distinct facts, timeframes, or perspectives ("what was decided
-  and did it happen", "what did X say vs. what did Y say", "how has the plan for X
-  changed since we last discussed it").
-- The first search's results don't actually answer what was asked (wrong doc, wrong
-  timeframe, or nothing that reads like a direct answer) — before concluding "not in the
-  vault," retry.
+**Decompose up front, don't wait to fail first.** You (the calling LLM) are the query-
+decomposition layer — neither script has one internally, and neither will ever call an
+LLM itself (they're plain deterministic Node, by design). If a question names or implies
+two distinct facts, timeframes, or perspectives ("what was decided and did it happen",
+"what did X say vs. what did Y say", "how has the plan for X changed since we last
+discussed it"), issue 2–3 targeted `search` calls immediately — one per sub-fact — instead
+of one combined query and waiting to see if it fails. Confirmed live (2026-08-26): a single
+combined query ("Founding Fuel launch go-live time decision and outcome") surfaced the
+plan-side doc but never the outcome-side doc, even after fixing a real crash bug in the
+query parser (see below) and even at `limit 20`. Two targeted sub-queries run instead — one
+phrased toward "the plan," one toward "the outcome" — each independently surfaced *both*
+documents in their own top 5. Decomposing first, not retrying after a miss, is what
+actually gets both halves of a multi-hop fact without extra round-trips.
+
+**When a single question is genuinely single-hop, don't decompose it** — most questions
+are, and splitting those wastes calls for no gain. The trigger is the question's own
+shape (does it name/imply more than one fact or perspective?), not its length.
+
+**If you didn't decompose up front and the first search's results don't actually answer
+what was asked** (wrong doc, wrong timeframe, or nothing that reads like a direct
+answer) — retry with 2–3 targeted searches before concluding "not in the vault."
 
 **Tested finding (2026-08-26): splitting by *intent* alone often isn't enough — the
 retry needs the source's literal vocabulary, not just a more targeted rephrasing of the
@@ -426,10 +440,8 @@ document's own heading phrase instead of a description of what it's about. So: r
 can be a natural rephrasing, but retry #2 should reach for likely literal terms — a
 proper noun, an exact date, quoted language — before concluding the vault has nothing.
 
-**When not to** — most questions are single-hop and already answered by the first result;
-splitting those wastes calls for no gain. Don't decompose a question just because it's
-long, and don't retry past 2–3 total queries — if none of them find it, say so rather than
-continuing to guess new phrasings.
+Don't retry past 2–3 total queries either way — if none of them find it, say so rather
+than continuing to guess new phrasings.
 
 **How to reconcile:** run each targeted query as its own `search` call, read each result
 set on its own terms (don't assume the first hit answers a sub-question the query wasn't

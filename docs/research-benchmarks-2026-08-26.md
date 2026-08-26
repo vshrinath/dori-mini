@@ -843,3 +843,98 @@ here:**
   fail where a literal, source-vocabulary rephrasing succeeds, and there's no way to know
   which from outside the system. Any "Dori finds what you need" claim should not imply
   this is solved.
+
+---
+
+## Part 9 — Proactive decomposition (2.1/2.4 follow-up) + a real bug found along the way
+
+Follow-up on 2.1/2.4: the previous framing split the fix into "agent-level" (cheap) vs.
+"tool-level" (a bigger future build requiring an LLM call inside the scripts). That framing
+was wrong in an important way — in both dori-mini and real Dori, an LLM is *already* the
+caller driving these tools via CLI/API. "Agent-level" decomposition isn't a stopgap short
+of the real fix, it IS the real fix (query decomposition/rewriting via an LLM), just with
+the LLM call happening in the caller instead of inside `search()`. The only case where a
+tool-side LLM call would be genuinely necessary is a non-agent caller with no LLM in the
+loop — not the case here.
+
+Acted on this by changing SKILL.md's multi-fact-recall guidance from **reactive** (retry
+with a rephrasing only after the first search fails) to **proactive** (decompose a
+compound question into 2–3 targeted searches immediately, before ever issuing the
+combined query).
+
+### 9.1 A real bug found while testing this: hyphenated query terms crash FTS search
+
+Testing decomposition against the 2.4 case (a query containing "Go-Live") threw:
+```
+FTS query failed: no such column: Launch
+```
+Reproduced in isolation against a bare in-memory FTS5 table — confirmed this is FTS5's own
+query-grammar misparsing an unquoted bareword containing `-` (e.g. `Go-Live*`), not a
+dori-mini-specific issue. **Checked real dori-portal's actual source
+(`dori-portal/lib/vault-indexer.ts`, `searchVaultDocumentsFts`, lines 119–124): the exact
+same unquoted-token construction exists there too** (`tokens.map(t => t+'*').join(' OR ')`,
+tokens keep `-` via `[^\p{L}\p{N}_-]` stripping). **This is a real, previously-undocumented
+crash bug in the actual production product**, not a dori-mini divergence — any real Dori
+user searching a hyphenated term ("Go-Live," "kick-off," "sign-off," "state-of-the-art")
+would hit the same crash.
+
+Fixed in dori-mini's `query-vault.mjs` (`toPrefixOrQuery`) as a prototype: quote each token
+before appending the prefix wildcard (`"Go-Live"*` instead of `Go-Live*`). Verified this
+still matches correctly (FTS5 tokenizes the quoted phrase the same way as unquoted content,
+so a quoted `"Pre-Launch"*` still matches indexed text containing "pre launch" as separate
+tokens) via both an isolated in-memory-table check and a live query against the real
+`portal.db`. Added a regression test (`test-query-vault.mjs`) that executes the built query
+string against a real FTS5 table, not just checking the string's shape. Re-ran the two
+existing regression cases (`search "aligna"`, `search "when will Vybe launch"`) — both still
+correct, no change in behavior for non-hyphenated queries. **Candidate to port back to real
+dori-portal** — this is a genuine production bug fix, not a stylistic prototype.
+
+### 9.2 Proactive decomposition, tested live on the 2.4 multi-hop case
+
+With the crash fixed, re-ran the *original* 2.4 combined query as a single shot:
+```
+node query-vault.mjs search "Founding Fuel launch go-live time decision and outcome" --limit 20
+```
+Result: 8 hits. `Pre launch readiness sync mom.md` (the plan-side doc) now appears at rank
+2 — an improvement over the original 2.4 write-up, likely a side effect of the FTS fix
+(2.2) and dedup/coverage backfill (Part 7) landing since then. But **`Launch morning check
+in mom.md` (the outcome-side doc) still does not appear anywhere in the 20** — confirming
+the combined single-query approach still doesn't reliably retrieve both halves of a
+multi-hop fact, even after two independent, unrelated bugs got fixed in between.
+
+Then ran the SKILL.md's new proactive approach — two targeted sub-queries, issued
+immediately instead of as a fallback retry, one aimed at each side of the fact:
+```
+node query-vault.mjs search "Founding Fuel launch morning check in outcome" --limit 5
+node query-vault.mjs search "Pre Launch Readiness Sync Monday cutover" --limit 5
+```
+**Both sub-queries independently surfaced BOTH documents in their own top 5** —
+`Pre launch readiness sync mom.md` and `Launch morning check in mom.md` each appear in
+both result sets (ranks 1–3). This is a clean, reproducible confirmation that decomposing
+up front — not waiting for a combined query to fail — is what actually closes the 2.4 gap,
+using the same LLM that's already driving the CLI, no new architecture.
+
+**Honest caveat:** this is one case, re-tested, not a new large-scale eval — the underlying
+claim (decomposition beats a single combined query for genuinely multi-hop questions) was
+already supported by Part 5's literal-vocabulary finding; this run adds proactive framing
+and a second confirmation on the same real fact chain, not a fresh independent case. If this
+goes on the site, frame it as "the retrieval layer benefits from an LLM splitting compound
+questions before searching" — true and demonstrated — not as "multi-hop is solved," since
+only one real fact chain has been used to verify it so far.
+
+### 9.3 Updated bottom line for 2.1/2.3/2.4
+
+- **2.1 (paraphrase brittleness):** still open, unchanged by this round — proactive
+  decomposition (rephrasing variants) is the scoped fix, not yet built into SKILL.md
+  guidance the way multi-hop splitting now is. Natural next step, not done here.
+- **2.4 (multi-hop):** meaningfully improved — proactive decomposition, now in SKILL.md,
+  demonstrated to retrieve both halves of the one real multi-hop fact chain tested. Not
+  validated across multiple independent multi-hop cases yet.
+- **2.3 (no "not found" signal):** untouched this round. The cross-query-agreement idea
+  (4.4) remains the cheapest next step and would fall out naturally once 2.1's proactive
+  rephrasing-variant decomposition is built, since that already produces multiple result
+  sets to compare for disagreement.
+- **Bonus, unplanned:** found and fixed a real crash bug in production dori-portal's search
+  function (hyphenated query terms), not something this session set out to find — a direct
+  result of testing the decomposition fix against real, naturally-hyphenated phrasing
+  ("Go-Live") rather than sanitized test queries.
