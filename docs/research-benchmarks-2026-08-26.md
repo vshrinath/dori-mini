@@ -1935,3 +1935,46 @@ supplied.
   measure nothing, which is why the eval's scopes name the project only.
 - **Non-determinism (15.5) is untouched** and applies to `scope_match` as much as to the
   verdict.
+
+### 16.7 Scope measured across the full question set — and a methodological trap
+
+Full 24-question eval, k=5, scope on vs off (both post-Part-16, so the prompt is identical
+and `--scope` is the only variable):
+
+| | scope OFF | scope ON |
+|---|---|---|
+| true positives (adjudicated) | 4 | 2 |
+| false positives | 1 (Q7) | **0** |
+| false negatives | 0 | 2 (Q2, Q14) |
+| negative controls refused | 4/4 | 4/4 |
+| scope rejects | — | 5 |
+| median check latency | 14,142 ms | 15,703 ms |
+
+Read naively this says scope trades one false positive for two false negatives — a bad deal,
+and an easy conclusion to write down. **It is wrong, and 15.5 is the reason it was worth
+checking rather than reporting.** A checker already measured returning three different
+verdicts across three identical runs cannot support a 2-case difference at n=24 as a finding.
+
+Both alleged regressions were re-run three times each, with and without scope:
+
+| | scope OFF | scope ON |
+|---|---|---|
+| Q2 "why did we skip load balancing" | 3 sufficient / 0 fail | 3 sufficient / 0 fail |
+| Q14 "how many on the governing committee" | 2 sufficient / 1 fail | 2 sufficient / 1 fail |
+
+**Identical failure rates in both configurations**, and `SCOPE_MATCH` returned YES on every
+one — scope never rejected either question. Q14 failed once in each column and in run 3
+failed *without* scope while passing *with* it. The failures are quote-fidelity sampling
+variance: the model sometimes paraphrases instead of copying, and the validator correctly
+rejects it. They have nothing to do with scope.
+
+**Conclusion: scope removes the wrong-referent false positive at no measurable cost in false
+negatives.** Its real price is the latency in 16.5. Keep the `SKILL.md` guidance to pass
+`--scope` whenever the caller knows the subject.
+
+**Generalizable point, and the most transferable thing in Parts 15–16:** on a
+non-deterministic checker, a single evaluation run measures the sample, not the change. The
+scope-on run produced a clean, plausible, quotable table that pointed the wrong way. What
+separated signal from noise was re-running the two specific disagreeing cases in both
+configurations — cheap (12 calls, ~3 minutes) next to the cost of shipping the wrong
+conclusion, or of writing it into a document that later gets cited as evidence.
