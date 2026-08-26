@@ -1,21 +1,19 @@
 // Loader shim for the credentials store's crypto/DB core.
 //
-// `credentials-lib.mjs` is deliberately NOT part of the public dori-mini package —
-// it's macOS-only (Keychain + pbcopy) and not something to hand out even sanitized
-// (see README, "Not included"). The intake front-ends that sit on top of it ARE
-// shipped, so a static import would crash a public clone at module-load time with
-// an opaque ERR_MODULE_NOT_FOUND. This resolves it at runtime instead and explains
-// the situation in plain terms.
+// `credentials-lib.mjs` ships with dori-mini, so this normally just resolves. It stays
+// a runtime import purely so a missing/removed core fails with a sentence instead of an
+// opaque ERR_MODULE_NOT_FOUND at module-load time, before any of the intake front-ends
+// have printed a thing. (Not being on macOS is a different failure — the core itself
+// reports that, since it affects every entry point, not just these two.)
 export async function loadCredentialsLib() {
   try {
     return await import('./credentials-lib.mjs');
   } catch (err) {
     if (err?.code !== 'ERR_MODULE_NOT_FOUND') throw err;
-    console.error(`The local credentials store isn't installed on this machine.
+    console.error(`Can't find credentials-lib.mjs, the encrypted store's core.
 
-This script is the intake front-end for an encrypted key/password store whose
-core (credentials-lib.mjs) is macOS-only and isn't shipped with dori-mini —
-see "Not included" in the README. Without it there's nothing to write to.`);
+It should sit next to this script. If you're in a clone, re-pull; if you removed
+it deliberately, these intake front-ends have nothing to write to.`);
     process.exit(1);
   }
 }

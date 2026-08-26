@@ -102,9 +102,19 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   before a missing file counts as a real delete. Scheduled with launchd, same pattern as
   the WhatsApp listener.
 
-**Not included**: a local encrypted credentials/secrets store this repo's author also
-built for themself — deliberately left out here since it's macOS-only (Keychain-backed)
-and not something to hand out even in sanitized form.
+- **`credentials-store.mjs` / `credentials-lib.mjs`** — a local encrypted store for API
+  keys, tokens, and passwords. AES-256-GCM, encryption key held in the macOS Keychain,
+  rows in a SQLite file at `~/.dori/credentials.sqlite`. **macOS-only** (it shells out to
+  `security` and `pbcopy`). Designed so an agent can look a secret up for you without
+  ever seeing it: `get` copies the value to your clipboard and prints only a length and
+  the last four characters, and `getSecret()` lets a script pull one into memory
+  directly. To add one, `add-credential-server.mjs` opens a small local form in your
+  browser (localhost-only, behind a one-time token), or `add-credential.mjs` asks in the
+  terminal — either way you type the value into that process, not into a chat.
+
+**Not included**: the bulk importer the author uses to load a whole markdown file of
+secrets at once — it's keyed to their own vault layout, and the store above covers the
+same ground one entry at a time.
 
 ## Read this first
 
