@@ -147,11 +147,57 @@ function parseFrontmatter(raw) {
   return { fm, body: body.trim() };
 }
 
+// Fallback for a paragraph with no blank-line breaks to split on — common in
+// PDF/OCR-extracted text, which markitdown often emits as one dense blob with
+// no paragraph breaks at all. Mirrors dori-engine's real splitOversized
+// (src/vector/ingest.ts): cascade sentence -> word -> hard character splitting,
+// whichever first produces pieces at or under targetChars. Without this, a
+// single unbroken paragraph bypassed chunking entirely and got embedded (and
+// FTS-indexed) as one oversized blob, diluting both retrieval paths.
+function packUnits(units, join, targetChars) {
+  const chunks = [];
+  let current = '';
+  for (const unit of units) {
+    if (!unit) continue;
+    if (current && current.length + join.length + unit.length > targetChars) {
+      chunks.push(current);
+      current = unit;
+    } else {
+      current = current ? `${current}${join}${unit}` : unit;
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+function hardSlice(text, targetChars) {
+  const chunks = [];
+  for (let i = 0; i < text.length; i += targetChars) chunks.push(text.slice(i, i + targetChars));
+  return chunks;
+}
+
+function splitOversized(text, targetChars) {
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  if (sentences.length > 1) {
+    return packUnits(sentences, ' ', targetChars).flatMap((c) => (c.length > targetChars ? splitOversized(c, targetChars) : [c]));
+  }
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length > 1) {
+    return packUnits(words, ' ', targetChars).flatMap((c) => (c.length > targetChars ? hardSlice(c, targetChars) : [c]));
+  }
+  return hardSlice(text, targetChars);
+}
+
 function chunkText(body, targetChars) {
   const paragraphs = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   const chunks = [];
   let current = '';
   for (const p of paragraphs) {
+    if (p.length > targetChars) {
+      if (current) { chunks.push(current); current = ''; }
+      chunks.push(...splitOversized(p, targetChars));
+      continue;
+    }
     if (current && (current.length + p.length + 2) > targetChars) {
       chunks.push(current);
       current = p;
@@ -306,9 +352,31 @@ async function cmdSearch(query, limit) {
   const fused = fuseRrf([vectorHits, ftsHits], limit);
   for (const hit of fused) {
     console.log(`[${hit.score.toFixed(3)}] ${hit.sourcePath} — ${hit.title}`);
-    console.log(`  ${hit.text.replace(/\s+/g, ' ').slice(0, 200)}…\n`);
+    console.log(`  ${previewAround(hit.text, query)}\n`);
   }
   if (fused.length === 0) console.log('No results.');
+}
+
+// CLI display convenience, not a mirrored Dori mechanism (dori-engine hands the
+// full chunk to the caller, no snippet step of its own) — chunks can still run
+// well past 200 chars, so always slicing from position 0 often shows the start
+// of the chunk instead of the sentence that actually matched the query.
+const PREVIEW_WINDOW = 220;
+function previewAround(text, query) {
+  const flat = text.replace(/\s+/g, ' ').trim();
+  const words = [...new Set(query.toLowerCase().split(/\s+/).filter((w) => w.length > 2))]
+    .sort((a, b) => b.length - a.length);
+  let matchAt = -1;
+  for (const w of words) {
+    const idx = flat.toLowerCase().indexOf(w);
+    if (idx !== -1) { matchAt = idx; break; }
+  }
+  if (matchAt === -1) return `${flat.slice(0, PREVIEW_WINDOW)}…`;
+  const start = Math.max(0, matchAt - Math.floor(PREVIEW_WINDOW / 3));
+  const end = Math.min(flat.length, start + PREVIEW_WINDOW);
+  const prefix = start > 0 ? '…' : '';
+  const suffix = end < flat.length ? '…' : '';
+  return `${prefix}${flat.slice(start, end)}${suffix}`;
 }
 
 const [, , cmd, arg1, arg2] = process.argv;
