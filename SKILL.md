@@ -448,6 +448,16 @@ than continuing to guess new phrasings.
 
 ### `search-multi` — fuse several phrasings into one ranked list
 
+**Use it as a second move, not a first one.** Run a plain `search` first; reach for
+`search-multi` only when that came back empty or clearly off-target. This is not a
+stylistic preference — always-on multi-query is measurably *worse* than cheap-first-then-
+escalate in every production evaluation found (research doc 10.4: an industry deployment
+measured Hit@10 falling 0.51 → 0.48 with always-on fusion; a 20,000-query study found 72%
+of real queries never needed augmentation at all, and escalating only on a failed first
+retrieval beat always-on augmentation while cutting latency ~32%). The trigger is simply
+"did the first search return anything useful" — you can only tell after searching, so don't
+try to predict it up front.
+
 Both scripts take several phrasings at once and fuse the result lists with RRF, so you get
 one merged list instead of reading 2–3 separate ones:
 ```bash
@@ -480,7 +490,8 @@ phrasings alongside one good source-vocabulary phrasing *suppressed* the correct
 that the good phrasing found on its own — RRF sums rank contributions, so a majority of
 poor variants outvotes one good one. Prefer **2 well-differentiated phrasings over 3+
 similar ones**, and if one phrasing is clearly your best guess at the source's wording,
-consider running it alone first.
+run it alone first. (Independently reproduced in the literature on a different task —
+performance peaked at one variant and degraded as more were added; research doc 10.4.)
 
 **`found_by` / `N/N phrasings` is corroboration, not correctness.** In the 3-natural-
 phrasings run above, the wrong documents scored a perfect 3/3 agreement. Agreement means

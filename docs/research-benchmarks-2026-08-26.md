@@ -1026,3 +1026,83 @@ the agreement-based alternative that 4.4 had proposed as the cheaper replacement
 | 2.4 multi-hop | **Improved** (Part 9), unchanged here. |
 | 2.3 no "not found" signal | **Still open, and now harder.** 4.2's cosine floor failed; 4.4's cross-query-agreement replacement is shown in 10.1 finding 3 to produce confident false agreement. Remaining credible option is an LLM sufficiency-check over retrieved context (Google's "sufficient context" work, cited in 4.4) — a real build, not a heuristic. |
 | 2.2 FTS brittleness | Fixed (Part 9's hyphen crash + the earlier OR/BM25 port). |
+
+### 10.4 External validation — the literature independently confirms all three findings
+
+Ran a broad search of 2025–2026 RAG research and practitioner reports *after* the tests
+above, so 10.1's findings were not steered by it. The convergence is close enough to be
+worth recording, and it also corrects one design decision made in 10.1.
+
+**Finding 2 ("more phrasings is not monotonically better") is independently reproduced.**
+[Revisiting Query Variants (2510.02512)](https://arxiv.org/abs/2510.02512) finds performance
+**optimal at k=1 and degrading as more variants are added** — the same non-monotonicity
+found here, measured on a different task (query-performance prediction) with different
+data. Same paper: *retrieved* variants beat *LLM-generated* ones (τ = 0.4033 vs 0.3308,
+~20% better), because generation *"may introduce topical drifts and hallucinations"* — the
+mechanism behind case B's three correlated rephrasings.
+
+**Finding 3 ("agreement is corroboration, not correctness") is the safe reading.** The
+cross-query-agreement idea has a real literature — Zhou & Croft's ranking robustness
+([CIKM 2006](https://dl.acm.org/doi/10.1145/1183614.1183696)) and RIG-QPP over query
+variants ([TOIS 2022](https://dl.acm.org/doi/10.1145/3545112)) — but **the specific rule
+"N variants returned zero overlap ⇒ the corpus lacks the answer" is not validated
+anywhere.** In agentic RAG specifically, QPP-to-answer-quality correlations are
+ρ = 0.0096–0.2497 ([2507.10411](https://arxiv.org/abs/2507.10411)), which the authors
+themselves call *"weak."* Confirms 10.1's decision to label the signal a hint, not a verdict.
+
+**Finding 1 ("register matters, not wording") matches the rewriting literature's mechanism.**
+[Not All Queries Need Rewriting (2603.13301)](https://arxiv.org/abs/2603.13301) finds
+rewriting swings from **−9.0% nDCG@10 (FiQA) to +5.1% (TREC-COVID)**, with degradations
+co-occurring with *reduced lexical alignment* when a rewrite replaces domain-specific
+terminology — lexical substitution happened in 95% of rewrites, and *"effectiveness depends
+on the direction of substitution rather than substitution itself."* That is 10.1's
+register finding stated from the other direction.
+
+**The correction: multi-query should be an escalation tier, not the default.** Three
+separate evaluations found always-on multi-query flat-to-negative once reranking and
+truncation are applied — [Medrano et al. (2603.02153)](https://arxiv.org/abs/2603.02153)
+measured **Hit@10 falling 0.51 → 0.48** in an industry deployment;
+[ARAGOG](https://arxiv.org/abs/2404.01037) found multi-query *underperforming* the naive
+baseline; and RAG-Fusion's own author reports the vector-only fusion variants *"collapse
+toward zero once a strong reranker is added."* Note also that the widely-circulated
+"RAG-Fusion improves accuracy 8–10%" figure **does not appear in the source paper**
+([2402.03367](https://arxiv.org/abs/2402.03367)), which is a single-author qualitative case
+study with no quantitative baseline comparison — an example of exactly the kind of number
+this project must not repeat.
+
+The validated pattern is a cheap-first cascade with a trivial trigger. **The Coverage
+Illusion** ([2605.27220](https://arxiv.org/abs/2605.27220)) — 20,000 real query-workflow
+pairs, Danish National Encyclopedia — escalates only when tier-1 returns zero sources, a
+binary `has_sources` check described as *"an O(1) array operation"* needing no LLM call.
+That cascade beat always-on augmentation by **+0.140 composite while cutting latency
+31.8%**, and **72.2% of real queries never needed augmentation at all** — against synthetic
+evaluation that had predicted >90% would. Their strongest negative result: they tried four
+ML paradigms to *predict* which queries need augmentation and concluded prediction is
+impossible, because the need *"is only revealed after searching the index."* Acted on this
+by rewriting SKILL.md's guidance so `search-multi` is a second-tier move after a plain
+`search` comes back empty or off-target, not the default first call.
+
+**The bigger, unbuilt fix for 2.1 — contextual retrieval at index time.** The largest
+measured effect found anywhere in this research round is
+[Anthropic's contextual retrieval](https://www.anthropic.com/news/contextual-retrieval):
+top-20 retrieval failure **5.7% → 3.7%** with contextual embeddings, **→ 2.9%** adding
+contextual BM25, **→ 1.9%** adding reranking (a **67% reduction**), at a one-time
+**$1.02 per million document tokens** with prompt caching and **zero added query-path
+latency**. It works by prepending LLM-generated surrounding context to each chunk before
+embedding — which is precisely the root cause 10.1 identified: chunks are stored in the
+source's register only, so a question in question-register has nothing to match. This
+attacks the problem at index time instead of papering over it with more query variants.
+**Scoped, not built** — it needs an LLM call per chunk at index time (a real architecture
+change for scripts that are deliberately deterministic, and a real if modest API cost
+against a ~2,854-file vault), so it should be an explicit decision, not something added
+silently. Recommended as the next real investment for 2.1 if this line of work continues.
+
+Also worth noting from the same research: **hybrid lexical + dense fused with RRF k=60 is
+the single highest-value tier**, and `semantic-index.mjs` already does exactly this — vector
+search plus FTS, fused via `fuseRrf` at k=60. Elastic's documentation states RRF
+*"requires no tuning"* and k=60 traces to
+[Cormack et al., SIGIR 2009](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf),
+where MAP is near-flat for k ∈ [10, 100] — so the constant inherited from real dori-engine
+is the right one and is not worth tuning. One cheap untested win from the same source:
+**top-20 outperformed top-10 and top-5**, suggesting the current default limit of 8 may be
+truncating too aggressively.
