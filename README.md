@@ -158,6 +158,11 @@ changed. To newly opt into a launchd-scheduled feature that showed up in an upda
 (WhatsApp, digests, the watched inbox), re-run `./setup.sh` — safe, but it re-asks every
 prompt from scratch, so re-enter your real vault path rather than hitting Enter through it.
 
+`setup.sh` also offers (macOS only) to schedule this once a day via launchd
+(`update-schedule.plist.template`) — that's the actual answer to "how would I know a
+new script landed": it only pings a desktop notification when it pulled real changes,
+or when it's blocked and needs you, never on the common no-op day. Logs: `~/.dori/update.log`.
+
 ## Usage
 
 Source the generated config once per shell (or add it to your shell profile):

@@ -245,6 +245,38 @@ else
   echo "  (Automatic digest scheduling needs launchd — macOS only, skipped on $(uname))"
 fi
 
+# --- daily auto-update check (macOS only — launchd) ---
+if [ "$(uname)" = "Darwin" ]; then
+  echo
+  echo "install.sh only ever handles a fresh install — without a scheduled check, the"
+  echo "only way to know a new script or fix landed is to run ./update.sh by hand."
+  read -r -p "Check for updates once a day automatically? [y/N] " UPDATE_REPLY
+  if [[ "$UPDATE_REPLY" =~ ^[Yy]$ ]]; then
+    read -r -p "  Check time (HH:MM, 24h, default 09:00): " UPDATE_TIME
+    UPDATE_TIME="${UPDATE_TIME:-09:00}"
+    UPDATE_HOUR=$((10#${UPDATE_TIME%%:*}))
+    UPDATE_MINUTE=$((10#${UPDATE_TIME##*:}))
+
+    UPDATE_PLIST="$HOME/Library/LaunchAgents/com.dori.update.plist"
+    sed -e "s|__NODE_PATH__|$(command -v node)|g" \
+        -e "s|__REPO_PATH__|$SCRIPT_DIR|g" \
+        -e "s|__HOUR__|$UPDATE_HOUR|g" \
+        -e "s|__MINUTE__|$UPDATE_MINUTE|g" \
+        -e "s|__HOME__|$HOME|g" \
+        "$SCRIPT_DIR/update-schedule.plist.template" > "$UPDATE_PLIST"
+    launchctl unload "$UPDATE_PLIST" >/dev/null 2>&1 || true
+    launchctl load "$UPDATE_PLIST"
+    echo "✓ Update check scheduled for $UPDATE_TIME — a notification only fires if"
+    echo "  something actually changed, or if it's blocked and needs you (logs: ~/.dori/update.log)"
+  else
+    echo "  Skipped — run ./update.sh by hand any time, or install it later yourself"
+    echo "  following update-schedule.plist.template."
+  fi
+else
+  echo
+  echo "  (Automatic update checks need launchd — macOS only, skipped on $(uname))"
+fi
+
 echo
 echo "== Setup complete =="
 echo "Add this to your shell profile so VAULT_ROOT is set in new terminals:"

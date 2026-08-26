@@ -163,7 +163,8 @@
 <span class="ok">✓</span> wired into Claude Code
 <span class="ask">? Set up the WhatsApp channel? [y/N]</span> <span class="dim">(macOS only, optional)</span>
 <span class="ask">? Set up a watched inbox folder? [y/N]</span> <span class="dim">(macOS only, optional)</span>
-<span class="ask">? Set up morning/evening digests? [y/N]</span> <span class="dim">(macOS only, optional)</span></pre>
+<span class="ask">? Set up morning/evening digests? [y/N]</span> <span class="dim">(macOS only, optional)</span>
+<span class="ask">? Check for updates once a day automatically? [y/N]</span> <span class="dim">(macOS only, optional)</span></pre>
   </div>
 
   <ol class="steps">
@@ -204,6 +205,10 @@
     <li><b>Offers to schedule morning/evening digests</b> (macOS only) — a local summary
     page plus a desktop notification, at times you pick. Say no and run it by hand later
     any time instead.</li>
+    <li><b>Offers to check for updates once a day</b> (macOS only) — a desktop
+    notification only fires when it actually pulled new commits, or when it's blocked
+    and needs you; the common no-op day stays silent. Say no and run <code>./update.sh</code>
+    by hand whenever you like instead.</li>
   </ol>
 
   <h2>Your vault, before and after</h2>
@@ -285,7 +290,10 @@
     for new scripts and fixes on a machine you've already set up, run
     <code>./update.sh</code> from inside wherever it's installed (<code>~/dori</code> by
     default). It refuses to run over uncommitted local changes rather than overwriting
-    them, and only reinstalls dependencies if one actually changed.</div>
+    them, and only reinstalls dependencies if one actually changed. Say yes to the
+    optional prompt during install (macOS only) and it checks once a day on its own —
+    a notification only fires when something actually changed, or if it's blocked and
+    needs you, never on the common no-op day.</div>
   </div>
 
   <div class="cta-row">

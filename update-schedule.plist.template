@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd job for update.sh — fires once a day at a fixed time (StartCalendarInterval),
+  same shape as digest-schedule.plist.template. This is how a user finds out something
+  changed without checking by hand: update.sh pings a desktop notification when it
+  actually pulls new commits, or when it's blocked and needs a human — never on the
+  common no-op "already up to date" day.
+
+  setup.sh installs this automatically if you say yes to the update-schedule prompt.
+  Manual install, if you skipped that or need a second machine:
+    cp update-schedule.plist.template ~/Library/LaunchAgents/com.dori.update.plist
+    # edit __HOUR__, __MINUTE__, __NODE_PATH__ (output of `command -v node`), and the
+    # two __REPO_PATH__/__HOME__ path placeholders
+    launchctl load ~/Library/LaunchAgents/com.dori.update.plist
+
+  To change the time later: edit the Hour/Minute in the installed plist directly, then:
+    launchctl unload ~/Library/LaunchAgents/com.dori.update.plist
+    launchctl load ~/Library/LaunchAgents/com.dori.update.plist
+
+  Logs: ~/.dori/update.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.dori.update</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__REPO_PATH__/update.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>DORI_NODE_PATH</key>
+    <string>__NODE_PATH__</string>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>__REPO_PATH__</string>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>__HOUR__</integer>
+    <key>Minute</key>
+    <integer>__MINUTE__</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.dori/update.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.dori/update.log</string>
+</dict>
+</plist>
