@@ -19,6 +19,7 @@ import { readFileSync, statSync, readdirSync, mkdirSync, realpathSync } from 'no
 import { join, relative, dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
 const VAULT_ID = 'personal';
@@ -94,6 +95,10 @@ CREATE TABLE IF NOT EXISTS indexed_files (
 const idxFilesCols = db.prepare(`PRAGMA table_info(indexed_files)`).all().map((c) => c.name);
 if (!idxFilesCols.includes('content_hash')) db.exec(`ALTER TABLE indexed_files ADD COLUMN content_hash TEXT NOT NULL DEFAULT ''`);
 if (!idxFilesCols.includes('duplicate_of')) db.exec(`ALTER TABLE indexed_files ADD COLUMN duplicate_of TEXT`);
+// Contextual retrieval bookkeeping (see cmdContextualize). Nullable and additive: an
+// un-contextualized index keeps working exactly as before, and this doubles as the resume
+// marker for a run that takes hours and may be interrupted.
+if (!idxFilesCols.includes('contextualized_at')) db.exec(`ALTER TABLE indexed_files ADD COLUMN contextualized_at TEXT`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_indexed_files_hash ON indexed_files(content_hash)`);
 
 function packFloat32(arr) {
@@ -264,6 +269,77 @@ function walk(dir, out = []) {
     else if (entry.name.endsWith('.md')) out.push(full);
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Contextual retrieval (PROTOTYPE — not in real dori-engine or dori-portal).
+//
+// Why: the measured baseline (docs/baseline-retrieval-eval-2026-08-26.md) puts natural-
+// phrasing retrieval at 55% hit rate @k=20, and ALL 7 both-channel misses recovered when
+// re-queried with source-document vocabulary (6/7 into the top 3). Register mismatch is
+// therefore 100% of the measured misses: chunks are stored only in the source's wording,
+// so a question phrased as a question has little to match. Anthropic's contextual-retrieval
+// result (top-20 failure 5.7% -> 2.9% with contextual embeddings + contextual BM25) fixes
+// exactly this, at index time, with zero added query latency.
+//
+// How this differs from the reference implementation: that one issues an LLM call PER CHUNK
+// with the document held in a prompt cache. Here the LLM is reached through `claude -p`,
+// using the session's own OAuth rather than an API key (no key handling, no separate bill),
+// and process startup dominates at ~7s per invocation. Per-chunk would be ~23,700 calls;
+// batching one call per DOCUMENT returns every chunk's context in a single response and
+// costs ~2,000 calls instead. Same output, ~12x fewer round trips.
+const CTX_MODEL = process.env.CONTEXTUAL_MODEL || 'haiku';
+const CTX_MAX_DOC_CHARS = 60000; // keeps a prompt sane on the handful of very long transcripts
+const CTX_TIMEOUT_MS = 180000;
+
+function buildContextPrompt(docText, chunks) {
+  const doc = docText.length > CTX_MAX_DOC_CHARS
+    ? docText.slice(0, CTX_MAX_DOC_CHARS) + '\n[...document truncated for context generation...]'
+    : docText;
+  const numbered = chunks.map((c, i) => `<chunk index="${i + 1}">\n${c}\n</chunk>`).join('\n');
+  return `<document>
+${doc}
+</document>
+
+Below are ${chunks.length} chunk(s) taken from the document above.
+
+${numbered}
+
+For EACH chunk, give a short succinct context (one sentence, under 25 words) situating that
+chunk within the overall document, for the purpose of improving search retrieval of the
+chunk. Name the specific project, people, dates, or topic the chunk belongs to, using words
+a person searching later would plausibly type.
+
+Output EXACTLY ${chunks.length} line(s), one per chunk, in order, each formatted as:
+<index>|<context>
+
+No preamble, no blank lines, no markdown, nothing else.`;
+}
+
+// Returns an array of context strings (one per chunk), or null if the call failed or the
+// response didn't line up. Null means "index this file exactly as before" — a failure here
+// must degrade to normal behaviour, never to a half-contextualized file.
+function generateContexts(docText, chunks) {
+  const res = spawnSync('claude', ['-p', '--model', CTX_MODEL], {
+    input: buildContextPrompt(docText, chunks),
+    encoding: 'utf8',
+    timeout: CTX_TIMEOUT_MS,
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  if (res.error || res.status !== 0 || !res.stdout) return null;
+
+  const byIndex = new Map();
+  for (const line of res.stdout.split('\n')) {
+    const m = line.match(/^\s*(\d+)\s*\|(.*)$/);
+    if (!m) continue;
+    const idx = Number(m[1]) - 1;
+    const ctx = m[2].trim();
+    if (idx >= 0 && idx < chunks.length && ctx) byIndex.set(idx, ctx);
+  }
+  // Require full coverage: a partial response would silently leave some chunks weaker than
+  // others, producing an index whose retrieval quality varies by accident rather than design.
+  if (byIndex.size !== chunks.length) return null;
+  return chunks.map((_, i) => byIndex.get(i));
 }
 
 let extractorPromise = null;
@@ -601,6 +677,85 @@ async function cmdDedupe() {
   for (const line of examples) console.log(`  duplicate: ${line}`);
 }
 
+// One-time (and resumable) pass that rewrites each file's chunks as
+// `<generated context>\n\n<original chunk>` and re-embeds them. Separate subcommand rather
+// than a flag on `index` because `index` skips unchanged files by mtime — the whole corpus
+// is "unchanged", so a flag there would contextualize nothing.
+//
+// Resumability is the point: ~2,000 files at ~7s per call is measured in hours, and the run
+// WILL be interrupted. `contextualized_at` is set per file immediately after that file's
+// chunks are committed, so a re-run picks up exactly where it stopped. A file is only ever
+// in the old state or the new state, never half-rewritten.
+async function cmdContextualize(limit, pathFilter) {
+  const files = walk(VAULT_ROOT);
+  const rows = db.prepare('SELECT source_path, contextualized_at, duplicate_of FROM indexed_files').all();
+  const state = new Map(rows.map((r) => [r.source_path, r]));
+
+  const getFtsRowids = db.prepare('SELECT fts_rowid FROM search_chunks WHERE source_path = ? AND vault_id = ? AND fts_rowid IS NOT NULL');
+  const deleteFtsByRowid = db.prepare('DELETE FROM search_fts WHERE rowid = ?');
+  const deleteChunks = db.prepare('DELETE FROM search_chunks WHERE source_path = ? AND vault_id = ?');
+  const countChunks = db.prepare('SELECT COUNT(*) AS n FROM search_chunks WHERE source_path = ? AND vault_id = ?');
+  const insertChunk = db.prepare(`
+    INSERT INTO search_chunks (chunk_id, vault_id, source_path, kind, collection, content_hash, text, title, embed_model, embed_dims, metadata_json, indexed_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const insertVector = db.prepare('INSERT INTO search_vectors (chunk_id, embedding) VALUES (?, ?)');
+  const insertFts = db.prepare('INSERT INTO search_fts (text, chunk_id) VALUES (?, ?)');
+  const setFtsRowid = db.prepare('UPDATE search_chunks SET fts_rowid = ? WHERE chunk_id = ?');
+  const markDone = db.prepare('UPDATE indexed_files SET contextualized_at = ? WHERE source_path = ?');
+
+  const todo = [];
+  for (const file of files) {
+    const relPath = relative(VAULT_ROOT, file);
+    const st = state.get(relPath);
+    if (!st || st.contextualized_at || st.duplicate_of) continue; // unindexed, done, or a duplicate
+    if (countChunks.get(relPath, VAULT_ID).n === 0) continue;     // nothing to rewrite
+    // Optional substring filter, so a high-value subset can be done (and measured) first
+    // rather than waiting on a full-corpus run that takes hours.
+    if (pathFilter && !relPath.toLowerCase().includes(pathFilter.toLowerCase())) continue;
+    todo.push({ file, relPath });
+  }
+  const batch = limit ? todo.slice(0, limit) : todo;
+  console.log(`Contextualize: ${todo.length} files pending, processing ${batch.length} this run.`);
+
+  let done = 0, failed = 0, chunksRewritten = 0;
+  for (const { file, relPath } of batch) {
+    const { fm, body } = parseFrontmatter(readFileSync(file, 'utf-8'));
+    const title = fm.title || relPath.split('/').pop().replace(/\.md$/, '');
+    const chunks = chunkText(body, CHUNK_TARGET_CHARS);
+    if (!chunks.length) { markDone.run(new Date().toISOString(), relPath); continue; }
+
+    const contexts = generateContexts(body, chunks);
+    if (!contexts) {
+      // Leave the file exactly as it was and move on — an un-contextualized file still
+      // retrieves as well as it did before, so a failure costs nothing but the opportunity.
+      failed++;
+      console.log(`  [skip] ${relPath} (context generation failed)`);
+      continue;
+    }
+
+    for (const r of getFtsRowids.all(relPath, VAULT_ID)) deleteFtsByRowid.run(r.fts_rowid);
+    deleteChunks.run(relPath, VAULT_ID);
+
+    for (let i = 0; i < chunks.length; i++) {
+      const text = `${contexts[i]}\n\n${chunks[i]}`;
+      const chunkId = `${relPath}#${i}`;
+      const vector = await embed(text);
+      const now = new Date().toISOString();
+      insertChunk.run(chunkId, VAULT_ID, relPath, 'note', 'vault', contentHash(text), text, title, EMBED_MODEL, vector.length, JSON.stringify(fm), now, now);
+      insertVector.run(chunkId, packFloat32(vector));
+      const ftsResult = insertFts.run(text, chunkId);
+      setFtsRowid.run(ftsResult.lastInsertRowid, chunkId);
+      chunksRewritten++;
+    }
+    markDone.run(new Date().toISOString(), relPath);
+    done++;
+    if (done % 10 === 0) console.log(`  ${done}/${batch.length} files, ${chunksRewritten} chunks rewritten`);
+  }
+  const remaining = todo.length - done;
+  console.log(`Contextualized ${done} files (${chunksRewritten} chunks), ${failed} failed, ${remaining} still pending — db: ${DB_PATH}`);
+}
+
 const [, , cmd, arg1, arg2] = process.argv;
 if (cmd === 'index') {
   await cmdIndex(arg1);
@@ -620,7 +775,9 @@ if (cmd === 'index') {
   await cmdSearchMulti(rest, limit);
 } else if (cmd === 'dedupe') {
   await cmdDedupe();
+} else if (cmd === 'contextualize') {
+  await cmdContextualize(arg1 ? Number(arg1) : 0, arg2);
 } else {
-  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit] | search-multi "<q1>" "<q2>" [limit] | dedupe');
+  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit] | search-multi "<q1>" "<q2>" [limit] | dedupe | contextualize [maxFiles] [pathFilter]');
   process.exit(1);
 }
