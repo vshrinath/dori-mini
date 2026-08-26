@@ -518,6 +518,51 @@ likely doesn't have this — say so rather than presenting whatever ranked first
 were a confident answer (RRF's top score is always 1.000 regardless of real relevance, so
 it cannot be trusted alone as a confidence signal — see the same research doc, section 2.3).
 
+### `verify` — ask whether the retrieved text actually answers the question
+
+```bash
+node ~/.claude/skills/dori/semantic-index.mjs verify "<question>" [k]   # default k=5
+```
+
+Retrieves the top-k, reads the full chunk text with a cheap model, and returns JSON with a
+verdict of `sufficient`, `partial`, `insufficient`, or `unverified`. Every `sufficient` /
+`partial` verdict must carry a quote that is matched back against the source `.md` on disk;
+a verdict whose quotes all fail that match is automatically downgraded to `insufficient`.
+
+**Use it before you state a fact the user will act on — not on every search.** It costs
+~12 s, and it improves nothing about retrieval; all it does is turn a confident wrong answer
+into an honest "not found." That trade is worth it when being wrong is expensive (a
+commitment, a number, a name, anything headed into a document or a message) and not worth it
+while browsing or exploring. You are the only party that knows which situation you are in —
+that is exactly why this is a separate command and not wired into `search`.
+
+**Reach for it especially when the question might have no answer in the vault at all.** This
+is the one thing the ranked list genuinely cannot tell you: RRF pins the top hit of *any*
+query to score 1.000, so four questions whose answers were verified absent from the corpus
+came back with a score ladder character-for-character identical to genuine rank-1 successes
+(research doc section 2.3 / Part 15). All four are now correctly refused, stably across
+repeat runs.
+
+**Tested limits — do not oversell this to the user (Part 15):**
+
+- **`sufficient` with a verified quote can still be the wrong answer.** The quote check
+  proves the text exists in that document; it does **not** prove the text answers what was
+  asked. Measured: "how many old stories are in the archive" returned a real, disk-verified
+  quote about a *different* archive (47 personal bylines) when the question meant the
+  2,500-article Founding Fuel archive. Always read the returned quote yourself and confirm
+  it is about the same thing the question was about.
+- **Verdicts are not reproducible on borderline cases.** One question returned three
+  different verdicts across three identical runs. Refusals are stable; positive verdicts are
+  the ones that vary. Never re-run to get a better verdict, and never report "verified" as
+  though it were deterministic.
+- **`unverified` ≠ `insufficient`.** `unverified` means the check itself did not run. It is a
+  fact about the tooling, never about the vault — do not tell the user their vault lacks
+  something on an `unverified` result.
+- **It does not improve recall.** If retrieval never surfaced the right document, `verify`
+  correctly says insufficient — which is honest, not a fix. When you get `insufficient` on a
+  question you believe the vault *should* answer, that is a cue to retry with the source's
+  literal vocabulary (see above), not to conclude the vault is empty.
+
 ## Mini-site (browse projects/, yt/, and structured records locally)
 
 ```bash

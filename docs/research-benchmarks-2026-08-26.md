@@ -1673,3 +1673,170 @@ model, corpus, and pipeline. Reproducing the *method* does not reproduce the *re
 A/B here cost two batches and caught both that the technique gave nothing on this stack and
 that a naive reading of the fused column would have reported a 56% → 63% "win" that was
 mostly an untreated channel holding steady.
+
+---
+
+## Part 15 — Failure mode 2.3: an LLM sufficiency check, measured
+
+2.3 is the "no not-found signal" problem. Section 5 of the baseline eval recorded its exact
+shape: four negative controls whose answers were verified ABSENT from the corpus by grep
+returned 20 results each, with a score ladder — `1.000 0.984 0.968 0.953 0.938` —
+**character-for-character identical** to three genuine rank-1 successes. The worst case, N2,
+asked what uptime was promised after launch and returned a real, recent, right-project
+launch document at score 1.000 that contains no occurrence of "uptime" or "SLA" at all.
+
+Two cheap signals were already ruled out by measurement, not taste: a cosine floor failed
+calibration (4.2), and cross-query agreement was measured agreeing 3/3 on WRONG documents
+(10.x). Both are ordering signals; neither carries absolute relevance. What was left was to
+read the retrieved text and judge it.
+
+### 15.1 What was built
+
+`semantic-index.mjs verify "<question>" [k]` (default k=5). It retrieves the top-k, sends
+the **full chunk text** to `claude -p --model haiku` via the session's OAuth, and returns a
+ternary verdict — `sufficient` / `partial` / `insufficient` — as JSON.
+
+Three design decisions did real work, and each was forced by something already measured:
+
+- **Full chunk text, not snippets.** Part 11 found 3 of 5 verified snippets truncating
+  before the answer. A check fed snippets would refuse genuine hits.
+- **Quotes validated against the source file ON DISK**, not the indexed chunk. A
+  sufficient/partial verdict must carry a verbatim quote, and every quote is matched back to
+  the `.md` file. This rejects a fabricated quote, a quote stitched from two passages, and —
+  specifically — a quote lifted from the LLM-generated contextual prefix that 62 files still
+  carry from Part 14, which no human ever wrote into the document. A verdict whose quotes
+  all fail is **downgraded to insufficient** rather than reported as the model stated it.
+- **`unverified` is not `insufficient`.** If the check itself fails to run, it says so. Only
+  `insufficient` is a claim about the vault; conflating the two would turn an infrastructure
+  failure into a false statement about the user's data.
+
+### 15.2 The direct result: the negative controls
+
+This is the one measurement needing no adjudication, because absence was established by grep
+across the whole corpus before any retrieval ran.
+
+| | before | after |
+|---|---|---|
+| N1–N4 signalled absence | **0 of 4** (identical score ladder to genuine hits) | **4 of 4 refused** |
+
+N2 — the dangerous shape — is stable across every repeat run: `insufficient`, with the
+reason "Passages discuss launch timing and deployment procedures but contain no uptime or
+SLA commitments." The trap document still ranks first; the check simply declines to answer
+from it. **This is 2.3 fixed for the case it was written about.**
+
+### 15.3 The other 20 questions cannot be scored mechanically — and the first attempt got it wrong
+
+The first eval run reported "FALSE POSITIVE 4". That number was wrong, and the way it was
+wrong is worth recording. The harness scored "the target document I named was not retrieved,
+yet an answer was claimed" as a false positive. But the ground-truth key names **one**
+canonical document per question, while the vault covers several of these facts in more than
+one place. Two of those four were correctly-grounded answers from a document the key simply
+did not name:
+
+- **Q19** ("dead audio players — what did we decide and who was finding them") was answered
+  from a Sveta/Indrajit/Charles/Ramnath meeting note with two disk-verified quotes naming
+  the decision (temporarily remove the broken SoundCloud embeds) and the people (Ramnath
+  isolating the listings, Gowtham scanning for broken links). That is the right answer. The
+  key had named FF-Tax and FF-Pre.
+- **Q4** ("what would alert us if the site went down") retrieved `tech docs/MONITORING_SETUP.md`,
+  which has an "Alerting System" section. Groundable, just not from the named target.
+
+The harness now flags these as `REVIEW` rather than guessing, and prints the quotes for
+adjudication. **Generalizable point: a ground-truth key that names one document per question
+measures retrieval of that document, not answerability of the question. Used unadjusted as a
+hallucination metric it manufactures false positives.**
+
+Adjudicated, post-fix run: **4 true positives** (Q2, Q9, Q14 on named targets; Q19 from a
+non-target document), **1 false positive** (Q7, below), 19 refusals of which the great
+majority are correct — at k=5 most targets are not retrieved at all, and refusing is the
+right answer.
+
+### 15.4 A new failure mode: verified quote, wrong referent
+
+Q7 is a real false positive and not the kind anticipated. Asked "roughly how many old
+stories are sitting in the archive," the check answered `sufficient` with a quote that
+**passes disk verification**:
+
+> "The YourStory archive is a large older cluster under plain `Shrinath V`. Search result
+> indicates 47 stories." — `content/writing/public-writing-index.md`
+
+The quote is real. The document is real. It is the wrong archive: the question means the
+Founding Fuel content archive, which FF-Tax records as **2,500 articles**. Q17 produced the
+same shape in the first run — asked about "stories written by two people" (the real answer:
+~18 articles with multi-author bylines and a migration script for legacy joint stories), it
+returned a graphic-novel authorship dispute between two named people, with a verified quote.
+
+**Quote verification proves the text exists in the document. It does not prove the text
+answers the question that was asked.** The validator cannot catch a referent mismatch, and
+no amount of tightening it will — the failure is in the judgment, not the evidence. This is
+a real limit of the design and it is not fixed.
+
+### 15.5 The check is not deterministic
+
+Four questions, three repeat runs each, identical inputs:
+
+| question | run 1 | run 2 | run 3 |
+|---|---|---|---|
+| N2 (negative control) | insufficient | insufficient | insufficient |
+| Q19 | sufficient 2/2 | sufficient 3/3 | sufficient 3/3 |
+| Q4 | sufficient 2/3 | insufficient (downgraded) | sufficient 3/3 |
+| Q9 | insufficient (downgraded) | sufficient | partial |
+
+Q9 returned **three different verdicts in three runs**. Part of that was a bug (15.6); the
+run-2-versus-run-3 difference is not — that is verdict-level sampling variance.
+
+The important asymmetry: **refusal is stable, answering is not.** The negative control never
+wavered across any run. The variance sits on borderline positive cases, which is the
+tolerable direction for this failure mode but must not be described as reliability.
+
+### 15.6 A bug built here, then caught by measuring it
+
+The quote validator normalized whitespace, case, smart quotes, and dashes — but not markdown
+emphasis. A model quoting prose naturally drops the markers, writing `by contributor Ronan
+Roy` for a source that reads `by contributor **Ronan Roy**`. That failed verification and
+downgraded a genuine hit, intermittently, depending on whether the model happened to
+preserve the asterisks. Fixed by stripping `*`, `_`, and backticks from **both** sides, which
+loosens formatting only and never wording — pinned by a test asserting that `Ronan Royce`
+still fails. Post-fix, the eval had **0 false negatives** where the pre-fix run had 1.
+
+Worth noting how this was found: not by reading the code, but because the same question gave
+different answers on different runs and that was chased rather than averaged away.
+
+### 15.7 Cost
+
+Measured end-to-end, one call: **12.3 s wall clock, of which 11.7 s is the LLM call** —
+retrieval and the Transformers.js model load add ~0.6 s. Full 24-question eval: 285 s of
+LLM time.
+
+The economics are the opposite of Part 14's, and that is the reason this was worth building
+where contextual retrieval was not:
+
+| | contextual retrieval (Part 14) | sufficiency check |
+|---|---|---|
+| when paid | per **write**, every file, forever | per **read**, only when asked |
+| corpus cost | ~17 h for the remaining 2,393 files | zero |
+| capture latency | +35–49 s permanently | unchanged |
+| paid if nobody queries | yes | no |
+
+### 15.8 What this fixes, and what it does not
+
+**Fixes:** the stated 2.3 failure — a question the vault cannot answer now gets refused
+instead of answered confidently from a plausible-looking neighbour. All four negative
+controls, stably.
+
+**Does not fix, and must not be claimed:**
+
+- **Retrieval quality is unchanged.** The check reports honestly on whatever retrieval hands
+  it. Most of the 19 refusals are cases where retrieval never surfaced the target at k=5 —
+  the check converting a silent wrong answer into an honest "not found" is the whole of the
+  improvement. Recall is not improved; 2.1 is still handled only by the literal-vocabulary
+  retry.
+- **Wrong-referent false positives survive** (15.4), with verified quotes.
+- **Verdicts are not reproducible** on borderline cases (15.5).
+- **n = 24**, one corpus, one model, k=5.
+
+**Policy:** a separate opt-in command, not wired into `search`. The caller decides when the
+stakes justify ~12 s, and the caller is the only party that knows the stakes — the same
+question is cheap to get wrong while browsing and expensive to get wrong in a client email.
+Always-on was considered and rejected on 15.5 as much as on latency: a check that returns
+three different verdicts in three runs should not be silently gating every search.

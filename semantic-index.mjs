@@ -756,6 +756,181 @@ async function cmdContextualize(limit, pathFilter) {
   console.log(`Contextualized ${done} files (${chunksRewritten} chunks), ${failed} failed, ${remaining} still pending — db: ${DB_PATH}`);
 }
 
+// ---------------------------------------------------------------------------
+// Sufficiency check — failure mode 2.3, "no not-found signal"
+// ---------------------------------------------------------------------------
+// Neither retrieval channel can say "the vault does not contain this." RRF
+// max-normalization pins the top hit of ANY query to 1.000, so the score ladder for four
+// verified-absent negative controls came back character-for-character identical to three
+// genuine rank-1 successes (docs/baseline-retrieval-eval-2026-08-26.md section 5). A cosine
+// floor failed calibration, and cross-query agreement was measured agreeing 3/3 on WRONG
+// documents. Both cheap signals are ruled out by evidence, not by taste.
+//
+// What is left is to read the retrieved text and judge it — a different information source
+// from vector geometry. A launch-readiness document sits near "what uptime did we promise"
+// in embedding space precisely because it is about the launch, but a reader can see it
+// never mentions uptime.
+//
+// The teeth are the quote check, not the verdict. A sufficient/partial verdict must carry a
+// verbatim quote, and every quote is matched back against the SOURCE FILE ON DISK rather
+// than the indexed chunk. Three things that buys: a fabricated quote fails, a quote
+// stitched together from two passages fails, and a quote lifted from the LLM-generated
+// contextual prefix that 62 files carry from the Part 14 experiment fails — because no
+// human ever wrote that line into the document. A verdict whose quotes all fail is
+// downgraded to insufficient rather than reported as the model stated it.
+const VERIFY_MODEL = process.env.VERIFY_MODEL || 'haiku';
+const VERIFY_TIMEOUT_MS = 120000;
+const VERIFY_DEFAULT_K = 5;
+const VERIFY_MAX_PASSAGE_CHARS = 4000; // chunks run past 8k; keeps one prompt bounded
+const MIN_QUOTE_CHARS = 12;            // a word or a heading is not evidence
+
+function buildVerifyPrompt(question, passages) {
+  const numbered = passages
+    .map((p, i) => `<passage index="${i + 1}" source="${p.sourcePath}">\n${p.body}\n</passage>`)
+    .join('\n\n');
+  return `You are checking whether retrieved passages actually contain the answer to a question.
+
+Be strict. These passages come from a search index that always returns its top matches, so
+they are usually about the right topic even when they contain nothing that answers the
+question. Mistaking topical relevance for an answer is the specific error you exist to catch.
+
+QUESTION: ${question}
+
+${numbered}
+
+Classify:
+- SUFFICIENT — the passages contain enough to answer the question fully.
+- PARTIAL — they contain some of the answer but leave part of it unanswered.
+- INSUFFICIENT — they do not answer it. Being about the right project, meeting, or topic is NOT sufficiency.
+
+Rules:
+- If uncertain, answer INSUFFICIENT.
+- Use only the passages. Do not use outside knowledge and do not infer what was probably meant.
+- For SUFFICIENT or PARTIAL you MUST give at least one quote copied character-for-character
+  from a passage that carries the answer. Quotes are checked automatically against the source
+  documents; an approximate or invented quote fails that check and voids the verdict.
+- A quote must be a full clause or sentence, not a single word or a heading.
+
+Output exactly this, nothing else:
+VERDICT: <SUFFICIENT|PARTIAL|INSUFFICIENT>
+REASON: <one sentence, under 25 words>
+QUOTE: <passage index>|<verbatim quote>
+
+Give one QUOTE line per supporting quote. For INSUFFICIENT, output no QUOTE lines.`;
+}
+
+// Whitespace, case, and smart-punctuation are normalized away before matching: a quote that
+// is verbatim in substance should not fail because markdown wrapped a line differently or
+// the model straightened an apostrophe. Anything beyond that must match exactly.
+function normalizeForMatch(s) {
+  return s
+    .replace(/[‘’ʼ]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, '-')
+    // Markdown emphasis and code markers are formatting, not wording. A model quoting prose
+    // naturally drops them — "by contributor Ronan Roy" for a source that reads "by
+    // contributor **Ronan Roy**" — and rejecting that as unverified made a genuine hit fail
+    // intermittently (measured: Q9 flipped between sufficient and downgraded across repeated
+    // runs on exactly this). Stripped from BOTH sides, so this loosens formatting only and
+    // never wording: a quote still has to match the document's actual words to pass.
+    .replace(/[*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+const verifyFileCache = new Map();
+function sourceText(sourcePath) {
+  if (!verifyFileCache.has(sourcePath)) {
+    let text = null;
+    try {
+      text = normalizeForMatch(readFileSync(join(VAULT_ROOT, sourcePath), 'utf8'));
+    } catch {
+      text = null; // unreadable source cannot corroborate anything — fails closed below
+    }
+    verifyFileCache.set(sourcePath, text);
+  }
+  return verifyFileCache.get(sourcePath);
+}
+
+function checkQuote(quote, passage) {
+  const q = normalizeForMatch(quote);
+  if (q.length < MIN_QUOTE_CHARS) return { ok: false, why: 'too_short' };
+  if (!passage) return { ok: false, why: 'bad_passage_index' };
+  const src = sourceText(passage.sourcePath);
+  if (src === null) return { ok: false, why: 'source_unreadable' };
+  if (!src.includes(q)) return { ok: false, why: 'not_in_source' };
+  return { ok: true, why: 'ok' };
+}
+
+async function cmdVerify(question, k) {
+  const emit = (o) => console.log(JSON.stringify(o, null, 2));
+  const lists = await retrieveLists(question, k, loadVectorRows());
+  const hits = fuseRrf(lists, k);
+
+  if (hits.length === 0) {
+    emit({ question, verdict: 'insufficient', reason: 'retrieval returned no passages', passages: [], quotes: [], model: VERIFY_MODEL });
+    return;
+  }
+
+  const passages = hits.map((h) => ({
+    sourcePath: h.sourcePath,
+    title: h.title,
+    body: h.text.length > VERIFY_MAX_PASSAGE_CHARS
+      ? h.text.slice(0, VERIFY_MAX_PASSAGE_CHARS) + '\n[...passage truncated...]'
+      : h.text,
+  }));
+
+  const started = Date.now();
+  const res = spawnSync('claude', ['-p', '--model', VERIFY_MODEL], {
+    input: buildVerifyPrompt(question, passages),
+    encoding: 'utf8',
+    timeout: VERIFY_TIMEOUT_MS,
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  const elapsed_ms = Date.now() - started;
+  const shown = passages.map((p) => p.sourcePath);
+
+  // Fails closed and says so. "unverified" is deliberately NOT "insufficient": the caller
+  // must be able to tell "the vault does not have this" apart from "the check did not run",
+  // because only the first is a fact about the vault.
+  if (res.error || res.status !== 0 || !res.stdout) {
+    const why = res.error ? res.error.message : `exit status ${res.status}`;
+    emit({ question, verdict: 'unverified', reason: `sufficiency check did not run: ${why}`, passages: shown, quotes: [], elapsed_ms, model: VERIFY_MODEL });
+    return;
+  }
+
+  const vm = res.stdout.match(/^\s*VERDICT:\s*(SUFFICIENT|PARTIAL|INSUFFICIENT)\b/im);
+  if (!vm) {
+    emit({ question, verdict: 'unverified', reason: 'sufficiency check returned no parsable verdict', passages: shown, quotes: [], elapsed_ms, model: VERIFY_MODEL });
+    return;
+  }
+  let verdict = vm[1].toLowerCase();
+  const reason = (res.stdout.match(/^\s*REASON:\s*(.+)$/im)?.[1] ?? '').trim();
+
+  const quotes = [...res.stdout.matchAll(/^\s*QUOTE:\s*(\d+)\s*\|(.+)$/gim)].map((m) => {
+    const idx = Number(m[1]);
+    const text = m[2].trim();
+    const passage = passages[idx - 1];
+    const chk = checkQuote(text, passage);
+    return { passage: idx, source: passage?.sourcePath ?? null, quote: text, verified: chk.ok, check: chk.why };
+  });
+
+  const verifiedCount = quotes.filter((q) => q.verified).length;
+  let downgraded_from = null;
+  if ((verdict === 'sufficient' || verdict === 'partial') && verifiedCount === 0) {
+    downgraded_from = verdict;
+    verdict = 'insufficient';
+  }
+
+  emit({
+    question, verdict, reason,
+    ...(downgraded_from ? { downgraded_from, downgrade_cause: 'no quote could be matched back to its source document' } : {}),
+    quotes_verified: verifiedCount, quotes_claimed: quotes.length,
+    quotes, passages: shown, elapsed_ms, model: VERIFY_MODEL,
+  });
+}
+
 const [, , cmd, arg1, arg2] = process.argv;
 if (cmd === 'index') {
   await cmdIndex(arg1);
@@ -777,7 +952,10 @@ if (cmd === 'index') {
   await cmdDedupe();
 } else if (cmd === 'contextualize') {
   await cmdContextualize(arg1 ? Number(arg1) : 0, arg2);
+} else if (cmd === 'verify') {
+  if (!arg1) { console.error('Usage: node semantic-index.mjs verify "<question>" [k]'); process.exit(1); }
+  await cmdVerify(arg1, arg2 ? Number(arg2) : VERIFY_DEFAULT_K);
 } else {
-  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit] | search-multi "<q1>" "<q2>" [limit] | dedupe | contextualize [maxFiles] [pathFilter]');
+  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit] | search-multi "<q1>" "<q2>" [limit] | verify "<question>" [k] | dedupe | contextualize [maxFiles] [pathFilter]');
   process.exit(1);
 }
