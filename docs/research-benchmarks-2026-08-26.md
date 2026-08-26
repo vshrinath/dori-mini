@@ -938,3 +938,91 @@ only one real fact chain has been used to verify it so far.
   function (hyphenated query terms), not something this session set out to find — a direct
   result of testing the decomposition fix against real, naturally-hyphenated phrasing
   ("Go-Live") rather than sanitized test queries.
+
+---
+
+## Part 10 — Multi-query retrieval (the 2.1 fix): built, and the naive version does not work
+
+Built the 2.1 fix: a `search-multi` command in **both** scripts that takes N phrasings of
+one question, retrieves each, and fuses the lists with RRF (the RAG-Fusion pattern). The
+caller — an LLM agent driving the CLI — supplies the phrasings; no LLM call was added
+inside either script, so both stay deterministic.
+
+Implementation notes:
+- `semantic-index.mjs`: refactored `cmdSearch` into `loadVectorRows()` + `retrieveLists()`
+  so N queries score against one decoded copy of the vault's embeddings instead of
+  re-scanning per query. `fuseRrf` already existed (k=60, mirroring real dori-engine's
+  `src/vector/rrf.ts`) and takes an array of lists, so multi-query is just 2N lists
+  instead of 2 — no new fusion code.
+- `query-vault.mjs`: `searchDocs` split into `searchStmt`/`runSearch`/`bytesOf`; added a
+  `fuseByRelPath` with the same k=60 and max-normalization. Duplicated rather than imported
+  because the two CLIs are separate entry points.
+- **Verified behavior-neutral for existing single-query search**: ran `git show
+  HEAD:semantic-index.mjs` to a sibling path (needs the local `node_modules`, so `/tmp`
+  fails) and diffed its output against the refactored version on two queries — byte-identical
+  ranked lists.
+
+### 10.1 The headline result: naive multi-query makes 2.1 *worse*, not better
+
+Tested against 2.1's canonical failure — "when will Vybe launch" never surfaces
+`captures/2025-03-19-sprint-planning.md`, which contains the answer ("It is called the
+season starts in June", line 935). Confirmed first that this doc is indexed and not marked
+a duplicate, so this is genuine ranking, not a coverage gap.
+
+| # | Approach | Target doc found? |
+|---|---|---|
+| A | `search "when will Vybe launch"`, limit 20 | **No** (the original 2.1 failure, still reproducible) |
+| B | `search-multi` × 3 **natural** rephrasings ("what is the timeline for launching Vybe", "Vybe go to market date") | **No** — and all three agreed 3/3 on the same wrong docs |
+| C | `search-multi` × 3 = 2 natural + 1 source-vocabulary ("the season starts in June") | **No** |
+| E | `search "proper launch season starts June"` alone | **Yes — rank 2** |
+| F | `search-multi` × 2 = 1 natural + 1 source-vocabulary | **Yes — rank 3** |
+| G | `search-multi` × 2 = 2 source-vocabulary phrasings | **Yes — rank 1, corroborated 2/2** |
+
+Three findings, all of which contradict the naive "generate N paraphrases and fuse" recipe:
+
+**1. Paraphrases of the *question* are not diverse enough.** Case B's three rephrasings are
+lexically and semantically near each other and all far from how the source actually talks.
+They retrieved the same wrong documents as each other. Variance has to come from the
+*vocabulary register* — a guess at the source's own wording — not from restating the
+question three ways.
+
+**2. More phrasings is not monotonically better; a weak majority actively suppresses a
+good variant.** Case C contains the exact query that succeeds alone in case E, yet C fails.
+RRF sums rank contributions across lists, so two poor phrasings (4 of 6 channel lists)
+outvote one good phrasing (2 of 6). Case F — the same good phrasing with only *one* weak
+partner — recovers the document at rank 3, and case G with two good phrasings puts it at
+rank 1. **The practical rule is 2 well-differentiated phrasings, not 3+ similar ones.**
+
+**3. Cross-query agreement is corroboration, not correctness — this partially invalidates
+the 4.4 proposal.** Section 4.4 suggested that if several phrasings return no overlapping
+documents, that disagreement is a cheap proxy for "the vault doesn't have this." Case B is
+the counterexample: three phrasings reached **perfect 3/3 agreement on documents that do
+not contain the answer.** High agreement is fully compatible with being wrong, because
+correlated queries make correlated errors. The signal is still worth surfacing (a doc found
+by several genuinely different phrasings is better evidence than RRF's max-normalized
+score, which is always 1.000 for the top hit), but it cannot be reported as a confidence
+verdict. Both implementations therefore label it as corroboration and explicitly hint-not-
+verdict — the same conclusion 4.2 reached for the cosine-floor attempt, now confirmed for
+the agreement-based alternative that 4.4 had proposed as the cheaper replacement.
+
+### 10.2 Honest scope of this result
+
+- One fact chain, tested six ways. Not a multi-case eval — the six variants above are
+  different *approaches to the same question*, not six independent questions. The direction
+  (register diversity beats paraphrase count) is consistent and mechanically explicable via
+  how RRF sums contributions, but it has not been validated across independent cases.
+- **2.1 is improved, not closed.** `search-multi` gives a real path to the answer that
+  single-query natural phrasing does not have (A fails, G succeeds at rank 1), but it
+  requires the caller to guess the source's vocabulary well. When that guess is bad, the
+  fused result is no better — and per finding 2, can be worse than not fusing at all.
+- Nothing here changes 2.3. A calibrated "not found" signal remains unbuilt, and finding 3
+  removed the cheapest candidate fix for it.
+
+### 10.3 Where this leaves the open issues
+
+| Issue | Status after Part 10 |
+|---|---|
+| 2.1 paraphrase brittleness | **Improved.** `search-multi` shipped in both scripts; SKILL.md now teaches register-diversity and the 2-not-3 rule. Still requires a good source-vocabulary guess. |
+| 2.4 multi-hop | **Improved** (Part 9), unchanged here. |
+| 2.3 no "not found" signal | **Still open, and now harder.** 4.2's cosine floor failed; 4.4's cross-query-agreement replacement is shown in 10.1 finding 3 to produce confident false agreement. Remaining credible option is an LLM sufficiency-check over retrieved context (Google's "sufficient context" work, cited in 4.4) — a real build, not a heuristic. |
+| 2.2 FTS brittleness | Fixed (Part 9's hyphen crash + the earlier OR/BM25 port). |

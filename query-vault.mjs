@@ -42,6 +42,7 @@ function usage(msg) {
   node query-vault.mjs last-meeting [--person <name>] [--sections decisions,actions] [--full]
   node query-vault.mjs show <path-or-title> [--sections decisions,actions] [--full]
   node query-vault.mjs search "<keywords>" [--limit ${DEFAULT_SEARCH_LIMIT}]
+  node query-vault.mjs search-multi "<phrasing 1>" "<phrasing 2>" ["<phrasing 3>"] [--limit ${DEFAULT_SEARCH_LIMIT}]
   node query-vault.mjs stats`);
   process.exit(1);
 }
@@ -379,10 +380,8 @@ function toPrefixOrQuery(q) {
   return kept.map((t) => `"${t.replace(/"/g, '')}"*`).join(' OR ');
 }
 
-function searchDocs(db, q, limit) {
-  const n = Math.min(Math.max(Number(limit) || DEFAULT_SEARCH_LIMIT, 1), MAX_SEARCH_LIMIT);
-  const match = toPrefixOrQuery(q);
-  const stmt = db.prepare(`
+function searchStmt(db) {
+  return db.prepare(`
     SELECT
       vault_documents_fts.rel_path AS rel_path,
       vault_documents.title AS title,
@@ -397,22 +396,88 @@ function searchDocs(db, q, limit) {
     ORDER BY rank
     LIMIT ?
   `);
-  let hits = [];
-  if (match) {
-    try {
-      hits = stmt.all(match, n);
-    } catch (err) {
-      console.error(`FTS query failed: ${err.message}`);
-      process.exit(1);
-    }
+}
+
+function runSearch(stmt, q, n) {
+  const match = toPrefixOrQuery(q);
+  if (!match) return [];
+  try {
+    return stmt.all(match, n);
+  } catch (err) {
+    console.error(`FTS query failed: ${err.message}`);
+    process.exit(1);
   }
+}
+
+function bytesOf(hits) {
+  return hits.reduce((s, h) => s + Buffer.byteLength(h.snippet || '', 'utf8'), 0);
+}
+
+function searchDocs(db, q, limit) {
+  const n = Math.min(Math.max(Number(limit) || DEFAULT_SEARCH_LIMIT, 1), MAX_SEARCH_LIMIT);
+  const hits = runSearch(searchStmt(db), q, n);
   printResult({
     db: DB_PATH,
     query: { cmd: 'search', q, limit: n, full: false },
-    bytes: {
-      full_content: 0,
-      returned: hits.reduce((s, h) => s + Buffer.byteLength(h.snippet || '', 'utf8'), 0),
+    bytes: { full_content: 0, returned: bytesOf(hits) },
+    hits,
+  });
+}
+
+// Reciprocal Rank Fusion over N result lists, keyed on rel_path. Same k=60 and the
+// same max-normalization as semantic-index.mjs's fuseRrf / real dori-engine's
+// src/vector/rrf.ts — duplicated rather than imported because these two CLIs are
+// separate entry points (importing would run the other's top-level dispatch).
+// Caveat inherited from that shared design: the top score is always 1.000 by
+// construction, so it is NOT a relevance signal. `found_by` below is the real signal.
+const RRF_K = 60;
+
+function fuseByRelPath(lists, limit) {
+  const merged = new Map();
+  lists.forEach((list) => {
+    list.forEach((hit, index) => {
+      const entry = merged.get(hit.rel_path);
+      const contribution = 1 / (RRF_K + index + 1);
+      if (entry) {
+        entry.score += contribution;
+        entry.found_by += 1;
+        entry.ranks.push(index + 1);
+      } else {
+        merged.set(hit.rel_path, { score: contribution, hit, found_by: 1, ranks: [index + 1] });
+      }
+    });
+  });
+  const ranked = [...merged.values()].sort((a, b) => b.score - a.score).slice(0, limit);
+  const denom = ranked[0]?.score > 0 ? ranked[0].score : 1;
+  return ranked.map((e) => ({ ...e.hit, score: e.score / denom, found_by: e.found_by, ranks: e.ranks }));
+}
+
+// Multi-query retrieval (RAG-Fusion pattern): the CALLER (an LLM agent) supplies several
+// rephrasings of one question; this fuses their result lists into one ranked list. Fixes
+// the paraphrase-brittleness failure mode where a natural phrasing misses a document that
+// a literal, source-vocabulary phrasing finds — see docs/research-benchmarks-2026-08-26.md
+// section 2.1. Also emits a cross-query agreement signal: a document found by several
+// independent phrasings is corroborated; zero overlap across all phrasings is a cheap
+// (uncalibrated) hint that the vault may simply not cover the question.
+function searchMulti(db, queries, limit) {
+  const n = Math.min(Math.max(Number(limit) || DEFAULT_SEARCH_LIMIT, 1), MAX_SEARCH_LIMIT);
+  const stmt = searchStmt(db);
+  const lists = queries.map((q) => runSearch(stmt, q, n));
+  const hits = fuseByRelPath(lists, n);
+  const corroborated = hits.filter((h) => h.found_by > 1).length;
+  printResult({
+    db: DB_PATH,
+    query: { cmd: 'search-multi', queries, limit: n, full: false },
+    agreement: {
+      queries: queries.length,
+      per_query_hits: lists.map((l) => l.length),
+      distinct_docs: new Set(lists.flat().map((h) => h.rel_path)).size,
+      corroborated_docs: corroborated,
+      // Honest, uncalibrated signal — see 4.2/2.3 in the research doc: no threshold here
+      // has been validated against known-answerable vs. known-unanswerable queries.
+      no_overlap: queries.length > 1 && corroborated === 0,
     },
+    bytes: { full_content: 0, returned: bytesOf(hits) },
     hits,
   });
 }
@@ -433,6 +498,11 @@ try {
     const q = args.positional.join(' ').trim();
     if (!q) usage('search requires keywords');
     searchDocs(db, q, args.flags.limit);
+  } else if (args.cmd === 'search-multi') {
+    // Each positional arg is one full rephrasing — quote them individually in the shell.
+    const queries = args.positional.map((q) => q.trim()).filter(Boolean);
+    if (queries.length < 2) usage('search-multi requires 2+ quoted queries');
+    searchMulti(db, queries, args.flags.limit);
   } else if (args.cmd === 'stats') {
     statsCmd(db);
   } else {

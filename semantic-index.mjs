@@ -368,22 +368,32 @@ async function cmdIndex(onlyFile) {
   if (filesDuplicate > duplicatesLogged.length) console.log(`  ...and ${filesDuplicate - duplicatesLogged.length} more`);
 }
 
-async function cmdSearch(query, limit) {
-  const queryVector = await embed(query);
-  const ftsQuery = toFtsQuery(query);
-
-  const vecRows = db
+// All embeddings for the vault, decoded once. cmdSearchMulti scores several queries
+// against the same set, so loading/unpacking per query would repeat the whole scan.
+function loadVectorRows() {
+  return db
     .prepare('SELECT c.chunk_id, c.source_path, c.title, c.text, v.embedding FROM search_vectors v JOIN search_chunks c ON c.chunk_id = v.chunk_id WHERE c.vault_id = ?')
-    .all(VAULT_ID);
-  const vectorHits = vecRows
+    .all(VAULT_ID)
     .map((r) => ({
       chunkId: r.chunk_id, sourcePath: r.source_path, title: r.title, text: r.text,
-      score: cosineSimilarity(queryVector, unpackFloat32(r.embedding)),
+      vector: unpackFloat32(r.embedding),
+    }));
+}
+
+// The two retrieval channels for ONE query, returned unfused so a caller can fuse
+// across several queries at once (see cmdSearchMulti).
+async function retrieveLists(query, limit, vecRows) {
+  const queryVector = await embed(query);
+  const vectorHits = vecRows
+    .map((r) => ({
+      chunkId: r.chunkId, sourcePath: r.sourcePath, title: r.title, text: r.text,
+      score: cosineSimilarity(queryVector, r.vector),
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit * 2);
 
   let ftsHits = [];
+  const ftsQuery = toFtsQuery(query);
   if (ftsQuery) {
     const rows = db
       .prepare(`
@@ -398,13 +408,55 @@ async function cmdSearch(query, limit) {
       score: arr.length > 0 ? (arr.length - i) / (arr.length + 1) : 0.5,
     }));
   }
+  return [vectorHits, ftsHits];
+}
 
-  const fused = fuseRrf([vectorHits, ftsHits], limit);
+async function cmdSearch(query, limit) {
+  const lists = await retrieveLists(query, limit, loadVectorRows());
+  const fused = fuseRrf(lists, limit);
   for (const hit of fused) {
     console.log(`[${hit.score.toFixed(3)}] ${hit.sourcePath} — ${hit.title}`);
     console.log(`  ${previewAround(hit.text, query)}\n`);
   }
   if (fused.length === 0) console.log('No results.');
+}
+
+// Multi-query retrieval (the RAG-Fusion pattern): the CALLER — an LLM agent driving this
+// CLI — supplies several rephrasings of one question, and all 2N channel lists fuse
+// through the same RRF. Targets the paraphrase-brittleness failure mode documented in
+// docs/research-benchmarks-2026-08-26.md section 2.1, where a natural phrasing misses a
+// document that the source's own literal vocabulary finds immediately. No LLM call is
+// added here: these scripts stay deterministic, the rephrasings come from the caller.
+async function cmdSearchMulti(queries, limit) {
+  const vecRows = loadVectorRows();
+  const perQuery = [];
+  for (const q of queries) perQuery.push(await retrieveLists(q, limit, vecRows));
+  const fused = fuseRrf(perQuery.flat(), limit);
+
+  // Cross-query agreement: how many of the N rephrasings independently found each chunk's
+  // document. A doc corroborated by several phrasings is a stronger signal than RRF's own
+  // score, which is max-normalized to 1.000 for the top hit of ANY query (see 2.3/4.2).
+  const foundBy = new Map();
+  perQuery.forEach((lists, i) => {
+    for (const path of new Set(lists.flat().map((h) => h.sourcePath))) {
+      if (!foundBy.has(path)) foundBy.set(path, new Set());
+      foundBy.get(path).add(i);
+    }
+  });
+
+  for (const hit of fused) {
+    const n = foundBy.get(hit.sourcePath)?.size ?? 1;
+    const mark = n > 1 ? `${n}/${queries.length} phrasings` : `1/${queries.length} phrasing`;
+    console.log(`[${hit.score.toFixed(3)}] (${mark}) ${hit.sourcePath} — ${hit.title}`);
+    console.log(`  ${previewAround(hit.text, queries[0])}\n`);
+  }
+  if (fused.length === 0) console.log('No results.');
+  const corroborated = fused.filter((h) => (foundBy.get(h.sourcePath)?.size ?? 1) > 1).length;
+  if (fused.length > 0 && corroborated === 0) {
+    // Uncalibrated hint, deliberately worded as a hint — 4.2 showed a thresholded
+    // confidence signal here failing badly, so this reports the fact, not a verdict.
+    console.log(`Note: no document was found by more than one phrasing — weak corroboration.`);
+  }
 }
 
 // CLI display convenience, not a mirrored Dori mechanism (dori-engine hands the
@@ -523,9 +575,20 @@ if (cmd === 'index') {
 } else if (cmd === 'search') {
   if (!arg1) { console.error('Usage: node semantic-index.mjs search "<query>" [limit]'); process.exit(1); }
   await cmdSearch(arg1, arg2 ? Number(arg2) : 8);
+} else if (cmd === 'search-multi') {
+  // Variable arg count: every positional is one full rephrasing, with an optional bare
+  // trailing number as the limit (only popped when 3+ args remain, so two queries and no
+  // limit still parse as two queries).
+  const rest = process.argv.slice(3);
+  const limit = rest.length > 2 && /^\d+$/.test(rest[rest.length - 1]) ? Number(rest.pop()) : 8;
+  if (rest.length < 2) {
+    console.error('Usage: node semantic-index.mjs search-multi "<phrasing 1>" "<phrasing 2>" ["<phrasing 3>"] [limit]');
+    process.exit(1);
+  }
+  await cmdSearchMulti(rest, limit);
 } else if (cmd === 'dedupe') {
   await cmdDedupe();
 } else {
-  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit] | dedupe');
+  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit] | search-multi "<q1>" "<q2>" [limit] | dedupe');
   process.exit(1);
 }

@@ -446,6 +446,51 @@ proper noun, an exact date, quoted language — before concluding the vault has 
 Don't retry past 2–3 total queries either way — if none of them find it, say so rather
 than continuing to guess new phrasings.
 
+### `search-multi` — fuse several phrasings into one ranked list
+
+Both scripts take several phrasings at once and fuse the result lists with RRF, so you get
+one merged list instead of reading 2–3 separate ones:
+```bash
+node ~/.claude/skills/dori/semantic-index.mjs search-multi "<phrasing 1>" "<phrasing 2>" [limit]
+node ~/.claude/skills/dori/query-vault.mjs search-multi "<phrasing 1>" "<phrasing 2>" [--limit N]
+```
+Each result is annotated with how many of your phrasings independently found it
+(`2/2 phrasings`). No LLM call happens inside either script — **you** supply the phrasings,
+the script only retrieves and fuses.
+
+**Vary the vocabulary register, not just the wording — this is the whole trick.** Tested
+against the real 2.1 failure case (2026-08-26), and the result is sharper than "generate
+some paraphrases":
+
+| What was tried | Target doc found? |
+|---|---|
+| `search "when will Vybe launch"` (natural, alone, limit 20) | **No** |
+| `search-multi` with 3 *natural* rephrasings ("what is the timeline for launching Vybe", "Vybe go to market date") | **No** — and all 3 agreed on the same wrong docs |
+| `search-multi` with 1 natural + 1 source-vocabulary phrasing | **Yes** — rank 3 |
+| `search-multi` with 2 source-vocabulary phrasings | **Yes** — rank 1, corroborated 2/2 |
+
+Rephrasings that stay in *question* register all retrieve the same wrong documents,
+because they're all lexically and semantically near each other and far from how the source
+actually talks. At least one phrasing should be a guess at the source's own words — how a
+transcript, a heading, or a decision line would actually be written ("the season starts in
+June", not "when will it launch").
+
+**More phrasings is NOT monotonically better.** Also tested: adding two weak natural
+phrasings alongside one good source-vocabulary phrasing *suppressed* the correct document
+that the good phrasing found on its own — RRF sums rank contributions, so a majority of
+poor variants outvotes one good one. Prefer **2 well-differentiated phrasings over 3+
+similar ones**, and if one phrasing is clearly your best guess at the source's wording,
+consider running it alone first.
+
+**`found_by` / `N/N phrasings` is corroboration, not correctness.** In the 3-natural-
+phrasings run above, the wrong documents scored a perfect 3/3 agreement. Agreement means
+several phrasings retrieved the same thing, which is worth knowing — it does **not** mean
+the thing answers the question. Always check the snippet actually contains the fact.
+The `no_overlap` / "weak corroboration" note is likewise a hint, not a verdict: it has
+never been calibrated against known-answerable vs. known-unanswerable questions (a previous
+attempt at a calibrated confidence signal failed outright — research doc 4.2), so never
+report it to the user as "the vault doesn't have this" on its own.
+
 **How to reconcile:** run each targeted query as its own `search` call, read each result
 set on its own terms (don't assume the first hit answers a sub-question the query wasn't
 actually about), and only merge into one answer if the sub-answers are actually
