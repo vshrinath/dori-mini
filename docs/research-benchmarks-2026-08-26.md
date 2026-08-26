@@ -1117,6 +1117,303 @@ truncating too aggressively.
 
 ---
 
+## Part 11 — YouTube capture: measured (2026-08-26)
+
+Every other benchmark in this doc measures search/recall over the vault. The product
+owner's flagship example — "a 45-minute video you scrub through and get no insights from"
+vs. "paste the link, it's catalogued, then ask questions or jump by chapter" — had **zero**
+measured data behind it. This part fills that gap. The headline finding is that the story
+is right about *why* and wrong about *what*: **the catalogued note is not meaningfully
+smaller than the transcript.** The reduction is entirely at query time.
+
+### 11.1 The video, the command, and the pre-checks
+
+Picked from the user's real, already-captured `yt/` directory rather than downloading
+something arbitrary: **`yt/2026-08-20-e182-blind-spots-to-big-bets-shrinath-v.md`** —
+"E182 | Blind Spots To Big Bets | Shrinath V" (https://youtu.be/hiYTq9xnkPw, channel
+"Inspire Someone today", uploaded 2026-08-20). **46:08 (2,768 s)** — the closest thing the
+vault has to the marketing story's "45-minute video," and long enough to be a genuine
+scrub-through problem.
+
+Re-ran SKILL.md section 1's documented command verbatim, into a scratch dir (nothing was
+written to the vault):
+```bash
+yt-dlp --write-auto-sub --skip-download --sub-lang en --convert-subs srt \
+  --write-info-json -o "%(title)s" "https://youtu.be/hiYTq9xnkPw"
+```
+Wall-clock, two runs: **2.05 s and 2.39 s** (`/usr/bin/time -p`, includes network). This is
+the only wall-clock figure in this part that is measured rather than arithmetic.
+
+Confirmed first that the note is genuinely indexed in both real indexes, so every retrieval
+miss below is a ranking result and not a coverage gap — the distinction Part 7 showed
+matters:
+- `portal.db`: 1 `vault_documents` row (38,658 stored chars), 1 `vault_documents_fts` row,
+  `duplicate_of` NULL.
+- `vectors.db`: **41 chunks** (min 326 / mean 941 / max 1,191 chars), `duplicate_of` NULL.
+
+**Limit-clamp check, per Part 12's lesson.** Every retrieval run below passed an explicit
+`--limit 5` / `5`, under both the old `MAX_SEARCH_LIMIT = 8` and the current 50, so no run
+was silently truncated. Verified by asserting requested-vs-returned
+(`requested limit: 5 | hits returned: 5`) rather than assuming it.
+
+### 11.2 Raw transcript volume — and a 5× inflation trap in the obvious number
+
+The SRT yt-dlp actually writes is **224,455 chars**. **That number should not be used.**
+YouTube auto-captions are *rolling*: each line is emitted twice — once as the incoming
+bottom line, once as the carried-over top line of the next cue — plus whitespace-only
+spacer cues. Measured on this file: **3,604 caption lines collapse to 1,206** once blanks
+are dropped and consecutive duplicates removed.
+
+Stripping numbering/timestamps to plain prose (SKILL.md line 30's own instruction) gives the
+honest ingest figure:
+
+| Measure | Value |
+|---|---|
+| SRT as delivered | 224,455 chars |
+| Plain prose after dedup | **45,568 chars** |
+| Words | 8,699 |
+| Estimated tokens (~4 chars/token) | **~11,392** |
+
+Per this doc's standing framing, the token figure is an estimate of the estimate — the
+4-chars/token rule is a rule of thumb, not a tokenizer run. **45,568 chars is the
+denominator every comparison below uses**, because it is the conservative one. Using the
+224,455-char SRT would inflate every reduction percentage by ~5× for free, which is exactly
+the kind of unfalsifiable rounding this doc exists to prevent.
+
+### 11.3 Structured capture volume — the finding that contradicts the expected story
+
+| Measure | Value |
+|---|---|
+| Prose transcript | 45,568 chars |
+| Vault note (file, incl. frontmatter) | 39,305 chars |
+| Vault note (body, as stored in `portal.db`) | 38,658 chars |
+| **Reduction** | **13.7%** (15.2% on the stored body) |
+
+**This is the honest result and it is not the flattering one.** The catalogued note is
+essentially a full-fidelity cleaned transcript — 31 sections spanning [00:00] to [44:24] —
+not a summary. It is ~14% smaller, and it *adds* material the transcript does not contain
+(the uploader's description, the "what you will learn" list, speaker attribution, a Key
+Ideas section). Any site claim shaped like "Dori turns a 45-minute video into something far
+smaller" is **false for this capture**. The note is a *restructure and enrichment*, not a
+compression. The compression is real, but it lives at query time (11.4).
+
+**A fidelity gain that is also a fidelity risk.** The note repairs ASR garbles — a genuine
+improvement, and exactly what SKILL.md line 41 instructs — but that means it contains text
+the raw captions do not literally support:
+
+| Raw auto-caption | Vault note |
+|---|---|
+| "folks like **Santo Dominic** who does a lot of behavioral research in India" | "folks like **Santosh Desai**, who does a lot of behavioural research in India" |
+| "we've not been able to **fire** a single engineer" | "we've not been able to **let go of** a single engineer" |
+| "operationally lazy not intellectually" (truncated) | "operationally lazy, not intellectually lazy" |
+
+The Santosh Desai repair is almost certainly correct (a well-known Indian behavioural
+commentator; "Santo Dominic" is an obvious garble), and the note's own header discloses the
+practice ("treat quotes as close paraphrase rather than verbatim"). But it is an
+**inference, not a source fact** — the video never says it intelligibly. A verbatim-quote
+claim would not be safe on auto-caption captures.
+
+### 11.4 Needle-in-haystack retrieval — 5 real facts, both channels, natural phrasing first
+
+Same methodology as 1.4/1.5/8.2. Five factual questions whose answers are genuinely in the
+video — each verified against the raw prose transcript, not just the note, before querying.
+Natural-language phrasing, `limit 5`, real indexes, read-only.
+
+```bash
+node query-vault.mjs search "<question>" --limit 5
+node semantic-index.mjs search "<question>" 5
+```
+
+| # | Question | FTS (`query-vault`) | Semantic (`semantic-index`) |
+|---|---|---|---|
+| 1 | how much did the Silicon Valley company spend on tokens | **MISS** | **rank 1** |
+| 2 | which two companies did Shrinath get laid off from | rank 3 | **MISS** |
+| 3 | what was wrong with the teacher persona in the education product | **rank 1** | **rank 1** (also 3, 4) |
+| 4 | who does he admire for behavioural research in India | **MISS** | **MISS** |
+| 5 | what does he mean by operationally lazy | **rank 1** | **MISS** |
+
+- **Surfaced by at least one channel: 4 / 5.**
+- **Surfaced by both channels: 1 / 5** (Q3).
+- **Surfaced by neither: 1 / 5** (Q4).
+- The two channels miss on *different* questions every time. A fourth independent instance
+  of 2.1/8.2's finding, now on a video transcript: which channel succeeds is not predictable
+  from outside.
+
+**Section 2.3 reproduced verbatim on new data.** Q5's semantic run returned five entirely
+irrelevant documents (two Kindle books, two clippings, Newport's *Deep Work*) scored
+**1.000, 0.984, 0.968, 0.953, 0.938** — the identical max-normalized pattern 2.3 documents
+for facts that provably do not exist. Nothing distinguishes it from a good hit.
+
+**Q4 is the most instructive miss, and it breaks a plausible assumption.** The question
+"who does he admire for behavioural research in India" nearly quotes the note, which reads
+"who does a lot of behavioural research in India". Yet:
+
+| Query | Result |
+|---|---|
+| `who does he admire for behavioural research in India` | MISS |
+| `behavioural research in India` (near-verbatim) | **MISS** |
+| `Santosh Desai` (the rare proper noun) | **rank 3** (only 3 hits exist in the whole vault) |
+
+So **high lexical overlap does not rescue retrieval — a rare term does.** A clean new
+instance of 2.2's disclosed residual limitation: OR-of-prefix-tokens/BM25 sums per-token
+relevance with no phrase or proximity scoring, so "research"/"India" spread thin across
+hundreds of documents while the phrase-as-a-phrase earns nothing.
+
+**Literal-vocabulary retry (Part 5 / Part 10's shipped guidance) fixes all three FTS misses,
+at rank 1:**
+
+| Retry query | Rank | Snippet returned |
+|---|---|---|
+| `Santosh Desai behavioural research patterns diversity` | **1** | "…like Santosh Desai, who does a lot of behavioural research in India…" |
+| `fifteen million dollars on tokens subpar code prototypes` | **1** | "…Prototypes, Subpar Code, and a $15M Token Bill…" |
+| `operationally lazy not intellectually lazy` | **1** | "…want to be operationally lazy, not intellectually lazy.**" |
+
+**The circularity caveat, stated plainly:** to put "Santosh Desai" in the query you must
+already know the answer. Same limitation Part 10.2 records ("requires the caller to guess
+the source's vocabulary well"), unsolved by this round. The retry strategy is real and
+works; it is not a substitute for retrieval that handles the question as asked.
+
+#### What a query actually costs — and a correction to this doc's own byte methodology
+
+`query-vault.mjs`'s reported `bytes.returned` is the sum of *snippet* bytes across all hits
+(`bytesOf()`, line 418) — the same measure 8.2 used. Across the runs above it ranged
+**390–548 bytes for all 5 hits**, i.e. a **98.8–99.1% reduction** against the 45,568-char
+transcript. **That figure overstates what you actually get**, and 8.2's use of it was fair
+only because that particular snippet happened to contain the number:
+
+| Q | Snippet actually returned | Contains the answer? |
+|---|---|---|
+| 2 | "…**Shrinath V:** We keep hearing news today about someone getting laid off…" | **No** — never names Motorola or Nokia |
+| 3 | "…the education space working with teachers. They showed me their persona: a…" | **No** — cuts off immediately before it |
+| 5 | "…**Operationally lazy, not intellectually lazy**\n\nThe stated…" | Partially — gives the phrase, not the meaning |
+
+**The snippet locates; it does not answer.** The honest unit of "what an LLM must read to
+answer" is the enclosing chunk or note section:
+
+| Answer-bearing unit | Chars | Reduction vs. 45,568 |
+|---|---|---|
+| One `vectors.db` chunk (mean of 41) | 941 | **97.9%** |
+| The chunk holding the $15M fact (`…#28`) | 893 | **98.0%** |
+| One note section (mean of 31) | 1,246 | **97.3%** |
+| One note section (largest) | 2,982 | **93.5%** |
+| Semantic top-5, worst case (5 × mean chunk) | ~4,705 | **89.7%** |
+
+**~97% is the defensible retrieval-reduction figure for this case**, not 99%. It sits at the
+low end of the 95–99.9% range Part 8's addendum authorizes, and it is the one that should be
+quoted for video, because the ~99% snippet number does not carry the answer.
+
+### 11.5 Chapters — measured, and the marketing story's weakest link
+
+Ran SKILL.md's documented info.json inspection on the test video:
+```
+chapters: 0
+upload_date: 20260820 | duration: 46:08 | channel: Inspire Someone today
+```
+**Zero.** This matches the note's own `has_youtube_chapters: false` frontmatter — the
+pipeline recorded it honestly at capture time. **For the single video that best matches the
+marketing story's "45-minute video," the "click the chapters" half of the story does not
+exist.**
+
+Because the story leans on chapters, measured the real base rate across the user's actual
+capture set: fetched `--write-info-json` for all 15 distinct YouTube URLs referenced in
+`yt/*.md`. 14 succeeded; one (`YSbB5gc_1K8`) returned `ERROR: Please sign in` — worth noting
+separately, since it means the documented pipeline can fail outright on
+authentication-gated videos.
+
+| Uploader chapters | Videos |
+|---|---|
+| ≥ 1 chapter | **11 of 14 (79%)** |
+| 0 chapters | 3 of 14 (21%) |
+
+Mean chapter span across the 11 chaptered videos: **146 s** (range 23–350 s). Chapters are
+*common but not guaranteed* — roughly one in five captures ships none, and this project's
+own flagship-length example is one of them.
+
+**What the note gives you when the uploader gives you nothing.** For E182 the pipeline
+derived **28 timestamped `## [MM:SS]` headings** (31 sections total) from the transcript —
+one jump point every **99 s** on average, i.e. *finer-grained than the 146 s mean of real
+uploader chapters*. That is the honest and more durable version of the claim: **the
+navigable structure comes from the capture, not from the uploader**, and it is present on
+100% of captures rather than 79%. It is also explicitly marked as inferred, so a reader
+knows not to mistake the headings for the uploader's own.
+
+### 11.6 The honest "regular way" baseline
+
+The fair question is not "how many words is the transcript" — nobody reads a transcript for
+fun. It is **what does it cost to answer one specific question about this video.**
+
+**Not measured, and not claimable:** no human was timed watching, scrubbing, or searching
+this video. There is no measured time saving in this part, and none should be published.
+
+**Arithmetic estimates from the real 2,768 s duration**, labeled as such:
+
+| Route to an answer | Cost |
+|---|---|
+| Watch through at 1× | 46.1 min |
+| Watch at 1.5× | 30.8 min |
+| Watch at 2× | 23.1 min |
+| Read the full transcript (8,699 words @ 250 wpm) | 34.8 min |
+| Scrub to find one unknown moment | Unbounded — this video has no chapters |
+| **Dori: one targeted search** | **~1,246 chars read (~97% less); 2 of 5 questions needed a second, source-vocabulary query** |
+
+The last row is the honest comparison, caveats included. The genuine asymmetry is not
+"46 minutes → 3 minutes" (unmeasured) but **"to answer one question you must ingest the
+whole thing, versus ~1.2 KB"** — a context claim, which 8.5 already concluded is this
+project's real value driver, not wall-clock speed.
+
+### 11.7 What's safe to claim, what needs a caveat, what should not be claimed
+
+**Safe to claim:**
+- A ~46-minute video becomes a searchable, timestamped, section-addressed note, and the
+  caption+metadata fetch itself takes **~2 seconds** (measured: 2.05 s / 2.39 s).
+- Answering a specific question reads **~1.2 KB instead of a ~45.6 KB transcript — ~97%
+  less** (measured, this case). Quote ~97% for video, not 99%.
+- Every capture gets navigable timestamped sections (28 here, ~1 per 99 s), **whether or not
+  the uploader provided chapters** — measured against a real 79%-have-chapters base rate.
+- The capture records `has_youtube_chapters: false` when chapters are absent, so inferred
+  structure is never passed off as the uploader's.
+
+**Needs a caveat:**
+- **Retrieval hit rate was 4 of 5 questions**, and only 1 of 5 was found by *both* channels.
+  Two needed a second query in the source's own vocabulary — which presupposes knowing the
+  answer. Do not imply first-try retrieval always works.
+- The ~97% figure is per-question retrieval, **not** a claim that the note is smaller than
+  the transcript.
+- 79% chapter availability is **n = 14**, one user's capture set, in one topic area. Real,
+  but small — not a general YouTube statistic.
+- Quotes from auto-caption captures are cleaned paraphrase, not verbatim.
+
+**Should NOT be claimed:**
+- **Any time saving.** Nothing here timed a human. "Saves you 45 minutes" is unsupported by
+  this or any other part of this document.
+- **That cataloguing shrinks the video.** Measured at **13.7%** — the note is a restructured
+  full transcript, and the "45 min → a short summary" framing is false for this capture.
+- **Any reduction figure derived from the 224,455-char raw SRT.** It is ~5× inflated by
+  rolling-caption duplication; 45,568 is the honest denominator.
+- **"Just click the chapters."** One in five captures has none, including this one.
+- **Anything implying the system knows when it failed.** Q5's semantic miss returned five
+  irrelevant documents scored 1.000/0.984/0.968/0.953/0.938 — 2.3's no-not-found-signal
+  limitation, reproduced exactly on video data.
+
+### 11.8 What could not be measured, and why
+
+- **Human time** (watch / scrub / search): no user study was run. Deliberately not estimated
+  beyond the labeled arithmetic in 11.6.
+- **End-to-end capture cost of the original note**: the note was authored on 2026-08-20 by an
+  LLM pass that was never instrumented. Only the yt-dlp fetch (~2 s) is re-measurable today;
+  the note-writing step's real wall-clock and token cost are unknown and are not estimated
+  here.
+- **A chaptered case end-to-end**: 11 vault videos do have uploader chapters, but no captured
+  note carries `has_youtube_chapters: true` (E182 is the only note with the field at all), so
+  "chapters used verbatim as headings" could not be verified against a real captured note —
+  only that the uploader data exists. Flagged rather than asserted.
+- **A second full video case**: the one video with a raw transcript already on disk
+  (`why-every-ai-skill-…-transcript.txt`, 549,723 chars) turned out to be a raw JSON3 caption
+  dump from a *different*, older capture path, not SKILL.md's SRT pipeline. Its byte count is
+  not comparable and was not used — disclosed rather than quietly folded in.
+
+---
+
 ## Part 12 — Result-limit defaults were an unmirrored divergence (and a correction to Part 9)
 
 Acting on 10.4's cheap suggestion (retrieval research finds top-20 outperforming
