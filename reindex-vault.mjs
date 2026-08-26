@@ -107,10 +107,31 @@ function parseFrontmatter(raw) {
   return { fm, body: body.trim() };
 }
 
+// Same ignore mechanism as semantic-index.mjs — see the long note there. Both indexers
+// walk the same vault, so an exclusion applied to only one would leave the other's index
+// still ranking the junk. Excluding a path never deletes the file; `show` and direct reads
+// are unaffected, and clearing VAULT_IGNORE plus a reindex restores it.
+const IGNORE_PATTERNS = (process.env.VAULT_IGNORE ?? 'hermes,*vybe*')
+  .split(',')
+  .map((s) => s.trim().replace(/^\/+|\/+$/g, ''))
+  .filter(Boolean);
+
+function ignoreMatches(rel, pattern) {
+  if (!pattern.includes('*')) return rel === pattern || rel.startsWith(pattern + '/');
+  const rx = pattern.split('*').map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+  return new RegExp(`^${rx}$`, 'i').test(rel);
+}
+
+function isIgnored(fullPath) {
+  const rel = relative(VAULT_ROOT, fullPath);
+  return IGNORE_PATTERNS.some((p) => ignoreMatches(rel, p));
+}
+
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.name.startsWith('.')) continue;
     const full = join(dir, entry.name);
+    if (isIgnored(full)) continue;
     if (entry.isDirectory()) walk(full, out);
     else if (entry.name.endsWith('.md')) out.push(full);
   }

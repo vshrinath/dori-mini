@@ -1448,3 +1448,88 @@ clamp only showed up when a stated limit and an observed hit count were compared
 each other. Worth carrying into anything published: a benchmark number is only as good as
 the assertion that the command actually did what its flags said.
 
+
+---
+
+## Part 13 — Corpus hygiene: 21.5% of the index was not personal knowledge
+
+Prompted by the vault owner asking, mid-session, which files were even being indexed.
+Neither indexer had **any** exclusion mechanism — the only filter in both `walk()`
+functions was "skip dotfiles," so every `.md` anywhere under the vault root got embedded
+and FTS-indexed. Real dori-engine's ingest path has no ignore logic either, so this is a
+genuine gap in both, not a dori-mini divergence.
+
+### 13.1 What was in there
+
+Measured composition of `vectors.db` before any change (30,184 chunks):
+
+| Path | Chunks | Files | % of index | What it is |
+|---|---|---|---|---|
+| `hermes/` | 5,563 | 258 | **18.4%** | A third-party AI agent's config. `hermes/SOUL.md` opens: *"You are Hermes Agent, an intelligent AI assistant created by Nous Research"* — plus `skills/*/SKILL.md` tool definitions. Not the vault owner's content at all. |
+| `references/kindle/` | 2,615 | 158 | 8.7% | Third-party book excerpts |
+| `docs/` | 2,562 | 105 | 8.5% | Software project docs (DEVEX_PLAN, LAUNCH_CHECKLIST) |
+| `inbox/` | 281 | 276 | 0.9% | Unrouted auto-captures, hash filenames |
+| `references/Clippings/` | 260 | 14 | 0.9% | Saved web articles |
+
+**This was demonstrably costing rank, not just space.** Observed in this session's own
+test runs, before the fix: `docs/nool/CHANGELOG-engine.md` ranked #4 on a Founding Fuel
+launch query, and `references/kindle/Hastings-Meyer-No Rules Rules.md` ranked #4 on a
+launch-timing query. Junk was outranking real project content on exactly the queries that
+had been failing all session — meaning part of what Parts 2.1/10.1 diagnosed as a *ranking*
+problem was really a *corpus* problem.
+
+### 13.2 What was excluded, and what deliberately was not
+
+The vault owner reviewed the list and chose **`hermes/` and Vybe only**. `references/kindle/`,
+`docs/`, `inbox/`, and `Clippings/` were explicitly **kept** — they are the owner's own
+material, and this is their call to make, not the indexer's.
+
+Vybe was excluded as known-bad data (flagged twice as "dirty and old"; last touched 58 days
+prior). **Note this retires section 2.1's headline case study**: the canonical
+paraphrase-brittleness example ("when will Vybe launch" → `2025-03-19-sprint-planning.md`)
+was built entirely on Vybe content, which is no longer indexed. The *finding* stands — it
+was independently reproduced on a case-study PDF in 8.2 and a video transcript in 11.4 —
+but that specific query is no longer reproducible, and should not be quoted as a live
+example.
+
+Implementation: a `VAULT_IGNORE` env var in both scripts, defaulting to `hermes,*vybe*`.
+Two pattern forms, because vault junk comes in two shapes — a bare name is a directory
+prefix (`hermes` → `hermes/**`), and a name containing `*` is a case-insensitive glob over
+the whole relative path. The glob form is not decoration: **a retired project's files are
+usually scattered rather than foldered.** Vybe's live under `captures/*vybe*`, so a
+prefix-only matcher would have silently matched nothing while appearing to work — the same
+class of failure as Part 12's silent limit clamp. Self-check in `test-ignore.mjs` covers
+both forms, case-insensitivity, regex-metacharacter escaping, and the near-miss cases
+(`hermes-notes/` must not match `hermes`).
+
+### 13.3 Measured result
+
+Both real DBs backed up (`.bak-prehermes-2026-08-26`) before running. Dry-run predicted 324
+files dropped (284 hermes + 40 vybe); both indexers pruned **exactly 324** and **298**
+respectively, matching prediction.
+
+| | Before | After | Change |
+|---|---|---|---|
+| `portal.db` documents | 2,779 | 2,455 | −324 |
+| `vectors.db` chunks | 30,184 | 23,701 | **−21.5%** |
+| Index tokens | 7,665,114 | 5,988,553 | **−21.9%** |
+
+**Retrieval quality improved for content that was kept.** Re-running
+`search "Pre Launch Readiness Sync Monday cutover"`: the top 5 previously included
+`docs/nool/CHANGELOG-engine.md` and a Kindle excerpt; it is now 4/5 genuine Founding Fuel
+meeting documents. Removing junk shifted relative ranking even for categories that were
+*not* excluded — which is the expected BM25/RRF behaviour, and worth stating plainly:
+corpus hygiene is a retrieval-quality lever, not only a storage one.
+
+Regression-checked after the prune: `search "aligna"` and Founding Fuel queries return
+real results on both indexes.
+
+### 13.4 Consequence for the contextual-retrieval decision
+
+The one-time contextual-indexing cost drops with the corpus: **7.67M → 5.99M tokens
+(−21.9%)** before any further exclusions. Combined with Part 8's amortization figure, that
+moves payback from ~17 recall queries to **~13**. It also means any baseline retrieval
+measurement taken *before* this prune would have been measuring a corpus that was 21.5%
+material the owner never wanted searched — so the baseline eval must be run against the
+cleaned index, not the original.
+

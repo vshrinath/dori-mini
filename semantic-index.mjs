@@ -227,10 +227,39 @@ function chunkText(body, targetChars) {
   return chunks.length ? chunks : [body];
 }
 
+// PROTOTYPE, not in real dori-engine (checked — its ingest path has no ignore logic
+// either). Before this, the only exclusion in either indexer was "skip dotfiles", so every
+// .md under the vault got embedded and FTS-indexed. Measured 2026-08-26: `hermes/` alone
+// was 5,563 chunks / 258 files — 18.4% of the whole index — and it holds AI-agent skill
+// definitions (SOUL.md, skills/*/SKILL.md), not personal knowledge. Junk like this doesn't
+// just cost index time; it competes for rank, and was observed outranking real project
+// content on real queries (research doc Part 13). Top-level path prefixes, comma-separated,
+// overridable per-run without editing code.
+// Two pattern forms, because vault junk comes in two shapes. A bare name is a directory
+// prefix (`hermes` -> hermes/**). A name containing `*` is a case-insensitive glob over the
+// whole relative path (`*vybe*`), needed because a retired project's files are usually
+// scattered — Vybe's live under captures/*vybe*, not a projects/vybe/ folder.
+const IGNORE_PATTERNS = (process.env.VAULT_IGNORE ?? 'hermes,*vybe*')
+  .split(',')
+  .map((s) => s.trim().replace(/^\/+|\/+$/g, ''))
+  .filter(Boolean);
+
+function ignoreMatches(rel, pattern) {
+  if (!pattern.includes('*')) return rel === pattern || rel.startsWith(pattern + '/');
+  const rx = pattern.split('*').map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+  return new RegExp(`^${rx}$`, 'i').test(rel);
+}
+
+function isIgnored(fullPath) {
+  const rel = relative(VAULT_ROOT, fullPath);
+  return IGNORE_PATTERNS.some((p) => ignoreMatches(rel, p));
+}
+
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.name.startsWith('.')) continue;
     const full = join(dir, entry.name);
+    if (isIgnored(full)) continue;
     if (entry.isDirectory()) walk(full, out);
     else if (entry.name.endsWith('.md')) out.push(full);
   }
