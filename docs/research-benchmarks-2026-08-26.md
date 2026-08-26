@@ -2134,3 +2134,96 @@ at zero ongoing cost beyond ~3.9s of local compute per search and zero measured 
 the strict hit/miss sense. Remaining path to close more of the gap: port the same reranker
 onto the FTS channel, and/or widen the candidate multiplier for the fraction of misses that
 sit beyond 80 — both are direct extensions of what already shipped, not new mechanisms.
+
+---
+
+## Part 18 — Reranker ported to the FTS channel: net positive, first real regressions
+
+Part 17 reranked only the dense/semantic channel. This extends the same mechanism to
+`query-vault.mjs`'s FTS channel over `portal.db` — genuinely new territory, not a copy:
+real dori-engine's own `canRerank` check explicitly skips reranking when there was no dense
+retrieval pass, so this diverges from what production does rather than mirroring it.
+
+### 18.1 What the port required beyond Part 17
+
+The reranker was factored into a shared `reranker.mjs` (both channels need pointer-identical
+scoring for a cross-channel comparison to mean anything), with the fail-open contract split
+into a pure `rerankWithScorer(query, candidates, scoreFn, enabled)` — `test-rerank.mjs` now
+imports and exercises the real logic with a fake scorer instead of hand-mirroring it, closing
+a drift risk the old test file's own header had flagged.
+
+The FTS channel's retrieval only ever produces a short highlighted `snippet` — Part 11
+already measured 3 of 5 verified snippets truncating before the answer. Reranking off that
+snippet would repeat the same failure inside the cross-encoder, so this channel needed one
+extra step the dense channel didn't: fetch each candidate's full `vault_documents.content`
+before scoring, keyed on `(vault_id, rel_path)` (which is why `searchStmt` now also selects
+`vault_id`). Both fields are stripped before output — this file's stated contract, that
+stdout never carries full document content unless `--full`, holds exactly as before.
+
+### 18.2 A real bug, caught by measurement
+
+The first paired-eval attempt pinned a single query at over 12 minutes of CPU time.
+`vault_documents.content` is not chunk-sized like the dense channel's candidates (median
+1,140 chars there): full document content measured p90=36KB, p99=119KB, max 445KB. Some
+queries were feeding the cross-encoder tokenizer a 444,708-character string, up to 80 times,
+sequentially.
+
+A first cap (4,000 chars, matching `VERIFY_MAX_PASSAGE_CHARS`'s precedent from the
+sufficiency check) fixed the hang — 52s — but was checked rather than assumed sufficient:
+the reranker's own tokenizer has `model_max_length = 512` and truncates there regardless of
+input size (confirmed directly: a 10,000-char pair tokenizes to exactly 512 `input_ids`), so
+most of a 4,000-char string was being tokenized in JS only to be discarded by the model.
+Retightened to 2,000 chars — enough to cover 512 tokens with room for the query text, which
+shares the same budget. Re-measured: 28s. Still ~7x the dense channel's per-query cost at the
+same candidate count, and that residual gap is expected, not a bug: FTS candidates remain
+longer than pre-chunked dense candidates even after capping.
+
+`test-rerank-fts.mjs` pins the actual regression — a 50,000-char fixture document must come
+back truncated to exactly the cap, not passed through whole.
+
+### 18.3 Result
+
+Same methodology as Part 17 — same-run, own-control (`RERANK=0` vs default), k=20, n=20 real
+questions plus 4 negative controls, via the real `query-vault.mjs` CLI:
+
+| | no rerank | reranked |
+|---|---|---|
+| hit@20 (n=20) | 9/20 (45%) | **10/20 (50%)** |
+| recovered (miss → hit) | — | Q9, Q12, Q20 |
+| **lost (hit → miss)** | — | **Q14, Q19** |
+| demoted, still hit | — | Q3 (−3), Q13 (−2), Q18 (−10) |
+| promoted, still hit | — | Q1 (+1), Q2 (+8), Q4 (+5) |
+| negative controls | 0/4 retrieved | 0/4 retrieved, unchanged |
+
+**Net +1 question — smaller than the dense channel's net +2, and with a materially different
+risk shape.** Part 17 had zero questions regress from hit to miss. This channel has two, and
+one is not a marginal case: Q14 ("how many people do they want on the governing committee
+now") was a clean first-stage rank 1 and disappeared from the reranked results entirely.
+Checked before reporting it as real rather than a truncation artifact: widened to 200
+candidates and a top-50 reranked window, the target still never reappears. This is a genuine
+cross-encoder judgment call, not a bug — the cross-encoder scored a candidate the lexical
+first stage ranked highest as insufficiently relevant.
+
+### 18.4 A prediction that didn't hold, and why
+
+Before building, a standalone rank probe (bypassing the CLI's `MAX_SEARCH_LIMIT=50` clamp to
+query FTS directly) predicted only Q7, Q12, and Q20 sat within the 80-candidate window a
+`limit=20` rerank reaches, with everything else too deep to matter. The real, authoritative
+result recovered Q9, Q12, and Q20 — Q12 and Q20 as predicted, but **Q7 stayed a miss despite
+appearing reachable, and Q9 recovered despite appearing unreachable.** The standalone probe
+hand-rolled its own tokenizer/stopword logic rather than calling `query-vault.mjs`'s real
+`toPrefixOrQuery`, and that copy drifted from what the actual code does. The probe was
+directionally useful for scoping the work — it correctly predicted the ceiling would be much
+lower than the dense channel's — but was not precise enough to trust for which specific
+questions would move, and Part 17's methodology (measure via the real CLI, not a
+reimplementation of it) is why this eval's own numbers are trustworthy where the earlier
+probe's per-question predictions were not.
+
+### 18.5 Decision
+
+Kept on by default, same as the dense channel — net positive, the code is tested and fails
+open on any scoring error, and `RERANK=0` remains available as an escape hatch. This is
+recorded as a smaller and noisier win than Part 17's, not an equivalent one: n=20 is a small
+sample for a result with real regressions in it, and Q14's loss is the kind of failure a
+user relying on a single top answer would notice directly. Worth a larger question set before
+this is trusted the way Part 17's result is.
