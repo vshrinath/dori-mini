@@ -24,6 +24,7 @@ const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/d
 const VAULT_ID = 'personal';
 const EMBED_MODEL = 'Xenova/all-MiniLM-L6-v2';
 const CHUNK_TARGET_CHARS = 1200;
+const MIN_DEDUP_BODY_CHARS = 40;
 const RRF_K = 60;
 
 // Matches dori-engine/src/config.ts's getOperationalDbDir exactly: sha256(realpath(vaultRoot)), first 16 hex chars.
@@ -77,6 +78,20 @@ CREATE TABLE IF NOT EXISTS indexed_files (
   mtime INTEGER NOT NULL
 );
 `);
+
+// PROTOTYPE, not yet in real dori-engine (checked — sqlite-vector-store.ts's content_hash
+// is per-chunk, used only for per-file change detection, not cross-file dedup). Real
+// vaults can have byte-identical files under multiple paths (found in dori-vault: the
+// same doc mirrored under entities/projects/ and projects/, plus a rendered _site/ copy,
+// plus website case-study copies — research-benchmarks-2026-08-26.md, Part 5). Each path
+// getting its own chunks means duplicate content counts as independent evidence in BM25/
+// RRF ranking, letting a heavily-duplicated topic bury a correct, non-duplicated match.
+// Whole-file hash here (not per-chunk) so a multi-chunk duplicate is caught as one file,
+// not chunk-by-chunk.
+const idxFilesCols = db.prepare(`PRAGMA table_info(indexed_files)`).all().map((c) => c.name);
+if (!idxFilesCols.includes('content_hash')) db.exec(`ALTER TABLE indexed_files ADD COLUMN content_hash TEXT NOT NULL DEFAULT ''`);
+if (!idxFilesCols.includes('duplicate_of')) db.exec(`ALTER TABLE indexed_files ADD COLUMN duplicate_of TEXT`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_indexed_files_hash ON indexed_files(content_hash)`);
 
 function packFloat32(arr) {
   const buf = Buffer.allocUnsafe(arr.length * 4);
@@ -240,8 +255,18 @@ async function cmdIndex(onlyFile) {
   const targets = onlyFile ? [onlyFile] : walk(VAULT_ROOT);
   const getFileMtime = db.prepare('SELECT mtime FROM indexed_files WHERE source_path = ?');
   const setFileMtime = db.prepare(`
-    INSERT INTO indexed_files (source_path, mtime) VALUES (?, ?)
-    ON CONFLICT(source_path) DO UPDATE SET mtime = excluded.mtime
+    INSERT INTO indexed_files (source_path, mtime, content_hash, duplicate_of) VALUES (?, ?, ?, ?)
+    ON CONFLICT(source_path) DO UPDATE SET mtime = excluded.mtime, content_hash = excluded.content_hash, duplicate_of = excluded.duplicate_of
+  `);
+  // Requires the candidate to actually have chunks — an indexed_files row can exist with
+  // no matching search_chunks rows (e.g. a stale bookkeeping row); deferring to a
+  // "canonical" with nothing actually indexed would leave the whole duplicate group
+  // unsearchable. Same class of bug found and fixed in reindex-vault.mjs's port of this.
+  const findCanonicalPath = db.prepare(`
+    SELECT i.source_path FROM indexed_files i
+    WHERE i.content_hash = ? AND i.source_path != ? AND i.duplicate_of IS NULL
+      AND EXISTS (SELECT 1 FROM search_chunks c WHERE c.source_path = i.source_path AND c.vault_id = ?)
+    LIMIT 1
   `);
   // Real schema has no FTS-sync trigger — deleting a chunk row must delete its fts row by
   // stored fts_rowid first (the app's own delete-by-rowid dance, replicated exactly).
@@ -277,9 +302,15 @@ async function cmdIndex(onlyFile) {
       deleteFileMtime.run(relPath);
       pruned++;
     }
+    // ponytail: if the canonical copy of a duplicate group gets pruned here, its
+    // duplicates stay unindexed until one of them is touched (mtime changes) and gets
+    // re-evaluated as canonical on its own. No auto-promotion of a remaining duplicate —
+    // real vaults rarely delete only the canonical copy of a mirrored file, and this
+    // stays simple; revisit if it turns out to matter.
   }
 
-  let filesIndexed = 0, filesSkipped = 0, chunksWritten = 0;
+  let filesIndexed = 0, filesSkipped = 0, chunksWritten = 0, filesDuplicate = 0;
+  const duplicatesLogged = [];
   for (const file of targets) {
     const relPath = relative(VAULT_ROOT, file);
     const stat = statSync(file);
@@ -290,14 +321,31 @@ async function cmdIndex(onlyFile) {
     const raw = readFileSync(file, 'utf-8');
     const { fm, body } = parseFrontmatter(raw);
     const title = fm.title || relPath.split('/').pop().replace(/\.md$/, '');
-    const chunks = chunkText(body, CHUNK_TARGET_CHARS);
+    // Empty/near-empty bodies (frontmatter-only stub files — found 80 of these in the
+    // real vault) all hash the same trivial value and would otherwise get wrongly
+    // flagged as duplicates of each other and of totally unrelated files. Below this
+    // length, skip dedup entirely — there's no meaningful "content" to be duplicate of,
+    // and such a short body can't meaningfully pollute BM25/embedding ranking anyway.
+    const fileHash = body.trim().length >= MIN_DEDUP_BODY_CHARS ? contentHash(body) : '';
 
-    // Deleting fts rows by their stored rowid must run before chunk rows disappear.
+    // Deleting fts rows by their stored rowid must run before chunk rows disappear —
+    // needed whether this file turns out to be a duplicate or not (it may have been
+    // indexed normally before an earlier duplicate check, or before its content changed
+    // into a duplicate of something else).
     for (const { fts_rowid } of getFtsRowidsForPath.all(relPath, VAULT_ID)) {
       deleteFtsByRowid.run(fts_rowid);
     }
     deleteChunksForPath.run(relPath, VAULT_ID);
 
+    const canonical = fileHash ? findCanonicalPath.get(fileHash, relPath, VAULT_ID) : null;
+    if (canonical) {
+      setFileMtime.run(relPath, mtimeMs, fileHash, canonical.source_path);
+      filesDuplicate++;
+      if (duplicatesLogged.length < 10) duplicatesLogged.push(`${relPath} == ${canonical.source_path}`);
+      continue;
+    }
+
+    const chunks = chunkText(body, CHUNK_TARGET_CHARS);
     for (let i = 0; i < chunks.length; i++) {
       const text = chunks[i];
       const chunkId = `${relPath}#${i}`;
@@ -312,10 +360,12 @@ async function cmdIndex(onlyFile) {
       setFtsRowid.run(ftsResult.lastInsertRowid, chunkId);
       chunksWritten++;
     }
-    setFileMtime.run(relPath, mtimeMs);
+    setFileMtime.run(relPath, mtimeMs, fileHash, null);
     filesIndexed++;
   }
-  console.log(`Indexed ${filesIndexed} files (${chunksWritten} chunks), skipped ${filesSkipped} unchanged, pruned ${pruned} stale files — db: ${DB_PATH}`);
+  console.log(`Indexed ${filesIndexed} files (${chunksWritten} chunks), skipped ${filesSkipped} unchanged, ${filesDuplicate} exact duplicates (not chunked), pruned ${pruned} stale files — db: ${DB_PATH}`);
+  for (const line of duplicatesLogged) console.log(`  duplicate: ${line}`);
+  if (filesDuplicate > duplicatesLogged.length) console.log(`  ...and ${filesDuplicate - duplicatesLogged.length} more`);
 }
 
 async function cmdSearch(query, limit) {
@@ -379,13 +429,103 @@ function previewAround(text, query) {
   return `${prefix}${flat.slice(start, end)}${suffix}`;
 }
 
+// One-time backfill for a vault that was already indexed before duplicate detection
+// existed — `index`'s per-file dedup check only runs for files whose mtime changed, so
+// already-indexed unchanged duplicates would otherwise never get caught. Dedup decisions
+// only need file content (a cheap read+hash), not embeddings, so this never re-embeds
+// anything — much cheaper than a full reindex. Canonical = lexicographically-first path
+// in each duplicate group, deterministic and stable across repeated runs.
+async function cmdDedupe() {
+  const files = walk(VAULT_ROOT);
+  const groups = new Map();
+  let skippedTrivial = 0;
+  for (const file of files) {
+    const relPath = relative(VAULT_ROOT, file);
+    const stat = statSync(file);
+    const { body } = parseFrontmatter(readFileSync(file, 'utf-8'));
+    const mtimeMs = Math.floor(stat.mtimeMs);
+    // See MIN_DEDUP_BODY_CHARS's comment in cmdIndex — empty/near-empty bodies all hash
+    // the same and would otherwise get wrongly grouped as duplicates of each other.
+    if (body.trim().length < MIN_DEDUP_BODY_CHARS) { skippedTrivial++; continue; }
+    const hash = contentHash(body);
+    if (!groups.has(hash)) groups.set(hash, []);
+    groups.get(hash).push({ relPath, mtimeMs });
+  }
+
+  const byRelPath = new Map(files.map((f) => [relative(VAULT_ROOT, f), f]));
+  const setFileMtime = db.prepare(`
+    INSERT INTO indexed_files (source_path, mtime, content_hash, duplicate_of) VALUES (?, ?, ?, ?)
+    ON CONFLICT(source_path) DO UPDATE SET mtime = excluded.mtime, content_hash = excluded.content_hash, duplicate_of = excluded.duplicate_of
+  `);
+  const getFtsRowidsForPath = db.prepare('SELECT fts_rowid FROM search_chunks WHERE source_path = ? AND vault_id = ? AND fts_rowid IS NOT NULL');
+  const deleteFtsByRowid = db.prepare('DELETE FROM search_fts WHERE rowid = ?');
+  const countChunksForPath = db.prepare('SELECT COUNT(*) AS n FROM search_chunks WHERE source_path = ? AND vault_id = ?');
+  const deleteChunksForPath = db.prepare('DELETE FROM search_chunks WHERE source_path = ? AND vault_id = ?');
+  const insertChunk = db.prepare(`
+    INSERT INTO search_chunks (chunk_id, vault_id, source_path, kind, collection, content_hash, text, title, embed_model, embed_dims, metadata_json, indexed_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const insertVector = db.prepare('INSERT INTO search_vectors (chunk_id, embedding) VALUES (?, ?)');
+  const insertFts = db.prepare('INSERT INTO search_fts (text, chunk_id) VALUES (?, ?)');
+  const setFtsRowid = db.prepare('UPDATE search_chunks SET fts_rowid = ? WHERE chunk_id = ?');
+
+  // Canonical must be a member that's actually searchable — trusting lexicographic order
+  // alone broke this against real data (a source_path can have an indexed_files row with
+  // zero actual chunks, a pre-existing gap unrelated to dedup; picking it as canonical
+  // over a duplicate that DID have chunks left the whole group unsearchable). Prefer
+  // whichever member already has chunks; only if none do, chunk+embed the chosen one.
+  let groupsWithDuplicates = 0, filesDeChunked = 0, chunksRemoved = 0, filesBackfilled = 0;
+  const examples = [];
+  for (const [hash, members] of groups) {
+    members.sort((a, b) => a.relPath.localeCompare(b.relPath));
+    const withChunks = members.filter((m) => countChunksForPath.get(m.relPath, VAULT_ID).n > 0);
+    const canonical = withChunks[0] ?? members[0];
+    if (!withChunks.length) {
+      const file = byRelPath.get(canonical.relPath);
+      const { fm, body } = parseFrontmatter(readFileSync(file, 'utf-8'));
+      const title = fm.title || canonical.relPath.split('/').pop().replace(/\.md$/, '');
+      const chunks = chunkText(body, CHUNK_TARGET_CHARS);
+      for (let i = 0; i < chunks.length; i++) {
+        const text = chunks[i];
+        const chunkId = `${canonical.relPath}#${i}`;
+        const vector = await embed(text);
+        const now = new Date().toISOString();
+        insertChunk.run(chunkId, VAULT_ID, canonical.relPath, 'note', 'vault', contentHash(text), text, title, EMBED_MODEL, vector.length, JSON.stringify(fm), now, now);
+        insertVector.run(chunkId, packFloat32(vector));
+        const ftsResult = insertFts.run(text, chunkId);
+        setFtsRowid.run(ftsResult.lastInsertRowid, chunkId);
+      }
+      filesBackfilled++;
+    }
+    setFileMtime.run(canonical.relPath, canonical.mtimeMs, hash, null);
+    const duplicates = members.filter((m) => m.relPath !== canonical.relPath);
+    if (duplicates.length === 0) continue;
+    groupsWithDuplicates++;
+    for (const dup of duplicates) {
+      const { n } = countChunksForPath.get(dup.relPath, VAULT_ID);
+      if (n > 0) {
+        for (const { fts_rowid } of getFtsRowidsForPath.all(dup.relPath, VAULT_ID)) deleteFtsByRowid.run(fts_rowid);
+        deleteChunksForPath.run(dup.relPath, VAULT_ID);
+        filesDeChunked++;
+        chunksRemoved += n;
+      }
+      setFileMtime.run(dup.relPath, dup.mtimeMs, hash, canonical.relPath);
+      if (examples.length < 10) examples.push(`${dup.relPath} == ${canonical.relPath}`);
+    }
+  }
+  console.log(`Dedup scan: ${groupsWithDuplicates} duplicate groups found, ${filesDeChunked} already-indexed duplicates de-chunked (${chunksRemoved} chunks removed), ${filesBackfilled} canonicals back-filled with missing chunks, ${skippedTrivial} trivial/near-empty files excluded from dedup — db: ${DB_PATH}`);
+  for (const line of examples) console.log(`  duplicate: ${line}`);
+}
+
 const [, , cmd, arg1, arg2] = process.argv;
 if (cmd === 'index') {
   await cmdIndex(arg1);
 } else if (cmd === 'search') {
   if (!arg1) { console.error('Usage: node semantic-index.mjs search "<query>" [limit]'); process.exit(1); }
   await cmdSearch(arg1, arg2 ? Number(arg2) : 8);
+} else if (cmd === 'dedupe') {
+  await cmdDedupe();
 } else {
-  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit]');
+  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit] | dedupe');
   process.exit(1);
 }

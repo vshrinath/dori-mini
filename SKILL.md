@@ -212,11 +212,19 @@ node ~/.claude/skills/dori/credentials-store.mjs get <service> <field>  # secret
 ```
 Never pass `--reveal` on `get` unless the user explicitly asks to see the plaintext — that's the one thing that puts a secret in your own output/transcript. Everything else in this store is designed so you never see the value.
 
-**Storing a new value**: tell the user the exact `set` command and have them run it themselves in their own terminal — a value passed as your own tool argument means you saw it.
+**Storing a new value** — on "add a secret/credential/key" (or similar), default to spinning up the local browser form yourself, no need to ask which method first:
 ```bash
-node ~/.claude/skills/dori/credentials-store.mjs set <service> <field> "<value>" [--plain]
+node ~/.claude/skills/dori/add-credential-server.mjs   # prints http://127.0.0.1:<port>/<random-token>
+open "<that URL>"                                       # macOS: launches it in the user's REAL browser
 ```
-`--plain` only for genuinely non-secret fields (an account ID, a label) where plaintext-in-sqlite is fine.
+It's a server bound to `127.0.0.1` only, behind a one-time random token so nothing else on the machine can guess the URL. Always `open` the URL rather than navigating your own Browser pane to it — `open` hands it to Safari/Chrome, a surface you have no tool to inspect; your Browser pane is a surface you could read back, which defeats the point. The form POSTs straight to that local process; the value never touches your own output, only a confirmation with length + last 4 is logged. Tell the user in chat that a tab just opened for them to fill in. The server exits after one save, or after a 10-minute idle timeout.
+
+Other ways to store a value, for when the user asks for them specifically:
+- Terminal wizard, no browser: `node ~/.claude/skills/dori/add-credential.mjs` — plain prompts (name, field, secret?, value), typed straight into that process. Tell the user to open Terminal (Cmd+Space, type "Terminal") and paste that line in.
+- Clipboard, for a fast one-off: user copies the value (Cmd+C, not into chat), then you run `node ~/.claude/skills/dori/credentials-store.mjs set-from-clipboard <service> <field> [--plain]` — reads `pbpaste` directly, never becomes a tool argument.
+- Manual `set`, if the user wants to type the whole command themselves in their own terminal: `node ~/.claude/skills/dori/credentials-store.mjs set <service> <field> "<value>" [--plain]` — only safe when *they* type it, not you (a value passed as your own tool argument means you saw it).
+
+`--plain` only for genuinely non-secret fields (an account ID, a label) where plaintext-in-sqlite is fine — those are low-risk enough to just type in chat.
 
 **Bulk import** from a markdown file the user maintains themselves (`# Name` headers, body is either free text or `KEY=value` lines — see file for exact parsing rules): run `import-credentials.mjs [file] [--delete-after]` with no path to use the default inbox at `~/proto-space/dori/scratch/credentials-inbox.md`. This script's stdout is header/field *names* only, never values — safe to run directly. Idempotent (upsert on `service`+`field`) — rerunning after edits updates changed values, adds new ones; it never deletes entries for removed/renamed headers, clean those up manually with `delete`.
 
@@ -380,6 +388,58 @@ If the vault is a git repo someone else also pushes to, external changes (a file
 node ~/.claude/skills/dori/sync-vault.mjs
 ```
 Pulls the vault repo (no-op if it isn't a git repo), then runs a full `reindex-vault.mjs` and a full `semantic-index.mjs index` — mirrors dori-engine's `git-sync.ts`, which calls `maybeReconcileVaultSearchIndex()` after every successful pull for the same reason.
+
+## Multi-fact recall — issue several targeted queries, don't rely on one
+
+A single `search` call (either script) returns one ranked list for one literal query. Real
+testing (`docs/research-benchmarks-2026-08-26.md`) found this misses real, answerable
+facts in two recurring shapes — neither dori-engine nor dori-portal has a fix for this
+today either (checked, no decomposition/multi-query logic exists in either), so this is a
+prototype worth porting back if it holds up:
+
+- **The question spans two related things** — a decision and its outcome, a before and an
+  after, two people's separate accounts of the same event. One query tends to retrieve
+  only one side (verified: a "was the launch on schedule" question surfaced the
+  launch-morning doc but never the pre-launch planning doc that named the actual date,
+  even at `limit 20`).
+- **The literal phrasing doesn't match the source's wording.** A natural paraphrase
+  ("when will X launch") can miss content that a closer phrasing ("X's proper launch")
+  finds immediately — the gap isn't small (not found in the top 20 vs. tied for rank 1).
+
+**When to split a question into 2–3 targeted searches instead of one:**
+- It names or implies two distinct facts, timeframes, or perspectives ("what was decided
+  and did it happen", "what did X say vs. what did Y say", "how has the plan for X
+  changed since we last discussed it").
+- The first search's results don't actually answer what was asked (wrong doc, wrong
+  timeframe, or nothing that reads like a direct answer) — before concluding "not in the
+  vault," retry.
+
+**Tested finding (2026-08-26): splitting by *intent* alone often isn't enough — the
+retry needs the source's literal vocabulary, not just a more targeted rephrasing of the
+question.** Live-tested against a real "was the launch on schedule" case that needed two
+separate docs: rephrasing into "the plan" and "the outcome" as natural-language
+sub-questions still missed the plan-side document entirely — both queries kept landing on
+the same generic, frequently-repeated docs. What actually found it was a third query
+built from words the source itself would use (an exact-ish title, a specific date, a
+named decision) — e.g. "the season starts in June" instead of "when will it launch," or a
+document's own heading phrase instead of a description of what it's about. So: retry #1
+can be a natural rephrasing, but retry #2 should reach for likely literal terms — a
+proper noun, an exact date, quoted language — before concluding the vault has nothing.
+
+**When not to** — most questions are single-hop and already answered by the first result;
+splitting those wastes calls for no gain. Don't decompose a question just because it's
+long, and don't retry past 2–3 total queries — if none of them find it, say so rather than
+continuing to guess new phrasings.
+
+**How to reconcile:** run each targeted query as its own `search` call, read each result
+set on its own terms (don't assume the first hit answers a sub-question the query wasn't
+actually about), and only merge into one answer if the sub-answers are actually
+consistent — otherwise present them separately with which query found what. If 2–3
+genuinely different phrasings of the same question all come back with no result sets that
+overlap or plausibly answer it, treat that disagreement itself as a signal the vault
+likely doesn't have this — say so rather than presenting whatever ranked first as if it
+were a confident answer (RRF's top score is always 1.000 regardless of real relevance, so
+it cannot be trusted alone as a confidence signal — see the same research doc, section 2.3).
 
 ## Mini-site (browse projects/, yt/, and structured records locally)
 

@@ -343,9 +343,41 @@ function showDoc(db, needle, sections, full) {
   });
 }
 
+// Mirrors dori-portal's real searchVaultDocumentsFts (lib/vault-indexer.ts): OR of
+// prefix tokens ranked by BM25 `rank`, not an AND-of-whole-terms match. A single query
+// word missing from a document's literal text (a stemmed form, a synonym, a % vs. a
+// spelled-out word) no longer sinks the whole match — it just contributes less rank.
+//
+// PROTOTYPE FIX, not yet in real Dori: neither dori-engine nor dori-portal filter
+// stopwords before building an FTS query. In a natural-language question ("when will
+// X launch") the common words ("when", "will") still match a huge fraction of the vault
+// and their summed BM25 contribution can outrank a document that matches the rarer,
+// actually-distinguishing terms ("X", "launch") — found via the 2026-08-26 test suite
+// (research-benchmarks-2026-08-26.md, section 2.1). Filtering them out before the OR
+// query is built is a candidate fix worth porting back to dori-portal's real
+// searchVaultDocumentsFts if it holds up here.
+const STOPWORDS = new Set([
+  'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'to', 'of', 'in',
+  'on', 'at', 'for', 'with', 'will', 'would', 'can', 'could', 'should', 'when', 'what',
+  'who', 'whom', 'which', 'this', 'that', 'these', 'those', 'and', 'or', 'but', 'if',
+  'then', 'so', 'do', 'does', 'did', 'has', 'have', 'had', 'i', 'you', 'he', 'she', 'it',
+  'we', 'they', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'not', 'no', 'yes',
+]);
+
+function toPrefixOrQuery(q) {
+  const tokens = q
+    .split(/\s+/)
+    .map((t) => t.replace(/[^\p{L}\p{N}_-]/gu, '').trim())
+    .filter((t) => t.length > 0);
+  if (tokens.length === 0) return '';
+  const meaningful = tokens.filter((t) => !STOPWORDS.has(t.toLowerCase()));
+  const kept = meaningful.length > 0 ? meaningful : tokens;
+  return kept.map((t) => `${t}*`).join(' OR ');
+}
+
 function searchDocs(db, q, limit) {
   const n = Math.min(Math.max(Number(limit) || DEFAULT_SEARCH_LIMIT, 1), MAX_SEARCH_LIMIT);
-  const escaped = q.replace(/"/g, '""');
+  const match = toPrefixOrQuery(q);
   const stmt = db.prepare(`
     SELECT
       vault_documents_fts.rel_path AS rel_path,
@@ -358,15 +390,17 @@ function searchDocs(db, q, limit) {
       ON vault_documents.vault_id = vault_documents_fts.vault_id
      AND vault_documents.rel_path = vault_documents_fts.rel_path
     WHERE vault_documents_fts MATCH ?
+    ORDER BY rank
     LIMIT ?
   `);
-  let hits;
-  try {
-    hits = stmt.all(`"${escaped}"`, n);
-    if (!hits.length) hits = stmt.all(escaped, n);
-  } catch (err) {
-    console.error(`FTS query failed: ${err.message}`);
-    process.exit(1);
+  let hits = [];
+  if (match) {
+    try {
+      hits = stmt.all(match, n);
+    } catch (err) {
+      console.error(`FTS query failed: ${err.message}`);
+      process.exit(1);
+    }
   }
   printResult({
     db: DB_PATH,

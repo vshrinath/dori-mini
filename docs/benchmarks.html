@@ -222,8 +222,32 @@
           <td><span class="num">648 chars</span><span class="sub"><code>semantic-index.mjs search</code> — correct doc (venue contract) ranked #1 at score 1.000 (~162 tokens)</span></td>
           <td class="win">−68% context</td>
         </tr>
+        <tr>
+          <td class="usecase">"What % of revenue came from the GPS products he led?" <span class="sub" style="margin-top:2px;">(one number, buried in a real PDF résumé with zero paragraph breaks, among 5 real converted PDFs)</span></td>
+          <td><span class="num">66,830 chars</span><span class="sub">all 5 real PDFs — résumé, program brief, SEO audit, two assessment reports — converted via <code>markitdown</code> and read in full (~16.7K tokens)</span></td>
+          <td><span class="num">604 chars</span><span class="sub"><code>semantic-index.mjs search</code>, no company name or number in the query — correct chunk ranked #1, snippet lands on the exact sentence (~151 tokens)</span></td>
+          <td class="win">−99% context</td>
+        </tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="cost-badge" style="margin-top:22px; background: rgba(240,168,14,0.08); border-color: rgba(240,168,14,0.3);">
+    <div class="mark" style="color:var(--amber);">🛠</div>
+    <div><b>A real bug, found and fixed building this row.</b> The PDF above converts
+    to one 8,947-character block with no paragraph breaks at all — markitdown's honest
+    output for a densely-laid-out résumé. The first version of this test failed: a
+    natural paraphrase missed the document entirely, because <code>semantic-index.mjs</code>
+    only ever split text <i>between</i> paragraphs — a single oversized paragraph with
+    nowhere to split bypassed chunking and got embedded as one diluted vector. Traced
+    it to <code>chunkText()</code>, ported dori-engine's real fallback for exactly this
+    case (<code>splitOversized</code> in <code>src/vector/ingest.ts</code> — its own
+    comment calls out "PDF/OCR-extracted text... one dense blob"), and fixed the
+    preview snippet to center on the matched word instead of always showing the start
+    of the chunk. Re-ran the same query after the fix — it works, and the number
+    shown in the table above is from the fixed version.
+    <a class="underline" href="https://github.com/vshrinath/dori-mini/commit/238f910" target="_blank" rel="noopener">See the fix →</a>
+    </div>
   </div>
 
   <p class="fine">
@@ -430,7 +454,13 @@ grep -rli "priya menon" /tmp/demo-vault/projects | xargs cat | wc -c
 <span class="dim"># the 6-document needle-in-haystack search</span>
 VAULT_ROOT=/tmp/docs-vault VAULT_VECTORS_DB=/tmp/docs.db node semantic-index.mjs index
 VAULT_ROOT=/tmp/docs-vault VAULT_VECTORS_DB=/tmp/docs.db \
-  node semantic-index.mjs search "what do we lose cancelling the venue 5 days out" 2</pre>
+  node semantic-index.mjs search "what do we lose cancelling the venue 5 days out" 2
+
+<span class="dim"># the PDF number, using the real markitdown conversion pipeline</span>
+markitdown my-resume.pdf >> pdf-vault/references/clippings/resume.md
+VAULT_ROOT=/tmp/pdf-vault VAULT_VECTORS_DB=/tmp/pdf.db node semantic-index.mjs index
+VAULT_ROOT=/tmp/pdf-vault VAULT_VECTORS_DB=/tmp/pdf.db \
+  node semantic-index.mjs search "what share of company revenue came from the GPS products he led" 2</pre>
   </div>
 
   <h2>What this doesn't claim</h2>
