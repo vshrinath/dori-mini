@@ -99,13 +99,31 @@ if (cmd === 'set') {
     if (!byService.size) console.log('(empty)');
   }
 } else if (cmd === 'find') {
-  const query = args.join(' ').toLowerCase();
+  const query = args.join(' ').toLowerCase().trim();
   if (!query) { console.error('Usage: credentials-store.mjs find <text>'); process.exit(1); }
   const d = db();
-  const rows = d.prepare(`SELECT service, value FROM credentials WHERE field = 'label' AND secret = 0`).all();
+  const rows = d.prepare(`SELECT service, field, value FROM credentials WHERE field IN ('label', 'aliases') AND secret = 0`).all();
   d.close();
-  const matches = rows.filter(r => r.value.toLowerCase().includes(query));
-  for (const m of matches) console.log(`${m.service}  —  ${m.value}`);
+  const byService = new Map();
+  for (const r of rows) {
+    if (!byService.has(r.service)) byService.set(r.service, { label: null, aliases: null });
+    byService.get(r.service)[r.field] = r.value;
+  }
+  // Match on the slug, the label, or the aliases. A query is scored by how many of its
+  // words hit, and only the best-scoring tier is shown — plain OR drowns "web search key"
+  // in every entry containing "key", while plain AND misses the entry you meant.
+  const terms = query.split(/\s+/);
+  const scored = [];
+  for (const [service, e] of byService) {
+    const hay = `${service} ${e.label || ''} ${e.aliases || ''}`.toLowerCase();
+    const score = terms.filter(t => hay.includes(t)).length;
+    if (score) scored.push({ service, ...e, score });
+  }
+  const best = Math.max(0, ...scored.map(m => m.score));
+  const matches = scored.filter(m => m.score === best);
+  for (const m of matches) {
+    console.log(`${m.service}  —  ${m.label || '(no label)'}${m.aliases ? `  [also: ${m.aliases}]` : ''}`);
+  }
   if (!matches.length) console.log('(no matches)');
 } else if (cmd === 'delete') {
   const [service, field] = args;

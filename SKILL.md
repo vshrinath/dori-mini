@@ -205,13 +205,19 @@ Local encrypted key/value store — `credentials-store.mjs`, `import-credentials
 
 **Lookup** ("what is my X", "get me the Y key"):
 ```bash
-node ~/.claude/skills/dori/credentials-store.mjs find "<text>"          # search by label when you don't know the exact service/field
+node ~/.claude/skills/dori/credentials-store.mjs find "<text>"          # search slug + label + aliases when you don't know the exact service
 node ~/.claude/skills/dori/credentials-store.mjs list                   # one line per service (label + field count), never shows secret values
 node ~/.claude/skills/dori/credentials-store.mjs list <service>         # full field list for one service
 node ~/.claude/skills/dori/credentials-store.mjs get <service>          # field is optional — with one secret field it resolves itself; several, it lists them and you pick
 node ~/.claude/skills/dori/credentials-store.mjs get <service> <field>  # secret: copies to clipboard, prints only a confirmation + last 4 chars. Plaintext field: prints directly.
 ```
 Users know a credential by its name, never by its field — "what's the OpenAI key" is the shape to expect. So `find "<text>"` → `get <service>` is the normal two-step, and you should not ask which field they mean unless `get` itself reports several. Field names vary by entry (`value`, `vps_root_password`, ...) and are an implementation detail.
+
+`find` scores entries by how many query words hit the slug, label, or aliases, and prints only the best-scoring tier — so "the web search key" lands on the entry tagged `search` rather than every entry containing "key". A product name often doesn't contain the word someone searches by ("Serper API key" vs. "search"), so when a `find` misses and you locate the entry another way, offer to tag it:
+```bash
+node ~/.claude/skills/dori/credentials-store.mjs set <service> aliases "search, web" --plain
+```
+Aliases are deliberately plaintext — they're search terms, not secrets — and don't affect `get`'s single-secret resolution.
 
 Never pass `--reveal` on `get` unless the user explicitly asks to see the plaintext — that's the one thing that puts a secret in your own output/transcript. Everything else in this store is designed so you never see the value.
 

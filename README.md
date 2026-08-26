@@ -108,7 +108,9 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
   `security` and `pbcopy`). Designed so an agent can look a secret up for you without
   ever seeing it: `get` copies the value to your clipboard and prints only a length and
   the last four characters, and `getSecret()` lets a script pull one into memory
-  directly. To add one, `add-credential-server.mjs` opens a small local form in your
+  directly. `find` searches names plus optional aliases, so a key you'd ask for as
+  "the search key" is findable even when its name says "Serper". To add one,
+  `add-credential-server.mjs` opens a small local form in your
   browser (localhost-only, behind a one-time token), or `add-credential.mjs` asks in the
   terminal — either way you type the value into that process, not into a chat.
 

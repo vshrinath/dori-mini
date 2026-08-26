@@ -74,6 +74,8 @@ input:focus-visible{
   box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent);
 }
 .hint{font-size:.6875rem; font-weight:500; line-height:1.35; color:var(--muted-fg); margin:7px 0 0}
+.hint em{font-style:normal; color:var(--fg-2)}
+.opt{text-transform:none; letter-spacing:normal; font-weight:400; opacity:.65; margin-left:5px}
 .reveal{position:relative}
 .reveal input{padding-right:60px}
 .reveal button{
@@ -128,6 +130,11 @@ const PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8">
       <label for="label">Name</label>
       <input id="label" name="label" type="text" placeholder="OpenAI API key" required autofocus autocomplete="off" spellcheck="false">
       <p class="hint">However you'd naturally ask for it later — "the OpenAI key", "VPS root password".</p>
+    </div>
+    <div class="field">
+      <label for="aliases">Also known as <span class="opt">optional</span></label>
+      <input id="aliases" name="aliases" type="text" placeholder="search, web" autocomplete="off" spellcheck="false">
+      <p class="hint">Other words you might ask for it by, comma-separated. "Serper API key" won't match a search for <em>search</em> unless you say so here.</p>
     </div>
     <div class="field">
       <label for="value">Value</label>
@@ -192,9 +199,11 @@ const server = createServer((req, res) => {
         return;
       }
       const service = slugify(label);
+      const aliases = (params.get('aliases') || '').trim();
       const d = db();
       setEntry(d, plain ? null : getOrCreateKey(), service, field, value, plain);
       if (field !== 'label') setEntry(d, null, service, 'label', label, true);
+      if (aliases) setEntry(d, null, service, 'aliases', aliases, true);
       d.close();
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(confirmPage(service, field, value.length));
