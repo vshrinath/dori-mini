@@ -1566,3 +1566,110 @@ reversible; deleting the underlying files is neither, and an unused directory ca
 the sole custodian of a live secret. Check what a directory *holds* before advising its
 removal, not merely when it was last touched.
 
+## Part 14 — Contextual retrieval: built, measured, and not adopted
+
+Anthropic's contextual-retrieval post reports top-20 retrieval failure dropping 5.7% → 1.9%
+by prepending an LLM-generated context sentence to each chunk before embedding. Their
+headline 49% improvement is contextual embeddings **plus** contextual BM25; contextual
+embeddings alone is the 35% component. This part records building it, measuring it on the
+real vault, and deciding against it.
+
+### 14.1 What was built
+
+`semantic-index.mjs contextualize [maxFiles] [pathFilter]`. For each file, the whole
+document (capped at 60k chars) plus its numbered chunks go to `claude -p --model haiku` in
+one call, which returns one `<index>|<context>` line per chunk. The parse requires
+**exactly** one line per chunk or the file is skipped entirely — a partial mapping would
+silently misalign contexts onto the wrong chunks. Each chunk is then re-embedded as
+`${context}\n\n${chunk}`. A `contextualized_at` column on `indexed_files` makes the pass
+resumable and lets an A/B confirm which documents were actually treated.
+
+The LLM call goes through the session's OAuth via `claude -p`, not the stored API key.
+
+### 14.2 What was measured
+
+Backup taken first: `vectors.db.bak-precontextual-2026-08-26`.
+
+Two batches ran: 39 files / 773 chunks (1 failed), then a targeted
+`founding-fuel/meetings` top-up of 21 files / 133 chunks (0 failed). Result: **62 of 2,455
+indexed files contextualized (2.5%)**, all five Founding Fuel eval targets among them
+(verified by querying `contextualized_at`, not assumed).
+
+The first batch was nearly wasted: filter `"founding-fuel"` with a 40-file cap could not
+reach the eval targets, which sit at positions 51–59 in that filter's ordering. Caught
+before the run, not after.
+
+Re-running the 16 Founding Fuel questions from the baseline eval (Part 13) at limit 20:
+
+```
+Q     semantic(base->now)   fts(base->now)     either
+Q1      2 ->   -            2 ->   2        hit -> hit
+Q2      1 ->   3            9 ->   9        hit -> hit
+Q5     14 ->  16            - ->   -        hit -> hit
+Q6      - ->  19            1 ->   1        hit -> hit
+Q9      1 ->   1            - ->   -        hit -> hit
+Q10     - ->  12            - ->   -        miss -> hit  <== RECOVERED
+Q19     3 ->   -           16 ->  16        hit -> hit
+
+semantic hits: 5/16 -> 5/16
+fts hits:      7/16 -> 7/16
+either:        9/16 (56%) -> 10/16 (63%)
+```
+
+### 14.3 Only one of those three columns is evidence
+
+`contextualize` writes to dori-engine's `vectors.db`. `query-vault.mjs` reads dori-portal's
+`portal.db`, which the pass never touched. The FTS column is therefore **byte-identical by
+construction** — every rank unchanged, 7/16 → 7/16 — and is not a null result, it is not a
+result at all. Reporting `either: 56% → 63%` as the headline would be reporting an artifact:
+that +1 is Q10 alone, and the column is flattered by an untreated channel still catching Q1
+and Q19 after the treated channel dropped them.
+
+**The measurable outcome is semantic: 5/16 → 5/16. Zero.**
+
+### 14.4 Worse than null — ranks got noisier
+
+The unchanged total hides movement in both directions: gained Q6 (miss → 19) and Q10
+(miss → 12), **lost** Q1 (2 → outside top 20) and Q19 (3 → outside top 20), degraded Q2
+(1 → 3) and Q5 (14 → 16). One rank held (Q9, 1 → 1).
+
+Two documents that were previously retrieved at ranks 2 and 3 stopped being retrieved at
+all. That is a regression, not a wash. The plausible mechanism: a ~20-word context prefix
+on a ~1200-char chunk, embedded by a 384-dimension `all-MiniLM-L6-v2`, competes with the
+chunk's own content rather than complementing it. The published results used considerably
+stronger embedding models.
+
+### 14.5 Decision: not adopted
+
+Contextualization is **not** run on the remaining 2,393 files and is **not** wired into the
+capture path. Three reasons, in order of weight:
+
+1. **It did not work here.** The semantic channel is exactly where the published
+   embeddings-only 35% should have appeared. It measured 0%, with two regressions.
+2. **The failure mode it targets is already handled.** Register mismatch accounts for 100%
+   of baseline misses (7/7), and all 7 recover on a literal-vocabulary retry — a free fix
+   already documented in `SKILL.md`.
+3. **The cost is recurring, not one-off.** ~35–49s per file; the remaining corpus is ~17h
+   sequential, and every future capture would carry the same per-file tax forever.
+
+### 14.6 What this result does not establish
+
+Stated so the negative is not overclaimed either:
+
+- **n = 16 questions**, one corpus, one embedding model. This is a decision-grade result for
+  this vault, not a general refutation of contextual retrieval.
+- **Contextual BM25 was never tested.** Porting the pass into `portal.db` would test the
+  other half of the published technique, and the published data suggests BM25 carries a
+  meaningful share of the gain.
+- **97.5% of the corpus is untreated**, so treated documents competed against untreated
+  ones. This confound cuts *toward* the technique, not against it: a contextualized target
+  should have gained ground on unchanged competitors. It did not.
+
+The `contextualize` command is left in place, working and resumable, so a stronger embedding
+model or a contextual-BM25 port can re-test it cheaply. It is simply not on by default.
+
+**Generalizable point:** a published benchmark improvement is a claim about a specific
+model, corpus, and pipeline. Reproducing the *method* does not reproduce the *result*. The
+A/B here cost two batches and caught both that the technique gave nothing on this stack and
+that a naive reading of the fused column would have reported a 56% → 63% "win" that was
+mostly an untreated channel holding steady.
