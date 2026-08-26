@@ -208,8 +208,11 @@ Local encrypted key/value store — `credentials-store.mjs`, `import-credentials
 node ~/.claude/skills/dori/credentials-store.mjs find "<text>"          # search by label when you don't know the exact service/field
 node ~/.claude/skills/dori/credentials-store.mjs list                   # one line per service (label + field count), never shows secret values
 node ~/.claude/skills/dori/credentials-store.mjs list <service>         # full field list for one service
+node ~/.claude/skills/dori/credentials-store.mjs get <service>          # field is optional — with one secret field it resolves itself; several, it lists them and you pick
 node ~/.claude/skills/dori/credentials-store.mjs get <service> <field>  # secret: copies to clipboard, prints only a confirmation + last 4 chars. Plaintext field: prints directly.
 ```
+Users know a credential by its name, never by its field — "what's the OpenAI key" is the shape to expect. So `find "<text>"` → `get <service>` is the normal two-step, and you should not ask which field they mean unless `get` itself reports several. Field names vary by entry (`value`, `vps_root_password`, ...) and are an implementation detail.
+
 Never pass `--reveal` on `get` unless the user explicitly asks to see the plaintext — that's the one thing that puts a secret in your own output/transcript. Everything else in this store is designed so you never see the value.
 
 **Storing a new value** — on "add a secret/credential/key" (or similar), default to spinning up the local browser form yourself, no need to ask which method first:
