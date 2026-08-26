@@ -27,6 +27,16 @@ const EMBED_MODEL = 'Xenova/all-MiniLM-L6-v2';
 const CHUNK_TARGET_CHARS = 1200;
 const MIN_DEDUP_BODY_CHARS = 40;
 const RRF_K = 60;
+// Mirrors dori-engine's TransformersReranker (packages/embeddings/src/reranker.ts) and its
+// wiring in src/vector/index.ts: a local ONNX cross-encoder applied to the top candidates of
+// a dense retrieval pass, no API key. Same model, same 4x candidate multiplier, same
+// fail-open contract (a reranking error keeps the first-stage ranking, never errors the
+// whole search). RERANK=0 disables it — kept as an escape hatch for A/B comparison against
+// the pre-rerank baseline (docs/baseline-retrieval-eval-2026-08-26.md), not a production
+// toggle real Dori exposes.
+const RERANK_MODEL = process.env.RERANK_MODEL || 'mixedbread-ai/mxbai-rerank-xsmall-v1';
+const RERANK_CANDIDATE_MULTIPLIER = 4;
+const RERANK_ENABLED = process.env.RERANK !== '0';
 // Mirrors dori-engine's DEFAULT_LIMIT (src/vector/index.ts:41). Was 8 here — an
 // unmirrored divergence. dori-engine imposes no max cap, so none is imposed here either.
 const DEFAULT_LIMIT = 10;
@@ -378,6 +388,62 @@ async function embed(text) {
   return Array.from(output.data);
 }
 
+// Local cross-encoder reranker — direct port of dori-engine's TransformersReranker
+// (packages/embeddings/src/reranker.ts). Scores one (query, document) pair per forward
+// pass: "callers should only rerank a small shortlist from a cheaper first-pass retrieval,
+// not a corpus" (real Dori's own comment on this). Never call on more than a few dozen
+// candidates.
+let rerankerPromise = null;
+async function getReranker() {
+  if (!rerankerPromise) {
+    rerankerPromise = (async () => {
+      const { AutoModelForSequenceClassification, AutoTokenizer } = await import('@huggingface/transformers');
+      const [tokenizer, model] = await Promise.all([
+        AutoTokenizer.from_pretrained(RERANK_MODEL),
+        AutoModelForSequenceClassification.from_pretrained(RERANK_MODEL, { dtype: 'q8' }),
+      ]);
+      return { tokenizer, model };
+    })();
+  }
+  return rerankerPromise;
+}
+
+function sigmoid(x) {
+  return 1 / (1 + Math.exp(-x));
+}
+
+async function rerankScores(query, texts) {
+  if (texts.length === 0) return [];
+  const { tokenizer, model } = await getReranker();
+  const scores = [];
+  for (const text of texts) {
+    const inputs = tokenizer(query, { text_pair: text, padding: true, truncation: true });
+    const { logits } = await model(inputs);
+    scores.push(sigmoid(logits.data[0]));
+  }
+  return scores;
+}
+
+// Applies the cross-encoder to `candidates` (the fused first-stage ranking) and returns a
+// NEW array sorted by cross-encoder score, which fully REPLACES the first-stage score —
+// mirrors real Dori exactly: "when a reranker ran, its cross-encoder scores fully replace
+// the first-stage scores... reranking already reflects deep semantic relevance to the
+// query text" (src/vector/index.ts). Fails open: any error keeps candidates in their
+// original first-stage order, same contract as SearchIndex.query's try/catch, so a broken
+// or unavailable reranker degrades search quality — it never errors the whole search.
+async function rerank(query, candidates) {
+  if (!RERANK_ENABLED || candidates.length <= 1) return candidates;
+  try {
+    const scores = await rerankScores(query, candidates.map((c) => c.text));
+    return candidates
+      .map((c, i) => ({ ...c, score: scores[i] ?? 0 }))
+      .sort((a, b) => b.score - a.score);
+  } catch (err) {
+    console.error(`Reranking failed, keeping first-stage ranking: ${err.message}`);
+    return candidates;
+  }
+}
+
 async function cmdIndex(onlyFile) {
   const targets = onlyFile ? [onlyFile] : walk(VAULT_ROOT);
   const getFileMtime = db.prepare('SELECT mtime FROM indexed_files WHERE source_path = ?');
@@ -539,8 +605,13 @@ async function retrieveLists(query, limit, vecRows) {
 }
 
 async function cmdSearch(query, limit) {
-  const lists = await retrieveLists(query, limit, loadVectorRows());
-  const fused = fuseRrf(lists, limit);
+  // Pull RERANK_CANDIDATE_MULTIPLIER x the requested limit from first-stage fusion so the
+  // cross-encoder has more than the final page to choose from — mirrors real Dori's
+  // effectiveLimit calculation exactly (src/vector/index.ts).
+  const candidateLimit = RERANK_ENABLED ? limit * RERANK_CANDIDATE_MULTIPLIER : limit;
+  const lists = await retrieveLists(query, candidateLimit, loadVectorRows());
+  const candidates = fuseRrf(lists, candidateLimit);
+  const fused = (await rerank(query, candidates)).slice(0, limit);
   for (const hit of fused) {
     console.log(`[${hit.score.toFixed(3)}] ${hit.sourcePath} — ${hit.title}`);
     console.log(`  ${previewAround(hit.text, query)}\n`);
