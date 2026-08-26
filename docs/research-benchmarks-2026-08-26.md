@@ -2056,3 +2056,81 @@ so this vault's behaviour is unchanged — verified: the loader returns `["*vybe
 **And the measurements themselves do not travel.** 55% hit@20, "register mismatch is 100% of
 misses", "21.5% junk" — those describe this corpus. The mechanisms generalize; the numbers
 are one vault's, and must not follow the code into anyone's documentation or marketing.
+
+---
+
+## Part 17 — Porting the reranker fixes the ordering problem it was built for
+
+Part 16's rank probe found that most baseline misses were near-misses, not absences: Q10 at
+rank 2, Q17's FF-Launch at rank 7, Q15 at rank 16, Q20's FF-Pre at rank 17 — all just past
+the k=20 cutoff, with the target document demonstrably in the index. Combined with the
+earlier finding that all 7 baseline misses recover under source vocabulary, the diagnosis
+was a ranking problem, not a coverage problem. Before building anything new for it: real
+dori-engine already ships a fix for exactly this shape
+(`packages/embeddings/src/reranker.ts`, `TransformersReranker` — a local ONNX cross-encoder,
+`mixedbread-ai/mxbai-rerank-xsmall-v1`, wired live and default-on whenever a dense retrieval
+pass ran) and Dori Mini had never mirrored it. It is ported directly, not reinvented — same
+model, same `RERANK_CANDIDATE_MULTIPLIER` (4x), same fully-replace-not-blend scoring, same
+fail-open contract on a scoring failure.
+
+### 17.1 Result
+
+Same-run, own-control comparison — `RERANK=0` vs default, same subprocess mechanism, same
+index state, only the toggle changed, so this isn't cross-referencing a historic baseline
+run under different index conditions:
+
+| | no rerank | reranked |
+|---|---|---|
+| hit@20 (semantic channel, n=20 real questions) | 8/20 (40%) | **10/20 (50%)** |
+| recovered (miss → hit) | — | Q18, Q19 |
+| lost (hit → miss) | — | **0** |
+| promoted within already-hit | — | Q1 (+13), Q2 (+1), Q6 (+12), Q10 (+1), Q15 (+9) |
+| demoted within already-hit | — | Q5 (−1), Q14 (−4) |
+| negative controls (N1–4) | 0/4 retrieved | 0/4 retrieved, unchanged |
+
+**+2 net questions, zero regressions in the binary hit/miss sense.** This is the first
+measured positive result in Parts 14–17 — contextual retrieval (Part 14) was flat-to-negative
+and scope (Part 16) fixed a different failure mode at roughly zero net effect on hit rate.
+
+### 17.2 What it does not fix, stated plainly
+
+- **This is the semantic channel only.** `query-vault.mjs`'s FTS channel (`portal.db`) has no
+  reranker ported. The baseline eval's original 55% headline was a two-channel *either*
+  composite across two separate databases — this 40%→50% figure is **not** directly
+  comparable to it and must not be quoted as "55% → X%." It is a clean, valid, like-for-like
+  measurement on its own terms, on one channel.
+- **Multi-hop questions remain largely unfixed.** Q17 needs both FF-Tax and FF-Launch in the
+  top 20; FF-Launch alone is promotable but FF-Tax's rerank score wasn't high enough to also
+  clear the cutoff, so the question stays a miss under the stricter "both required" rule. Q20
+  is the same shape. Reranking improves single-document ranking; it does not relax the
+  multi-hop metric's AND requirement.
+- **Candidates beyond the 4x window are structurally unreachable.** Q7 (rank 84), Q8 (rank
+  294), Q16 (not in top 300) sit outside the 80-candidate pool a `limit=20` search pulls, so
+  the cross-encoder never sees them — this is not a bug, it is the documented cost of the
+  multiplier, same tradeoff real Dori accepts. Reaching them would mean widening the
+  multiplier or the first-stage limit, which is a direct compute-for-recall trade, not free.
+- **One real quality regression, not just a metric footnote.** Q14 moved from rank 1 to rank
+  5. Still counted as a "hit" at k=20, but if this were feeding a single-answer response
+  rather than a ranked list, this is a worse answer, not a neutral one. The cross-encoder's
+  judgment does not always agree with the first-stage ranking, and it does not always win.
+
+### 17.3 Cost
+
+Real, measured, at the actual candidate depth a `limit=20` search uses (80 candidates through
+the cross-encoder, one forward pass per candidate): **~3.9s per search**, warm cache. First
+call anywhere pays a one-time model download (~30s, cached thereafter under
+`~/.cache/huggingface` the same way the embedding model already is). No LLM call, no API key,
+no per-token cost — this is local ONNX inference, same cost shape as embedding.
+
+Confirmed deterministic: the same query run twice produced byte-identical rankings. Unlike
+`verify` (Part 15.5), there is no run-to-run sampling variance to account for here — the
+cross-encoder is a fixed forward pass, not a sampled LLM completion.
+
+### 17.4 Where this leaves 2.1
+
+The 45%-still-missing figure from the baseline eval is now measurably smaller on the
+semantic channel (40%→50% hit, i.e. the miss rate on this channel dropped from 60% to 50%),
+at zero ongoing cost beyond ~3.9s of local compute per search and zero measured regression in
+the strict hit/miss sense. Remaining path to close more of the gap: port the same reranker
+onto the FTS channel, and/or widen the candidate multiplier for the fraction of misses that
+sit beyond 80 — both are direct extensions of what already shipped, not new mechanisms.
