@@ -163,6 +163,10 @@ prompt from scratch, so re-enter your real vault path rather than hitting Enter 
 new script landed": it only pings a desktop notification when it pulled real changes,
 or when it's blocked and needs you, never on the common no-op day. Logs: `~/.dori/update.log`.
 
+When something did change, `./update.sh` prints the new section(s) of
+[`RELEASE_NOTES.md`](./RELEASE_NOTES.md) — plain English, no commit hashes, same
+convention real Dori's own release notes use.
+
 ## Usage
 
 Source the generated config once per shell (or add it to your shell profile):
