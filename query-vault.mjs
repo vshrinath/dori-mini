@@ -17,9 +17,14 @@ import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { RERANK_ENABLED, RERANK_CANDIDATE_MULTIPLIER, rerank } from './reranker.mjs';
+import { discoverProjects, discoverPeople, matchProject } from './scope.mjs';
 
 const DB_PATH = process.env.VAULT_INDEX_DB || resolve(homedir(), 'proto-space/dori/store/portal.db');
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
+// Opt-in and unproven — see docs/eval-scope-2026-08-26.mjs before flipping the default.
+// Fails open (matchProject returns null on 0 or >1 hits): a wrong scope would silently
+// exclude the right document, worse than not scoping at all.
+const SCOPE_ENABLED = process.env.SCOPE === '1';
 const DEFAULT_SECTIONS = ['decisions', 'actions'];
 // Mirrors real dori-portal's searchVaultDocumentsFts (lib/vault-indexer.ts:115,
 // `Math.min(Math.max(options?.limit ?? 20, 1), 50)`). dori-mini previously used 5/8,
@@ -387,7 +392,7 @@ function toPrefixOrQuery(q) {
   return kept.map((t) => `"${t.replace(/"/g, '')}"*`).join(' OR ');
 }
 
-function searchStmt(db) {
+function searchStmt(db, scoped) {
   return db.prepare(`
     SELECT
       vault_documents_fts.rel_path AS rel_path,
@@ -401,16 +406,17 @@ function searchStmt(db) {
       ON vault_documents.vault_id = vault_documents_fts.vault_id
      AND vault_documents.rel_path = vault_documents_fts.rel_path
     WHERE vault_documents_fts MATCH ?
+    ${scoped ? "AND vault_documents_fts.rel_path LIKE ?" : ''}
     ORDER BY rank
     LIMIT ?
   `);
 }
 
-function runSearch(stmt, q, n) {
+function runSearch(stmt, q, n, scopeSlug) {
   const match = toPrefixOrQuery(q);
   if (!match) return [];
   try {
-    return stmt.all(match, n);
+    return scopeSlug ? stmt.all(match, `%/${scopeSlug}/%`, n) : stmt.all(match, n);
   } catch (err) {
     console.error(`FTS query failed: ${err.message}`);
     process.exit(1);
@@ -475,7 +481,10 @@ async function searchDocs(db, q, limit) {
   // exactly (semantic-index.mjs cmdSearch, Part 17), which itself mirrors real Dori's
   // effectiveLimit (src/vector/index.ts).
   const candidateN = RERANK_ENABLED ? n * RERANK_CANDIDATE_MULTIPLIER : n;
-  const candidates = runSearch(searchStmt(db), q, candidateN);
+  const scopeSlug = SCOPE_ENABLED
+    ? matchProject(q, discoverProjects(VAULT_ROOT), discoverPeople(VAULT_ROOT))
+    : null;
+  const candidates = runSearch(searchStmt(db, Boolean(scopeSlug)), q, candidateN, scopeSlug);
   const reranked = await rerankFtsHits(db, q, candidates);
   const hits = stripInternalFields(reranked.slice(0, n));
   printResult({
