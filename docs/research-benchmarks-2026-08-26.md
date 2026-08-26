@@ -1493,6 +1493,8 @@ but that specific query is no longer reproducible, and should not be quoted as a
 example.
 
 Implementation: a `VAULT_IGNORE` env var in both scripts, defaulting to `hermes,*vybe*`.
+*(That default was a latent ship-blocker and was removed in Part 17 — patterns now live in
+`<vault>/.doriignore`. The mechanism below is unchanged.)*
 Two pattern forms, because vault junk comes in two shapes — a bare name is a directory
 prefix (`hermes` → `hermes/**`), and a name containing `*` is a case-insensitive glob over
 the whole relative path. The glob form is not decoration: **a retired project's files are
@@ -1978,3 +1980,79 @@ scope-on run produced a clean, plausible, quotable table that pointed the wrong 
 separated signal from noise was re-running the two specific disagreeing cases in both
 configurations — cheap (12 calls, ~3 minutes) next to the cost of shipping the wrong
 conclusion, or of writing it into a document that later gets cited as evidence.
+
+---
+
+## Part 17 — A shipping hazard found by asking "does this hold for anyone else?"
+
+Everything in Parts 13–16 was built and measured against one vault. Reviewing the work for
+release surfaced one change that was actively unsafe to ship, and it had been sitting in the
+code since Part 13 passing every test.
+
+### 17.1 The hazard
+
+```js
+const IGNORE_PATTERNS = (process.env.VAULT_IGNORE ?? 'hermes,*vybe*')
+```
+
+`hermes` and `*vybe*` are two *specific projects belonging to one user*, hardcoded as the
+default in both indexers. For most users the patterns match nothing and cost nothing. For any
+user with a directory named `hermes` or a project whose files contain "vybe", the effect is:
+
+**their real notes are silently dropped from both search indexes — no error, no warning, no
+log line, and nothing on the surface that would lead them to look at an ignore list.** They
+would simply find that Dori could never recall a particular project, with no way to
+diagnose why.
+
+That is the worst failure shape available: silent, total for the affected content, and
+invisible from the outside. It is worse than the crash in Part 9, which at least announced
+itself.
+
+### 17.2 Why the tests did not catch it
+
+`test-ignore.mjs` covered the *matcher* thoroughly — prefix form, glob form, case
+insensitivity, regex-metacharacter escaping, and the `hermes-notes/` near-miss. Every
+assertion passed, and none of them could have caught this, because the bug was not in the
+matching logic. It was in the **default value**, which no test asserted anything about.
+
+**Generalizable point: a well-tested mechanism with a wrong default is still a wrong
+program.** Tests written while building a feature naturally test the feature; the default is
+part of the interface, not the feature, and is easy to leave unexamined. The question that
+found it was not "is this correct?" but "what happens to someone who is not me?"
+
+### 17.3 The fix
+
+Default is now empty. Patterns are read from `<vault>/.doriignore` — one per line, `#` for
+comments, both pattern forms unchanged. `VAULT_IGNORE` still overrides for a single run.
+
+A file in the vault rather than an env var, for a reason specific to how this system runs:
+the launchd background jobs (digest, notifications, WhatsApp listener) do not inherit a shell
+profile. An exclusion list configured as an environment variable would apply to interactive
+runs and *not* to background reindexes, so the two would silently maintain different views of
+the same vault. A file in the vault root applies no matter how the process was started, and
+travels with the vault if it is cloned or synced.
+
+The empty default is the safe one in both directions: a new user excludes nothing until they
+say otherwise, and excluding nothing is always recoverable, whereas silently excluding
+something is not noticeable enough to be recoverable.
+
+Tests added asserting the parser returns `[]` for an absent, empty, and comment-only file.
+`~/proto-space/dori/dori-vault/.doriignore` was created carrying the two existing patterns,
+so this vault's behaviour is unchanged — verified: the loader returns `["*vybe*", "hermes"]`.
+
+### 17.4 What else was checked for the same class of problem
+
+- **Hardcoded paths** (`proto-space/dori/dori-vault`, `proto-space/dori/store/portal.db`) —
+  env-overridable defaults, a prototype convention rather than a hazard. Real Dori configures
+  these. Left alone.
+- **The `verify` prompt** — contains no project names, no vocabulary from this vault, nothing
+  user-specific. Ports as-is.
+- **`loadVectorRows()` decodes every embedding on every search** — ~36 MB at this vault's
+  23,731 chunks, ~384 MB at 250k. Pre-existing, mirrored from dori-engine's own design, not
+  introduced here, but a real ceiling worth knowing before shipping to larger vaults.
+- **Everything measured is English markdown.** Non-English vaults are untested, and the
+  quote-matching normalizer makes markdown assumptions.
+
+**And the measurements themselves do not travel.** 55% hit@20, "register mismatch is 100% of
+misses", "21.5% junk" — those describe this corpus. The mechanisms generalize; the numbers
+are one vault's, and must not follow the code into anyone's documentation or marketing.

@@ -107,11 +107,24 @@ function parseFrontmatter(raw) {
   return { fm, body: body.trim() };
 }
 
-// Same ignore mechanism as semantic-index.mjs — see the long note there. Both indexers
-// walk the same vault, so an exclusion applied to only one would leave the other's index
-// still ranking the junk. Excluding a path never deletes the file; `show` and direct reads
-// are unaffected, and clearing VAULT_IGNORE plus a reindex restores it.
-const IGNORE_PATTERNS = (process.env.VAULT_IGNORE ?? 'hermes,*vybe*')
+// Same ignore mechanism as semantic-index.mjs — see the long note there, including why the
+// default is empty rather than a baked-in project name. Both indexers walk the same vault,
+// so an exclusion applied to only one would leave the other's index still ranking the junk.
+// Excluding a path never deletes the file; `show` and direct reads are unaffected, and
+// removing the line from <vault>/.doriignore plus a reindex restores it.
+function readIgnoreFile() {
+  try {
+    return readFileSync(join(VAULT_ROOT, '.doriignore'), 'utf8')
+      .split('\n')
+      .map((l) => l.replace(/#.*$/, '').trim())
+      .filter(Boolean)
+      .join(',');
+  } catch {
+    return '';
+  }
+}
+
+const IGNORE_PATTERNS = (process.env.VAULT_IGNORE ?? readIgnoreFile())
   .split(',')
   .map((s) => s.trim().replace(/^\/+|\/+$/g, ''))
   .filter(Boolean);

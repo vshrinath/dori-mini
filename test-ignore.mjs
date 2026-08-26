@@ -7,6 +7,34 @@
 // them while appearing to work.
 import assert from 'node:assert';
 
+// Mirrors the .doriignore parser in both indexers. The default MUST be empty: a project
+// name baked into shipped code silently drops a different user's real data out of search,
+// with no error and nothing to notice. Shipping 'hermes,*vybe*' as a default would have
+// done exactly that to anyone with a project of either name.
+function parseIgnoreFile(text) {
+  return text
+    .split('\n')
+    .map((l) => l.replace(/#.*$/, '').trim())
+    .filter(Boolean)
+    .join(',')
+    .split(',')
+    .map((s) => s.trim().replace(/^\/+|\/+$/g, ''))
+    .filter(Boolean);
+}
+
+// an absent or empty file excludes NOTHING — the only safe default for someone else's vault
+assert.deepEqual(parseIgnoreFile(''), []);
+assert.deepEqual(parseIgnoreFile('\n\n   \n'), []);
+assert.deepEqual(parseIgnoreFile('# only a comment\n# and another\n'), []);
+
+// real file shape: comments, blanks, and both pattern forms
+assert.deepEqual(
+  parseIgnoreFile('# header\n\n*vybe*\n\n# note about hermes\nhermes\n'),
+  ['*vybe*', 'hermes'],
+);
+// trailing comment on a pattern line, and stray slashes trimmed
+assert.deepEqual(parseIgnoreFile('/archive/  # retired\n'), ['archive']);
+
 function ignoreMatches(rel, pattern) {
   if (!pattern.includes('*')) return rel === pattern || rel.startsWith(pattern + '/');
   const rx = pattern.split('*').map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');

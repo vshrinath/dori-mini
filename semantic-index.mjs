@@ -244,7 +244,26 @@ function chunkText(body, targetChars) {
 // prefix (`hermes` -> hermes/**). A name containing `*` is a case-insensitive glob over the
 // whole relative path (`*vybe*`), needed because a retired project's files are usually
 // scattered — Vybe's live under captures/*vybe*, not a projects/vybe/ folder.
-const IGNORE_PATTERNS = (process.env.VAULT_IGNORE ?? 'hermes,*vybe*')
+// Exclusions are per-VAULT, never a shipped default. A project name baked in here would
+// silently drop a different user's real data out of search — no error, no warning, nothing
+// to notice, and nearly impossible to diagnose from the outside. So the default is empty and
+// the list is read from <vault>/.doriignore, which travels with the vault and applies no
+// matter how the process was started. An env var alone would not do: the launchd background
+// jobs (digest, notifications) do not inherit a shell profile, so their reindex would
+// silently use a different exclusion set than an interactive one.
+function readIgnoreFile() {
+  try {
+    return readFileSync(join(VAULT_ROOT, '.doriignore'), 'utf8')
+      .split('\n')
+      .map((l) => l.replace(/#.*$/, '').trim())
+      .filter(Boolean)
+      .join(',');
+  } catch {
+    return ''; // absent file means "exclude nothing", the correct default for a new vault
+  }
+}
+
+const IGNORE_PATTERNS = (process.env.VAULT_IGNORE ?? readIgnoreFile())
   .split(',')
   .map((s) => s.trim().replace(/^\/+|\/+$/g, ''))
   .filter(Boolean);
