@@ -521,13 +521,29 @@ it cannot be trusted alone as a confidence signal — see the same research doc,
 ### `verify` — ask whether the retrieved text actually answers the question
 
 ```bash
-node ~/.claude/skills/dori/semantic-index.mjs verify "<question>" [k]   # default k=5
+node ~/.claude/skills/dori/semantic-index.mjs verify "<question>" [k] [--scope "<subject>"]
 ```
 
-Retrieves the top-k, reads the full chunk text with a cheap model, and returns JSON with a
-verdict of `sufficient`, `partial`, `insufficient`, or `unverified`. Every `sufficient` /
-`partial` verdict must carry a quote that is matched back against the source `.md` on disk;
-a verdict whose quotes all fail that match is automatically downgraded to `insufficient`.
+Retrieves the top-k (default 5), reads the full chunk text with a cheap model, and returns
+JSON with a verdict of `sufficient`, `partial`, `insufficient`, or `unverified`. Every
+`sufficient` / `partial` verdict must carry a quote that is matched back against the source
+`.md` on disk; a verdict whose quotes all fail that match is automatically downgraded to
+`insufficient`.
+
+**Always pass `--scope` when you know what the question is about.** Questions name their
+subject loosely — "the archive", "the site", "our stories" — and the referent lives in the
+conversation you are having, not in the question string. You know it; the tool cannot infer
+it. Without scope, "roughly how many old stories are sitting in the archive" was answered
+`sufficient` from a real, disk-verified quote about a *personal* 47-story archive when the
+question meant a 2,500-article publication archive. With `--scope "the Founding Fuel content
+archive"` the same question returns `scope_match: NO` and `insufficient`. Pass the project,
+publication, client, or body of work the conversation is about.
+
+**Read the `about` field on every result.** It names what the passages were actually about,
+in the model's own words, and is returned whether or not you passed a scope. On an ambiguous
+question that is where a wrong referent becomes visible — `"about": "The YourStory archive…
+under the name Shrinath V"` is the tell that the answer, though correctly quoted, is about
+the wrong thing. Check it before repeating any answer to the user.
 
 **Use it before you state a fact the user will act on — not on every search.** It costs
 ~12 s, and it improves nothing about retrieval; all it does is turn a confident wrong answer
@@ -545,12 +561,10 @@ repeat runs.
 
 **Tested limits — do not oversell this to the user (Part 15):**
 
-- **`sufficient` with a verified quote can still be the wrong answer.** The quote check
-  proves the text exists in that document; it does **not** prove the text answers what was
-  asked. Measured: "how many old stories are in the archive" returned a real, disk-verified
-  quote about a *different* archive (47 personal bylines) when the question meant the
-  2,500-article Founding Fuel archive. Always read the returned quote yourself and confirm
-  it is about the same thing the question was about.
+- **The quote check alone cannot catch a wrong referent** — that is what `--scope` and
+  `about` are for (above). A disk-verified quote proves the text exists in that document; it
+  never proves the text answers *your* question. When you did not pass a scope, the verdict
+  is only as good as your own reading of `about`.
 - **Verdicts are not reproducible on borderline cases.** One question returned three
   different verdicts across three identical runs. Refusals are stable; positive verdicts are
   the ones that vary. Never re-run to get a better verdict, and never report "verified" as

@@ -3,7 +3,9 @@
 // docs/baseline-retrieval-eval-2026-08-26.md — 20 real questions plus 4 negative controls
 // whose answers were verified ABSENT from the corpus by grep before any retrieval ran.
 //
-// Usage: node docs/eval-sufficiency-2026-08-26.mjs [k]     (k = passages shown, default 5)
+// Usage: node docs/eval-sufficiency-2026-08-26.mjs [k] [--scope]
+//   k       passages shown to the check (default 5)
+//   --scope pass each question's real-world subject, as a caller who knows it would
 //
 // The metric that matters is NOT accuracy. It is the 2x2 below, because the two error types
 // have opposite costs and a single accuracy number hides the trade:
@@ -35,35 +37,45 @@ const DOC = {
   'SM-EC': '2026-06-20-shishu-mandir-ec-meeting',
 };
 
+// The 4th field is the scope a real caller would have supplied — the project the
+// conversation is about. Pass --scope on the command line to run the eval with it. These are
+// the scopes a caller genuinely knows, NOT a restatement of the answer: "the Founding Fuel
+// website relaunch", never "the 2,500-article archive". Writing the answer into the scope
+// would measure nothing.
+const FF = 'the Founding Fuel website relaunch';
 const Q = [
-  ['Q1', 'what time of night were we going to push the new site live', ['FF-Pre']],
-  ['Q2', 'why did we skip load balancing for the new site', ['FF-Pre']],
-  ['Q3', 'we renamed one of the site sections right before going live, what did it become', ['FF-Pre']],
-  ['Q4', 'what were we going to use to get alerted if the site went down', ['FF-Pre']],
-  ['Q5', "why doesn't the front page keep loading more stories as you scroll", ['FF-Launch']],
-  ['Q6', 'which topic did we put at the top of the homepage on launch day', ['FF-Launch']],
-  ['Q7', 'roughly how many old stories are sitting in the archive', ['FF-Tax']],
-  ['Q8', 'what are we using to send the sign-in emails', ['FF-Tax']],
-  ['Q9', 'who writes our film awards coverage', ['FF-Osc']],
-  ['Q10', 'who was the original developer we asked to look over the new setup', ['FF-Arch']],
-  ['Q11', 'what database is the hospital records system we are evaluating built on', ['SC-EMR']],
-  ['Q12', 'how much of my week did I commit to the eye hospital advisory work', ['SC-P1']],
-  ['Q13', 'when is the school society annual general meeting happening', ['SM-EC']],
-  ['Q14', 'how many people do they want on the governing committee now', ['SM-EC']],
-  ['Q15', 'what share of our pages does the new search engine handle', ['FF-Arch']],
-  ['Q16', 'how many failed AI pilots did the soft drinks company have', ['FF-Arch']],
-  ['Q17', 'we had a mess with stories written by two people, did that get sorted before launch', ['FF-Tax', 'FF-Launch']],
-  ['Q18', 'Charles was going to narrate the site tour video, is that what actually happened', ['FF-Osc', 'FF-Launch']],
-  ['Q19', 'old articles had dead audio players, what did we decide to do and who was finding them', ['FF-Tax', 'FF-Pre']],
-  ['Q20', 'we agreed a time to flip the switch, did the site actually go live that morning', ['FF-Pre', 'FF-Launch']],
-  ['N1', 'what are we paying Gowtham per month', []],
-  ['N2', 'what uptime did we promise after the launch', []],
-  ['N3', 'which investor put money into Founding Fuel', []],
-  ['N4', 'how many newsletter subscribers did Founding Fuel have at launch', []],
+  ['Q1', 'what time of night were we going to push the new site live', ['FF-Pre'], FF],
+  ['Q2', 'why did we skip load balancing for the new site', ['FF-Pre'], FF],
+  ['Q3', 'we renamed one of the site sections right before going live, what did it become', ['FF-Pre'], FF],
+  ['Q4', 'what were we going to use to get alerted if the site went down', ['FF-Pre'], FF],
+  ['Q5', "why doesn't the front page keep loading more stories as you scroll", ['FF-Launch'], FF],
+  ['Q6', 'which topic did we put at the top of the homepage on launch day', ['FF-Launch'], FF],
+  ['Q7', 'roughly how many old stories are sitting in the archive', ['FF-Tax'], FF],
+  ['Q8', 'what are we using to send the sign-in emails', ['FF-Tax'], FF],
+  ['Q9', 'who writes our film awards coverage', ['FF-Osc'], FF],
+  ['Q10', 'who was the original developer we asked to look over the new setup', ['FF-Arch'], FF],
+  ['Q11', 'what database is the hospital records system we are evaluating built on', ['SC-EMR'], 'the SCEH eye hospital EMR evaluation'],
+  ['Q12', 'how much of my week did I commit to the eye hospital advisory work', ['SC-P1'], 'the SCEH eye hospital advisory engagement'],
+  ['Q13', 'when is the school society annual general meeting happening', ['SM-EC'], 'the Shishu Mandir school society'],
+  ['Q14', 'how many people do they want on the governing committee now', ['SM-EC'], 'the Shishu Mandir school society'],
+  ['Q15', 'what share of our pages does the new search engine handle', ['FF-Arch'], FF],
+  ['Q16', 'how many failed AI pilots did the soft drinks company have', ['FF-Arch'], FF],
+  ['Q17', 'we had a mess with stories written by two people, did that get sorted before launch', ['FF-Tax', 'FF-Launch'], FF],
+  ['Q18', 'Charles was going to narrate the site tour video, is that what actually happened', ['FF-Osc', 'FF-Launch'], FF],
+  ['Q19', 'old articles had dead audio players, what did we decide to do and who was finding them', ['FF-Tax', 'FF-Pre'], FF],
+  ['Q20', 'we agreed a time to flip the switch, did the site actually go live that morning', ['FF-Pre', 'FF-Launch'], FF],
+  ['N1', 'what are we paying Gowtham per month', [], FF],
+  ['N2', 'what uptime did we promise after the launch', [], FF],
+  ['N3', 'which investor put money into Founding Fuel', [], FF],
+  ['N4', 'how many newsletter subscribers did Founding Fuel have at launch', [], FF],
 ];
 
-function runVerify(question, k) {
-  const raw = execFileSync('node', ['semantic-index.mjs', 'verify', question, String(k)],
+const USE_SCOPE = process.argv.includes('--scope');
+
+function runVerify(question, k, scope) {
+  const args = ['semantic-index.mjs', 'verify', question, String(k)];
+  if (USE_SCOPE && scope) args.push('--scope', scope);
+  const raw = execFileSync('node', args,
     { cwd: SKILL, encoding: 'utf8', maxBuffer: 32e6 });
   const s = raw.indexOf('{'), e = raw.lastIndexOf('}');
   if (s === -1 || e === -1) throw new Error('no JSON in output: ' + raw.slice(0, 200));
@@ -71,15 +83,15 @@ function runVerify(question, k) {
 }
 
 const rows = [];
-let tp = 0, fp = 0, fn = 0, tn = 0, unver = 0, downgrades = 0, review = 0;
+let tp = 0, fp = 0, fn = 0, tn = 0, unver = 0, downgrades = 0, review = 0, scopeRejects = 0;
 const latencies = [];
 const reviewNotes = [];
 
-console.log(`sufficiency eval — k=${K}, ${Q.length} questions\n`);
-for (const [id, question, targets] of Q) {
+console.log(`sufficiency eval — k=${K}, ${Q.length} questions, scope ${USE_SCOPE ? 'ON' : 'off'}\n`);
+for (const [id, question, targets, scope] of Q) {
   let r;
   try {
-    r = runVerify(question, K);
+    r = runVerify(question, K, scope);
   } catch (err) {
     rows.push([id, 'ERROR', '-', '-', err.message.slice(0, 40)]);
     unver++;
@@ -87,6 +99,7 @@ for (const [id, question, targets] of Q) {
   }
   latencies.push(r.elapsed_ms ?? 0);
   if (r.downgraded_from) downgrades++;
+  if (r.scope_match === 'NO') scopeRejects++;
 
   const passages = r.passages ?? [];
   const present = targets.filter((t) => passages.some((p) => p.includes(DOC[t])));
@@ -141,7 +154,8 @@ console.log(`FALSE POSITIVE ${fp}   <- claimed an answer whose fact is absent fr
 console.log(`FALSE NEGATIVE ${fn}   <- suppressed an answer the passages did contain`);
 console.log(`REVIEW         ${review}   <- answered from a non-target document; adjudicate below`);
 console.log(`unverified     ${unver}   (check failed to run; not counted either way)`);
-console.log(`quote downgrades ${downgrades}  (verdict voided because no quote matched its source)`);
+console.log(`quote downgrades ${downgrades}  (verdict voided: unmatched quote, or scope mismatch)`);
+if (USE_SCOPE) console.log(`scope rejects   ${scopeRejects}  (passages were about a different subject)`);
 if (reviewNotes.length) {
   console.log(`\n--- REVIEW cases: does the quote answer the question ASKED? ---`);
   console.log(reviewNotes.join('\n'));

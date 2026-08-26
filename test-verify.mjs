@@ -102,4 +102,47 @@ assert.deepEqual(
   { ok: false, why: 'source_unreadable' },
 );
 
-console.log('verify quote validator: all assertions passed');
+// --- verdict downgrade precedence -------------------------------------------
+// Mirrors resolveVerdict in semantic-index.mjs. The ordering is the point: a wrong-referent
+// answer usually has fully verifiable quotes, so checking quote coverage first would report
+// "no quote matched" — the wrong cause — on the one failure the quote check cannot see.
+function resolveVerdict(verdict, scopeMatch, verifiedCount, about) {
+  const none = { verdict, downgraded_from: null, downgrade_cause: null };
+  if (verdict === 'insufficient') return none;
+  if (scopeMatch === 'NO') {
+    return { verdict: 'insufficient', downgraded_from: verdict,
+      downgrade_cause: `passages are about ${about || 'a different subject'}, which is not the requested scope` };
+  }
+  if (verifiedCount === 0) {
+    return { verdict: 'insufficient', downgraded_from: verdict,
+      downgrade_cause: 'no quote could be matched back to its source document' };
+  }
+  return none;
+}
+
+// a well-grounded, in-scope answer survives untouched
+assert.equal(resolveVerdict('sufficient', 'YES', 2, 'x').verdict, 'sufficient');
+assert.equal(resolveVerdict('partial', null, 1, 'x').downgraded_from, null);
+
+// the measured Q7 case: verified quotes, wrong referent -> refused, and the cause names
+// the referent rather than blaming the quotes, which were fine
+const wrongReferent = resolveVerdict('sufficient', 'NO', 3, 'the YourStory archive');
+assert.equal(wrongReferent.verdict, 'insufficient');
+assert.equal(wrongReferent.downgraded_from, 'sufficient');
+assert.match(wrongReferent.downgrade_cause, /YourStory archive/);
+
+// unverifiable quotes still refuse when scope is fine or absent
+assert.equal(resolveVerdict('sufficient', 'YES', 0, 'x').verdict, 'insufficient');
+assert.match(resolveVerdict('sufficient', null, 0, 'x').downgrade_cause, /no quote/);
+
+// UNCLEAR must not behave like NO (it is the fallback for an unparsable scope line, and
+// treating it as a mismatch would refuse every answer whose SCOPE_MATCH line got garbled)
+assert.equal(resolveVerdict('sufficient', 'UNCLEAR', 2, 'x').verdict, 'sufficient');
+// ...but it must not wave through an ungrounded one either
+assert.equal(resolveVerdict('sufficient', 'UNCLEAR', 0, 'x').verdict, 'insufficient');
+
+// an insufficient verdict is never "downgraded" — nothing to record
+assert.deepEqual(resolveVerdict('insufficient', 'NO', 0, 'x'),
+  { verdict: 'insufficient', downgraded_from: null, downgrade_cause: null });
+
+console.log('verify quote validator + downgrade precedence: all assertions passed');

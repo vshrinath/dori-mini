@@ -784,10 +784,24 @@ const VERIFY_DEFAULT_K = 5;
 const VERIFY_MAX_PASSAGE_CHARS = 4000; // chunks run past 8k; keeps one prompt bounded
 const MIN_QUOTE_CHARS = 12;            // a word or a heading is not evidence
 
-function buildVerifyPrompt(question, passages) {
+function buildVerifyPrompt(question, passages, scope) {
   const numbered = passages
     .map((p, i) => `<passage index="${i + 1}" source="${p.sourcePath}">\n${p.body}\n</passage>`)
     .join('\n\n');
+  // Supplied by the caller, who is the only party that knows it. Questions name their
+  // subject loosely — "the archive", "the site", "our stories" — and the referent lives in
+  // the conversation, not the question. Without it, a passage about a DIFFERENT archive
+  // answers the question's wording perfectly while answering the wrong question.
+  const scopeBlock = scope
+    ? `\nSCOPE: this question is about ${scope}. Passages concerning a different project,
+publication, organization, client, or body of work do NOT answer it, no matter how closely
+their wording matches the question.\n`
+    : '';
+  const scopeLine = scope ? '\nSCOPE_MATCH: <YES|NO|UNCLEAR>' : '';
+  const scopeRule = scope
+    ? `\n- If the passages are about something other than the stated SCOPE, answer INSUFFICIENT
+  and set SCOPE_MATCH to NO, even when they answer the question's literal wording.`
+    : '';
   return `You are checking whether retrieved passages actually contain the answer to a question.
 
 Be strict. These passages come from a search index that always returns its top matches, so
@@ -795,7 +809,7 @@ they are usually about the right topic even when they contain nothing that answe
 question. Mistaking topical relevance for an answer is the specific error you exist to catch.
 
 QUESTION: ${question}
-
+${scopeBlock}
 ${numbered}
 
 Classify:
@@ -806,6 +820,10 @@ Classify:
 Rules:
 - If uncertain, answer INSUFFICIENT.
 - Use only the passages. Do not use outside knowledge and do not infer what was probably meant.
+- Questions name their subject loosely ("the archive", "the site", "our stories"). Work out
+  what the passages are actually about before deciding. A passage that answers a similarly
+  worded question about a DIFFERENT thing — another publication, another project, another
+  person's body of work — is NOT an answer. This is the most common way to get this wrong.${scopeRule}
 - For SUFFICIENT or PARTIAL you MUST give at least one quote copied character-for-character
   from a passage that carries the answer. Quotes are checked automatically against the source
   documents; an approximate or invented quote fails that check and voids the verdict.
@@ -813,10 +831,12 @@ Rules:
 
 Output exactly this, nothing else:
 VERDICT: <SUFFICIENT|PARTIAL|INSUFFICIENT>
-REASON: <one sentence, under 25 words>
+ABOUT: <what the quoted material is specifically about — name the project, publication, organization, or body of work it belongs to>
+REASON: <one sentence, under 25 words>${scopeLine}
 QUOTE: <passage index>|<verbatim quote>
 
-Give one QUOTE line per supporting quote. For INSUFFICIENT, output no QUOTE lines.`;
+Give one QUOTE line per supporting quote. For INSUFFICIENT, output no QUOTE lines.
+Always output ABOUT, including for INSUFFICIENT — say what the passages were about instead.`;
 }
 
 // Whitespace, case, and smart-punctuation are normalized away before matching: a quote that
@@ -863,13 +883,39 @@ function checkQuote(quote, passage) {
   return { ok: true, why: 'ok' };
 }
 
-async function cmdVerify(question, k) {
+// Applies the two mechanical downgrades to a model-stated verdict. Order matters: scope
+// mismatch is checked BEFORE quote coverage, because a wrong-referent answer typically has
+// perfectly verifiable quotes — measured, a real disk-verified quote about a 47-story
+// personal archive answering a question that meant a 2,500-article publication archive.
+// Quote validation cannot catch that, so checking coverage first would name the wrong cause
+// on the one failure the quote check is blind to.
+function resolveVerdict(verdict, scopeMatch, verifiedCount, about) {
+  const none = { verdict, downgraded_from: null, downgrade_cause: null };
+  if (verdict === 'insufficient') return none;
+  if (scopeMatch === 'NO') {
+    return {
+      verdict: 'insufficient',
+      downgraded_from: verdict,
+      downgrade_cause: `passages are about ${about || 'a different subject'}, which is not the requested scope`,
+    };
+  }
+  if (verifiedCount === 0) {
+    return {
+      verdict: 'insufficient',
+      downgraded_from: verdict,
+      downgrade_cause: 'no quote could be matched back to its source document',
+    };
+  }
+  return none;
+}
+
+async function cmdVerify(question, k, scope) {
   const emit = (o) => console.log(JSON.stringify(o, null, 2));
   const lists = await retrieveLists(question, k, loadVectorRows());
   const hits = fuseRrf(lists, k);
 
   if (hits.length === 0) {
-    emit({ question, verdict: 'insufficient', reason: 'retrieval returned no passages', passages: [], quotes: [], model: VERIFY_MODEL });
+    emit({ question, scope: scope ?? null, verdict: 'insufficient', reason: 'retrieval returned no passages', passages: [], quotes: [], model: VERIFY_MODEL });
     return;
   }
 
@@ -883,7 +929,7 @@ async function cmdVerify(question, k) {
 
   const started = Date.now();
   const res = spawnSync('claude', ['-p', '--model', VERIFY_MODEL], {
-    input: buildVerifyPrompt(question, passages),
+    input: buildVerifyPrompt(question, passages, scope),
     encoding: 'utf8',
     timeout: VERIFY_TIMEOUT_MS,
     maxBuffer: 32 * 1024 * 1024,
@@ -896,17 +942,27 @@ async function cmdVerify(question, k) {
   // because only the first is a fact about the vault.
   if (res.error || res.status !== 0 || !res.stdout) {
     const why = res.error ? res.error.message : `exit status ${res.status}`;
-    emit({ question, verdict: 'unverified', reason: `sufficiency check did not run: ${why}`, passages: shown, quotes: [], elapsed_ms, model: VERIFY_MODEL });
+    emit({ question, scope: scope ?? null, verdict: 'unverified', reason: `sufficiency check did not run: ${why}`, passages: shown, quotes: [], elapsed_ms, model: VERIFY_MODEL });
     return;
   }
 
   const vm = res.stdout.match(/^\s*VERDICT:\s*(SUFFICIENT|PARTIAL|INSUFFICIENT)\b/im);
   if (!vm) {
-    emit({ question, verdict: 'unverified', reason: 'sufficiency check returned no parsable verdict', passages: shown, quotes: [], elapsed_ms, model: VERIFY_MODEL });
+    emit({ question, scope: scope ?? null, verdict: 'unverified', reason: 'sufficiency check returned no parsable verdict', passages: shown, quotes: [], elapsed_ms, model: VERIFY_MODEL });
     return;
   }
   let verdict = vm[1].toLowerCase();
   const reason = (res.stdout.match(/^\s*REASON:\s*(.+)$/im)?.[1] ?? '').trim();
+  // What the passages are actually about, in the model's own words. Reported even when no
+  // scope was supplied: an ambiguous question ("how many stories are in the archive") gets
+  // silently resolved to whichever referent the passages happen to carry, and naming it is
+  // what lets the caller see the assumption instead of inheriting it.
+  const about = (res.stdout.match(/^\s*ABOUT:\s*(.+)$/im)?.[1] ?? '').trim();
+  // Absent/garbled SCOPE_MATCH reads as UNCLEAR, never as YES — a scope check that failed to
+  // parse must not be able to wave a mismatched answer through.
+  const scopeMatch = scope
+    ? (res.stdout.match(/^\s*SCOPE_MATCH:\s*(YES|NO|UNCLEAR)\b/im)?.[1] ?? 'UNCLEAR').toUpperCase()
+    : null;
 
   const quotes = [...res.stdout.matchAll(/^\s*QUOTE:\s*(\d+)\s*\|(.+)$/gim)].map((m) => {
     const idx = Number(m[1]);
@@ -917,15 +973,15 @@ async function cmdVerify(question, k) {
   });
 
   const verifiedCount = quotes.filter((q) => q.verified).length;
-  let downgraded_from = null;
-  if ((verdict === 'sufficient' || verdict === 'partial') && verifiedCount === 0) {
-    downgraded_from = verdict;
-    verdict = 'insufficient';
-  }
+  const resolved = resolveVerdict(verdict, scopeMatch, verifiedCount, about);
+  verdict = resolved.verdict;
+  const { downgraded_from, downgrade_cause } = resolved;
 
   emit({
-    question, verdict, reason,
-    ...(downgraded_from ? { downgraded_from, downgrade_cause: 'no quote could be matched back to its source document' } : {}),
+    question,
+    ...(scope ? { scope, scope_match: scopeMatch } : {}),
+    verdict, about, reason,
+    ...(downgraded_from ? { downgraded_from, downgrade_cause } : {}),
     quotes_verified: verifiedCount, quotes_claimed: quotes.length,
     quotes, passages: shown, elapsed_ms, model: VERIFY_MODEL,
   });
@@ -953,9 +1009,18 @@ if (cmd === 'index') {
 } else if (cmd === 'contextualize') {
   await cmdContextualize(arg1 ? Number(arg1) : 0, arg2);
 } else if (cmd === 'verify') {
-  if (!arg1) { console.error('Usage: node semantic-index.mjs verify "<question>" [k]'); process.exit(1); }
-  await cmdVerify(arg1, arg2 ? Number(arg2) : VERIFY_DEFAULT_K);
+  const usage = 'Usage: node semantic-index.mjs verify "<question>" [k] [--scope "<what the question is about>"]';
+  const rest = process.argv.slice(3);
+  const si = rest.indexOf('--scope');
+  let scope;
+  if (si !== -1) {
+    scope = rest[si + 1];
+    if (!scope || scope.startsWith('--')) { console.error(`--scope needs a value.\n${usage}`); process.exit(1); }
+    rest.splice(si, 2);
+  }
+  if (!rest[0]) { console.error(usage); process.exit(1); }
+  await cmdVerify(rest[0], rest[1] ? Number(rest[1]) : VERIFY_DEFAULT_K, scope);
 } else {
-  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit] | search-multi "<q1>" "<q2>" [limit] | verify "<question>" [k] | dedupe | contextualize [maxFiles] [pathFilter]');
+  console.error('Usage: node semantic-index.mjs index [file] | search "<query>" [limit] | search-multi "<q1>" "<q2>" [limit] | verify "<question>" [k] [--scope "<subject>"] | dedupe | contextualize [maxFiles] [pathFilter]');
   process.exit(1);
 }

@@ -1768,8 +1768,11 @@ returned a graphic-novel authorship dispute between two named people, with a ver
 
 **Quote verification proves the text exists in the document. It does not prove the text
 answers the question that was asked.** The validator cannot catch a referent mismatch, and
-no amount of tightening it will — the failure is in the judgment, not the evidence. This is
-a real limit of the design and it is not fixed.
+no amount of tightening it will — the failure is in the judgment, not the evidence.
+
+*(Addressed in Part 16. The sentence above still stands: the fix does not come from
+tightening the quote check, which remains blind to this, but from naming the referent and
+letting the caller constrain it.)*
 
 ### 15.5 The check is not deterministic
 
@@ -1840,3 +1843,95 @@ stakes justify ~12 s, and the caller is the only party that knows the stakes —
 question is cheap to get wrong while browsing and expensive to get wrong in a client email.
 Always-on was considered and rejected on 15.5 as much as on latency: a check that returns
 three different verdicts in three runs should not be silently gating every search.
+
+---
+
+## Part 16 — Fixing the wrong-referent false positive
+
+15.4 recorded a false positive the quote validator is structurally blind to: a
+disk-verified quote that answers a *different* question sharing the question's vocabulary.
+This part fixes it.
+
+### 16.1 The two cases are not the same bug
+
+Diagnosing before building mattered here, because the two measured instances have different
+causes and only one of them is a mistake:
+
+- **Q17 is a genuine mismatch.** Asked about "stories written by two people" — really
+  multi-author bylines, ~18 articles with a migration script for legacy joint stories — the
+  check returned a graphic-novel authorship dispute. A graphic novel is not "stories written
+  by two people" under any reading.
+- **Q7 is genuine ambiguity, not error.** "Roughly how many old stories are sitting in the
+  archive" never says *which* archive. Answering "47" from the YourStory byline cluster is a
+  defensible reading of the question as written; it simply isn't the one intended (the
+  Founding Fuel archive, 2,500 articles). **The referent lives in the conversation, not in
+  the question string.** The caller knows it; the tool cannot infer it.
+
+That split is why one mechanism was not enough.
+
+### 16.2 Three mechanisms
+
+1. **`about` — always returned.** The check must name what the passages are actually about,
+   in its own words, whether or not a scope was supplied. This does not prevent the error;
+   it makes it *visible* instead of buried. On an ambiguous question that is the entire
+   remedy available, because nothing else knows the intended referent.
+2. **`--scope "<subject>"` — the caller supplies the referent.** Passages about a different
+   project, publication, client, or body of work are declared non-answers even when they
+   match the question's wording. A `SCOPE_MATCH: NO` forces `insufficient`.
+3. **A referent rule in the prompt**, independent of scope: work out what the passages are
+   about before deciding, and do not let a passage answering a similarly-worded question
+   about a different thing count. This turned out to carry real weight on its own (16.3).
+
+`SCOPE_MATCH` parses absent or garbled as `UNCLEAR`, never `YES` — a scope check that failed
+to parse must not be able to wave a mismatched answer through. Scope mismatch is evaluated
+**before** quote coverage, because a wrong-referent answer typically has fully verifiable
+quotes; checking coverage first would report "no quote matched" — the wrong cause — on the
+one failure the quote check cannot see. That precedence is a pure function with tests
+pinning it, including that `UNCLEAR` must not behave like `NO`.
+
+### 16.3 Measured on the two cases
+
+| case | before | after |
+|---|---|---|
+| Q7, no scope | `sufficient`, no indication anything was wrong | `sufficient`, but `about`: *"The YourStory archive, a body of older stories published under the name Shrinath V"* — the mismatch is now legible |
+| Q7, `--scope "the Founding Fuel content archive"` | — | `scope_match: NO` → **`insufficient`**, reason: *"Passages 1–2 answer the question for YourStory, not Founding Fuel"* |
+| Q17, no scope | `partial`, wrong answer, no signal | `partial`, `about`: *"A graphic novel by Shrinath (with Charles involved)"*, reason explicitly hedges: *"don't clearly establish 'two people' as separate story writers"* |
+| Q17, `--scope "Founding Fuel"` (generic) | — | `scope_match: **YES**` → still **`insufficient`**: *"Passages describe a single graphic novel, not multiple stories by two writers"* |
+| Q17, `--scope "Founding Fuel article bylines and author attribution"` | — | `scope_match: NO` → **`insufficient`** |
+
+The Q17 generic-scope row is the interesting one. The scope check **correctly** said YES —
+the graphic novel really is a Founding Fuel matter — and the answer was refused anyway, by
+mechanism 3. A scope filter alone would have passed it. This is the case for keeping the
+referent rule in the prompt rather than relying on the caller always supplying a precise
+scope, which callers will not reliably do.
+
+### 16.4 Regression: the prompt change costs nothing on the rest
+
+Full 24-question eval re-run with scope **off**, so the only variable is the changed prompt:
+
+| | before Part 16 | after Part 16 |
+|---|---|---|
+| true positives (adjudicated) | 4 | 4 |
+| false positives | 1 (Q7) | 1 (Q7 — no scope supplied, as expected) |
+| false negatives | 0 | 0 |
+| negative controls refused | 4/4 | 4/4 |
+
+Nothing was broken, and nothing improved either — correctly, since without a scope the only
+new thing is `about`, which informs the caller rather than changing the verdict.
+
+### 16.5 Cost
+
+Median check latency rose **11,716 ms → 14,142 ms**, about 20%, from the longer prompt (the
+referent rule plus the `about` field). Real, and paid on every call whether or not a scope is
+supplied.
+
+### 16.6 What is still not fixed
+
+- **An ambiguous question with no scope still gets an arbitrary referent.** `about` makes it
+  visible, but a caller that does not read it inherits the same error. Mechanism 1 is a
+  disclosure, not a guard.
+- **Scope quality is the caller's problem.** A scope too generic to discriminate (Q17 with
+  "Founding Fuel") leans entirely on mechanism 3; a scope that restates the answer would
+  measure nothing, which is why the eval's scopes name the project only.
+- **Non-determinism (15.5) is untouched** and applies to `scope_match` as much as to the
+  verdict.
