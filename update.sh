@@ -72,9 +72,19 @@ fi
 
 echo
 echo "Updated $(git rev-parse --short "$OLD_HEAD") → $(git rev-parse --short "$NEW_HEAD"):"
-git log --oneline "$OLD_HEAD..$NEW_HEAD"
 CHANGE_COUNT=$(git rev-list --count "$OLD_HEAD..$NEW_HEAD")
-notify "Updated — $CHANGE_COUNT new commit$([ "$CHANGE_COUNT" = 1 ] || echo s). See ~/.dori/update.log or run ./update.sh by hand for details."
+
+# RELEASE_NOTES.md is the user-facing changelog (plain English, no commit hashes) —
+# show its new section(s) when one landed, since that's what actually changed for a
+# person running this, rather than a raw commit log full of internal shorthand.
+if git diff --name-only "$OLD_HEAD" "$NEW_HEAD" | grep -q '^RELEASE_NOTES\.md$'; then
+  echo
+  git diff "$OLD_HEAD" "$NEW_HEAD" -- RELEASE_NOTES.md | grep '^+' | grep -v '^+++' | sed 's/^+//'
+  notify "Updated — see the new section in RELEASE_NOTES.md."
+else
+  git log --oneline "$OLD_HEAD..$NEW_HEAD"
+  notify "Updated — $CHANGE_COUNT new commit$([ "$CHANGE_COUNT" = 1 ] || echo s). See ~/.dori/update.log or run ./update.sh by hand for details."
+fi
 
 if git diff --name-only "$OLD_HEAD" "$NEW_HEAD" | grep -q '^package\.json$'; then
   echo
