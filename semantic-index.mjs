@@ -12,7 +12,7 @@
 //
 // Usage:
 //   node semantic-index.mjs index [absolute-path-to-one-file]   # default: full vault walk
-//   node semantic-index.mjs search "<query>" [limit]            # default limit 8
+//   node semantic-index.mjs search "<query>" [limit]            # default limit 10
 
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, statSync, readdirSync, mkdirSync, realpathSync } from 'node:fs';
@@ -26,6 +26,9 @@ const EMBED_MODEL = 'Xenova/all-MiniLM-L6-v2';
 const CHUNK_TARGET_CHARS = 1200;
 const MIN_DEDUP_BODY_CHARS = 40;
 const RRF_K = 60;
+// Mirrors dori-engine's DEFAULT_LIMIT (src/vector/index.ts:41). Was 8 here — an
+// unmirrored divergence. dori-engine imposes no max cap, so none is imposed here either.
+const DEFAULT_LIMIT = 10;
 
 // Matches dori-engine/src/config.ts's getOperationalDbDir exactly: sha256(realpath(vaultRoot)), first 16 hex chars.
 function operationalDbDir(vaultRoot) {
@@ -574,13 +577,13 @@ if (cmd === 'index') {
   await cmdIndex(arg1);
 } else if (cmd === 'search') {
   if (!arg1) { console.error('Usage: node semantic-index.mjs search "<query>" [limit]'); process.exit(1); }
-  await cmdSearch(arg1, arg2 ? Number(arg2) : 8);
+  await cmdSearch(arg1, arg2 ? Number(arg2) : DEFAULT_LIMIT);
 } else if (cmd === 'search-multi') {
   // Variable arg count: every positional is one full rephrasing, with an optional bare
   // trailing number as the limit (only popped when 3+ args remain, so two queries and no
   // limit still parse as two queries).
   const rest = process.argv.slice(3);
-  const limit = rest.length > 2 && /^\d+$/.test(rest[rest.length - 1]) ? Number(rest.pop()) : 8;
+  const limit = rest.length > 2 && /^\d+$/.test(rest[rest.length - 1]) ? Number(rest.pop()) : DEFAULT_LIMIT;
   if (rest.length < 2) {
     console.error('Usage: node semantic-index.mjs search-multi "<phrasing 1>" "<phrasing 2>" ["<phrasing 3>"] [limit]');
     process.exit(1);

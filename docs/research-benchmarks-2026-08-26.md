@@ -898,9 +898,17 @@ node query-vault.mjs search "Founding Fuel launch go-live time decision and outc
 Result: 8 hits. `Pre launch readiness sync mom.md` (the plan-side doc) now appears at rank
 2 — an improvement over the original 2.4 write-up, likely a side effect of the FTS fix
 (2.2) and dedup/coverage backfill (Part 7) landing since then. But **`Launch morning check
-in mom.md` (the outcome-side doc) still does not appear anywhere in the 20** — confirming
-the combined single-query approach still doesn't reliably retrieve both halves of a
-multi-hop fact, even after two independent, unrelated bugs got fixed in between.
+in mom.md` (the outcome-side doc) does not appear** — confirming the combined single-query
+approach still doesn't reliably retrieve both halves of a multi-hop fact, even after two
+independent, unrelated bugs got fixed in between.
+
+> **Correction (Part 12, same day):** this run was described as checking "the top 20." It
+> was not. `query-vault.mjs` had `MAX_SEARCH_LIMIT = 8`, which silently clamped
+> `--limit 20` down to 8 — the "8 hits" figure above is the tell. Re-run after raising the
+> cap (Part 12): a genuine limit-20 search returns 20 hits, `Pre launch readiness sync
+> mom.md` still appears, and `Launch morning check in mom.md` **still does not**. The
+> conclusion is unchanged and now actually tested at the depth originally claimed, but the
+> original wording overstated what had been checked.
 
 Then ran the SKILL.md's new proactive approach — two targeted sub-queries, issued
 immediately instead of as a fallback retry, one aimed at each side of the fact:
@@ -1106,3 +1114,40 @@ where MAP is near-flat for k ∈ [10, 100] — so the constant inherited from re
 is the right one and is not worth tuning. One cheap untested win from the same source:
 **top-20 outperformed top-10 and top-5**, suggesting the current default limit of 8 may be
 truncating too aggressively.
+
+---
+
+## Part 12 — Result-limit defaults were an unmirrored divergence (and a correction to Part 9)
+
+Acting on 10.4's cheap suggestion (retrieval research finds top-20 outperforming
+top-10/top-5, while dori-mini defaulted to 8) turned up something more basic than a tuning
+question: **dori-mini's limits didn't match either real upstream, and one of them was
+silently truncating tests.**
+
+| Script | Mirrors | Real upstream's values | dori-mini had | Now |
+|---|---|---|---|---|
+| `query-vault.mjs` | dori-portal `searchVaultDocumentsFts` (`lib/vault-indexer.ts:115`) | default **20**, max **50** | default 5, max **8** | default 20, max 50 |
+| `semantic-index.mjs` | dori-engine `DEFAULT_LIMIT` (`src/vector/index.ts:41`) | default **10**, no max cap | default 8, no cap | default 10, no cap |
+
+`MAX_SEARCH_LIMIT = 8` was a hard clamp, not a default — so **every `--limit 20` passed to
+`query-vault.mjs` in this document's earlier tests silently returned at most 8 results.**
+Part 9.2's claim to have checked "the top 20" is corrected inline above; the "8 hits"
+reported in that same paragraph was the unnoticed evidence.
+
+**Re-ran the affected tests at genuine depth after raising the cap:**
+- Part 9.2's multi-hop combined query now returns a real 20 hits. `Pre launch readiness
+  sync mom.md` still appears; `Launch morning check in mom.md` still does not. **Part 9's
+  conclusion survives** — it was simply never tested at the depth it claimed.
+- **The limit increase does NOT rescue the 2.1 case.** `semantic-index.mjs search "when
+  will Vybe launch" 20` still does not surface `captures/2025-03-19-sprint-planning.md`.
+  (`semantic-index.mjs` never had a cap, so its earlier limit-20 results were genuine and
+  need no correction.) Honest negative result: aggressive truncation was **not** the cause
+  of the paraphrase-brittleness failure, and the research-suggested top-20 win does not
+  transfer to this case. The register-mismatch diagnosis in 10.1 stands as the explanation.
+
+**Why this correction matters beyond the one number:** the divergence was invisible because
+the parameter was *plausible*. Nothing errored, results still looked reasonable, and the
+clamp only showed up when a stated limit and an observed hit count were compared against
+each other. Worth carrying into anything published: a benchmark number is only as good as
+the assertion that the command actually did what its flags said.
+

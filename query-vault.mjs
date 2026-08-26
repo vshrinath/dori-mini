@@ -20,8 +20,14 @@ import { homedir } from 'node:os';
 const DB_PATH = process.env.VAULT_INDEX_DB || resolve(homedir(), 'proto-space/dori/store/portal.db');
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
 const DEFAULT_SECTIONS = ['decisions', 'actions'];
-const DEFAULT_SEARCH_LIMIT = 5;
-const MAX_SEARCH_LIMIT = 8;
+// Mirrors real dori-portal's searchVaultDocumentsFts (lib/vault-indexer.ts:115,
+// `Math.min(Math.max(options?.limit ?? 20, 1), 50)`). dori-mini previously used 5/8,
+// an unmirrored divergence that silently clamped every `--limit 20` to 8 — see the
+// correction in docs/research-benchmarks-2026-08-26.md Part 9. Independently, retrieval
+// research finds top-20 outperforming top-10/top-5, so the real product's values are
+// also the better ones.
+const DEFAULT_SEARCH_LIMIT = 20;
+const MAX_SEARCH_LIMIT = 50;
 const CANDIDATE_LIMIT = 25;
 const PREVIEW_CHARS = 400;
 
