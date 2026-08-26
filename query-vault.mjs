@@ -430,6 +430,19 @@ function bytesOf(hits) {
 // candidate before scoring. `vault_documents` is keyed on (vault_id, rel_path), which is
 // why searchStmt now also selects vault_id: without it, two vaults sharing a rel_path could
 // fetch the wrong document's content.
+// Measured against the real vault before this was caught: vault_documents.content is NOT
+// chunk-sized like the dense channel's candidates (median 1,140 chars there). Full document
+// content runs p90=36KB, p99=119KB, max 445KB. Feeding that unbounded into the cross-encoder
+// tokenizer pinned a single query at 12+ minutes of CPU time — not slow, actually wrong.
+// An initial 4000-char cap fixed the hang (52s) but was still measured wasteful: the
+// mxbai-rerank-xsmall-v1 tokenizer's own model_max_length is 512 tokens, and it truncates
+// there regardless of input size (confirmed: a 10,000-char pair tokenizes to exactly 512
+// input_ids) — so most of a 4000-char string was being tokenized in JS only to be discarded
+// by the model. 2000 chars covers what 512 tokens can hold (with room left for the query
+// text, which shares the same budget) without paying to tokenize a tail the model never
+// sees.
+const RERANK_MAX_DOC_CHARS = 2000;
+
 function attachContent(db, hits) {
   const stmt = db.prepare('SELECT content FROM vault_documents WHERE vault_id = ? AND rel_path = ?');
   return hits.map((h) => {
@@ -437,7 +450,8 @@ function attachContent(db, hits) {
     // Falls back to the (weaker) snippet rather than dropping the candidate if content is
     // somehow missing — searchStmt's INNER JOIN guarantees a matching row exists today, but
     // failing open here costs nothing and avoids a crash if that ever stops being true.
-    return { ...h, text: row?.content || h.snippet || '' };
+    const text = row?.content || h.snippet || '';
+    return { ...h, text: text.length > RERANK_MAX_DOC_CHARS ? text.slice(0, RERANK_MAX_DOC_CHARS) : text };
   });
 }
 
