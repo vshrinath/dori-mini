@@ -1533,3 +1533,36 @@ measurement taken *before* this prune would have been measuring a corpus that wa
 material the owner never wanted searched — so the baseline eval must be run against the
 cleaned index, not the original.
 
+### 13.5 Follow-up: `hermes/` was moved out of the vault entirely
+
+Investigating whether the excluded content was even needed turned up that `hermes/` was not
+documentation at all but a **complete installed Hermes agent** — an 8 MB `bin/tirith`
+binary, `auth.json`/`auth.lock`, a `.env` holding a live `DEEPSEEK_API_KEY`, `state.db`,
+plus `sessions/`, `memories/`, `checkpoints/`, `logs/`, and a `cron/` directory. 432 files,
+19 MB, of which 284 were the `.md` files reaching the index.
+
+Dormancy confirmed before recommending anything: last modification **21 April 2026**
+(~4 months prior), zero files touched since August, no launchd agents, no crontab entries,
+empty `cron/`, 3 log/session files. Nothing in dori-engine or dori-portal referenced it;
+the only vault references were two historical `CHANGELOG-engine.md` mentions.
+
+Deletion was **not** recommended despite it being unused, for two reasons a size-and-recency
+check alone would have missed: the `.env` held the only copy of a real API credential, and
+`memories/`/`sessions/`/`state.db` held unrecoverable agent history. The vault owner moved
+it to `~/proto-space/archive/hermes-2026-04` instead — removing it from the indexed tree
+without destroying a credential or any history.
+
+Verified after the move: `hermes/` absent from the vault, 0 hermes rows in both indexes,
+vault at 2,495 `.md` files against 2,455 indexed documents — the 40-file gap being exactly
+the Vybe files still held out by `VAULT_IGNORE`, so the counts reconcile.
+
+The `hermes` pattern is deliberately left in the `VAULT_IGNORE` default. It now matches
+nothing, which costs nothing, and keeps the exclusion in place if the directory is ever
+recreated.
+
+**Generalizable point:** "is this content needed?" and "is this content indexed?" are
+different questions with different risk profiles. Excluding from an index is cheap and
+reversible; deleting the underlying files is neither, and an unused directory can still be
+the sole custodian of a live secret. Check what a directory *holds* before advising its
+removal, not merely when it was last touched.
+
