@@ -16,6 +16,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
+import { RERANK_ENABLED, RERANK_CANDIDATE_MULTIPLIER, rerank } from './reranker.mjs';
 
 const DB_PATH = process.env.VAULT_INDEX_DB || resolve(homedir(), 'proto-space/dori/store/portal.db');
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
@@ -390,6 +391,7 @@ function searchStmt(db) {
   return db.prepare(`
     SELECT
       vault_documents_fts.rel_path AS rel_path,
+      vault_documents.vault_id AS vault_id,
       vault_documents.title AS title,
       json_extract(vault_documents.frontmatter_json, '$.date') AS date,
       json_extract(vault_documents.frontmatter_json, '$.type') AS type,
@@ -419,9 +421,49 @@ function bytesOf(hits) {
   return hits.reduce((s, h) => s + Buffer.byteLength(h.snippet || '', 'utf8'), 0);
 }
 
-function searchDocs(db, q, limit) {
+// The FTS channel's own retrieval only ever produces a short highlighted `snippet` (see
+// searchStmt above) — Part 11 already measured 3 of 5 verified snippets truncating before
+// the answer they matched. Reranking off that snippet would repeat the same failure inside
+// the cross-encoder: it would be scoring relevance from a fragment, not the passage. So
+// unlike the dense channel (whose chunks already ARE the full unit of retrieval),
+// reranking the FTS channel needs one extra step — fetch the full document body per
+// candidate before scoring. `vault_documents` is keyed on (vault_id, rel_path), which is
+// why searchStmt now also selects vault_id: without it, two vaults sharing a rel_path could
+// fetch the wrong document's content.
+function attachContent(db, hits) {
+  const stmt = db.prepare('SELECT content FROM vault_documents WHERE vault_id = ? AND rel_path = ?');
+  return hits.map((h) => {
+    const row = stmt.get(h.vault_id, h.rel_path);
+    // Falls back to the (weaker) snippet rather than dropping the candidate if content is
+    // somehow missing — searchStmt's INNER JOIN guarantees a matching row exists today, but
+    // failing open here costs nothing and avoids a crash if that ever stops being true.
+    return { ...h, text: row?.content || h.snippet || '' };
+  });
+}
+
+// vault_id and text are internal-only — fetched for scoring, never part of this file's
+// stated output contract (top-of-file comment: stdout never includes vault_documents.content
+// unless --full). Strips both before a hit set reaches printResult, whether or not
+// reranking actually ran.
+function stripInternalFields(hits) {
+  return hits.map(({ vault_id, text, ...rest }) => rest);
+}
+
+async function rerankFtsHits(db, query, hits) {
+  if (!RERANK_ENABLED || hits.length <= 1) return hits;
+  return rerank(query, attachContent(db, hits));
+}
+
+async function searchDocs(db, q, limit) {
   const n = Math.min(Math.max(Number(limit) || DEFAULT_SEARCH_LIMIT, 1), MAX_SEARCH_LIMIT);
-  const hits = runSearch(searchStmt(db), q, n);
+  // Pull RERANK_CANDIDATE_MULTIPLIER x the requested limit from FTS so the cross-encoder has
+  // more than the final page to choose from — mirrors the dense channel's candidateLimit
+  // exactly (semantic-index.mjs cmdSearch, Part 17), which itself mirrors real Dori's
+  // effectiveLimit (src/vector/index.ts).
+  const candidateN = RERANK_ENABLED ? n * RERANK_CANDIDATE_MULTIPLIER : n;
+  const candidates = runSearch(searchStmt(db), q, candidateN);
+  const reranked = await rerankFtsHits(db, q, candidates);
+  const hits = stripInternalFields(reranked.slice(0, n));
   printResult({
     db: DB_PATH,
     query: { cmd: 'search', q, limit: n, full: false },
@@ -503,7 +545,7 @@ try {
   } else if (args.cmd === 'search') {
     const q = args.positional.join(' ').trim();
     if (!q) usage('search requires keywords');
-    searchDocs(db, q, args.flags.limit);
+    await searchDocs(db, q, args.flags.limit);
   } else if (args.cmd === 'search-multi') {
     // Each positional arg is one full rephrasing — quote them individually in the shell.
     const queries = args.positional.map((q) => q.trim()).filter(Boolean);
