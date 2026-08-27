@@ -28,16 +28,7 @@ function slugify(name) {
   return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const fm = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.+)$/);
-    if (kv) fm[kv[1]] = kv[2].trim();
-  }
-  return fm;
-}
+import { parseFrontmatter, asList } from './frontmatter.mjs';
 
 function isSelfValue(fm) {
   return fm.is_self === 'true' || fm.isSelf === 'true';
@@ -52,14 +43,14 @@ export function getSelf() {
   if (!existsSync(PEOPLE_DIR)) return null;
   for (const f of readdirSync(PEOPLE_DIR)) {
     if (!f.endsWith('.md')) continue;
-    const fm = parseFrontmatter(readFileSync(join(PEOPLE_DIR, f), 'utf-8'));
+    const fm = parseFrontmatter(readFileSync(join(PEOPLE_DIR, f), 'utf-8')).fm;
     if (isSelfValue(fm)) {
       return {
         slug: f.replace(/\.md$/, ''),
         name: (fm.name || '').replace(/^["']|["']$/g, ''),
         role: fm.role || null,
         org: fm.org || null,
-        projects: (fm.projects?.match(/"([^"]+)"/g) || []).map((s) => s.replace(/"/g, '')),
+        projects: asList(fm.projects),
         links: parseLinks(fm),
       };
     }
@@ -73,7 +64,7 @@ function clearOtherSelfMarks(excludeSlug) {
     if (!f.endsWith('.md') || f.replace(/\.md$/, '') === excludeSlug) continue;
     const full = join(PEOPLE_DIR, f);
     const raw = readFileSync(full, 'utf-8');
-    const fm = parseFrontmatter(raw);
+    const fm = parseFrontmatter(raw).fm;
     if (!isSelfValue(fm)) continue;
     writeFileSync(full, raw.replace(/^is_self:\s*true\s*$/m, 'is_self: false').replace(/^isSelf:\s*true\s*$/m, 'isSelf: false'));
   }
@@ -85,12 +76,12 @@ function clearOtherSelfMarks(excludeSlug) {
 export function setSelf({ name, role, org, projects, links }) {
   const slug = slugify(name);
   const existingPath = join(PEOPLE_DIR, `${slug}.md`);
-  const existing = existsSync(existingPath) ? parseFrontmatter(readFileSync(existingPath, 'utf-8')) : {};
+  const existing = existsSync(existingPath) ? parseFrontmatter(readFileSync(existingPath, 'utf-8')).fm : {};
   clearOtherSelfMarks(slug);
 
   const finalRole = role ?? existing.role;
   const finalOrg = org ?? existing.org;
-  const finalProjects = projects ?? (existing.projects?.match(/"([^"]+)"/g) || []).map((s) => s.replace(/"/g, ''));
+  const finalProjects = projects ?? asList(existing.projects);
   const finalLinks = { ...parseLinks(existing), ...(links || {}) };
 
   const lines = [`name: "${name}"`, 'is_self: true'];

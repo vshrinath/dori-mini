@@ -84,28 +84,7 @@ if (!ftsSql || !ftsSql.sql.includes('porter')) {
   rebuildFts.run();
 }
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  if (!m) return { fm: {}, body: raw };
-  const [, fmBlock, body] = m;
-  const fm = {};
-  let currentKey = null;
-  for (const line of fmBlock.split('\n')) {
-    const listItem = line.match(/^\s*-\s+(.*)$/);
-    if (listItem && currentKey) {
-      (fm[currentKey] ??= []).push(listItem[1].trim().replace(/^["']|["']$/g, ''));
-      continue;
-    }
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.*)$/);
-    if (kv) {
-      const [, key, val] = kv;
-      if (val.trim() === '') { currentKey = key; continue; }
-      fm[key] = val.trim().replace(/^["']|["']$/g, '');
-      currentKey = null;
-    }
-  }
-  return { fm, body: body.trim() };
-}
+import { parseFrontmatter } from './frontmatter.mjs';
 
 // Same ignore mechanism as semantic-index.mjs — see the long note there, including why the
 // default is empty rather than a baked-in project name. Both indexers walk the same vault,

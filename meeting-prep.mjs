@@ -28,27 +28,7 @@ function slugify(name) {
   return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const fm = {};
-  let currentListKey = null;
-  for (const line of m[1].split('\n')) {
-    const listItem = line.match(/^\s+-\s+"?([^"]+)"?$/);
-    if (listItem && currentListKey) {
-      fm[currentListKey] = fm[currentListKey] || [];
-      fm[currentListKey].push(listItem[1].trim());
-      continue;
-    }
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.*)$/);
-    if (kv) {
-      currentListKey = kv[2].trim() === '' ? kv[1] : null;
-      if (currentListKey) continue;
-      fm[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
-    }
-  }
-  return fm;
-}
+import { parseFrontmatter } from './frontmatter.mjs';
 
 // Mirrors gatherRelevantMeetingDocs: attendee-overlap score, recency tiebreak, hard filter
 // on project match (no --project => no docs). Meetings live at the entities/projects/<slug>
@@ -62,7 +42,7 @@ function gatherRelevantMeetingDocs(project, attendeeSlugs) {
   for (const f of readdirSync(dir)) {
     if (!f.endsWith('.md') || f.startsWith('prep-')) continue;
     const raw = readFileSync(join(dir, f), 'utf-8');
-    const fm = parseFrontmatter(raw);
+    const fm = parseFrontmatter(raw).fm;
     if ((fm.account || '') !== project) continue;
     const people = Array.isArray(fm.people) ? fm.people : [];
     const overlap = people.filter((p) => wanted.has(p)).length;
@@ -94,7 +74,7 @@ function classifyAttendees(names) {
     people = readdirSync(PEOPLE_DIR)
       .filter((f) => f.endsWith('.md'))
       .map((f) => {
-        const fm = parseFrontmatter(readFileSync(join(PEOPLE_DIR, f), 'utf-8'));
+        const fm = parseFrontmatter(readFileSync(join(PEOPLE_DIR, f), 'utf-8')).fm;
         return { name: fm.name || f.replace(/\.md$/, ''), aliases: fm.aliases || [], slug: f.replace(/\.md$/, '') };
       });
   }

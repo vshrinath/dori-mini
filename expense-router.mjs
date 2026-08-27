@@ -76,16 +76,7 @@ export function extractExpense(message) {
   return { amount, description, category: hit ? hit.category : 'Travel' };
 }
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const fm = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.+)$/);
-    if (kv) fm[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
-  }
-  return fm;
-}
+import { parseFrontmatter } from './frontmatter.mjs';
 
 function loadTripLedgers() {
   const ledgers = [];
@@ -94,7 +85,7 @@ function loadTripLedgers() {
     for (const f of readdirSync(dir)) {
       if (!f.endsWith('.md')) continue;
       const relPath = `finances/${dir === TRIPS_DIR ? 'trips' : 'reimbursements'}/${f}`;
-      const fm = parseFrontmatter(readFileSync(join(dir, f), 'utf-8'));
+      const fm = parseFrontmatter(readFileSync(join(dir, f), 'utf-8')).fm;
       if (!fm.threadId) continue;
       ledgers.push({ threadId: fm.threadId, trip: fm.trip || fm.threadId, account: fm.account, status: fm.status || 'draft', relPath });
     }

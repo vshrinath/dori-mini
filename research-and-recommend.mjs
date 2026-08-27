@@ -23,16 +23,7 @@ const SKILL_DIR = dirname(fileURLToPath(import.meta.url));
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
 const PEOPLE_DIR = join(VAULT_ROOT, 'entities/people');
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const fm = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.+)$/);
-    if (kv) fm[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
-  }
-  return fm;
-}
+import { parseFrontmatter } from './frontmatter.mjs';
 
 // Colleagues already in the vault at the same company — entities/people/*.md's own `org:`
 // field (a plain string, e.g. "SCEH"), not org-store.mjs's structured records, since most
@@ -42,7 +33,7 @@ function colleaguesAt(company) {
   const norm = company.toLowerCase().trim();
   return readdirSync(PEOPLE_DIR)
     .filter((f) => f.endsWith('.md'))
-    .map((f) => ({ fm: parseFrontmatter(readFileSync(join(PEOPLE_DIR, f), 'utf-8')), file: f }))
+    .map((f) => ({ fm: parseFrontmatter(readFileSync(join(PEOPLE_DIR, f), 'utf-8')).fm, file: f }))
     .filter(({ fm }) => (fm.org || '').toLowerCase().trim() === norm)
     .map(({ fm, file }) => ({ name: fm.name || file.replace(/\.md$/, ''), role: fm.role || null }));
 }

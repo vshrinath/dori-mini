@@ -126,15 +126,11 @@ function bodyHeaderFallback(body, label) {
   return m ? m[1].trim() : undefined;
 }
 
+import { parseFrontmatter as parseFm } from './frontmatter.mjs';
+
+// Adds the body-header fallbacks on top of the shared parser (./frontmatter.mjs).
 export function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  if (!m) return { fm: {}, body: raw };
-  const fm = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.+)$/);
-    if (kv) fm[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
-  }
-  const body = m[2];
+  const { fm, body } = parseFm(raw);
   fm.watch = fm.watch || bodyHeaderFallback(body, 'Watch');
   fm.channel = fm.channel || bodyHeaderFallback(body, 'Channel');
   fm.duration = fm.duration || bodyHeaderFallback(body, 'Duration');

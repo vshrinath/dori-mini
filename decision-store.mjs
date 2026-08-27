@@ -62,23 +62,10 @@ function slugify(s) {
   return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const fm = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.+)$/);
-    if (kv) fm[kv[1]] = kv[2].trim();
-  }
-  return fm;
-}
+import { parseFrontmatter, asList } from './frontmatter.mjs';
 
 function unquote(s) {
   return (s || '').replace(/^["']|["']$/g, '');
-}
-
-function parseList(raw) {
-  return (raw?.match(/"([^"]*)"/g) || []).map((s) => s.replace(/"/g, ''));
 }
 
 export function loadDecisions() {
@@ -86,7 +73,7 @@ export function loadDecisions() {
   return readdirSync(DECISIONS_DIR)
     .filter((f) => f.endsWith('.md'))
     .map((f) => {
-      const fm = parseFrontmatter(readFileSync(join(DECISIONS_DIR, f), 'utf-8'));
+      const fm = parseFrontmatter(readFileSync(join(DECISIONS_DIR, f), 'utf-8')).fm;
       return {
         slug: f.replace(/\.md$/, ''),
         id: fm.id,
@@ -94,7 +81,7 @@ export function loadDecisions() {
         status: fm.status || 'active',
         decidedAt: fm.decided_at,
         owner: unquote(fm.owner) || undefined,
-        topics: parseList(fm.topics),
+        topics: asList(fm.topics),
         confidence: fm.confidence !== undefined ? Number(fm.confidence) : undefined,
         source: unquote(fm.source) || undefined,
       };

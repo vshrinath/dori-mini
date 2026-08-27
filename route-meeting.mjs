@@ -36,25 +36,16 @@ function normalize(name) {
   return name.toLowerCase().replace(/[^a-z\s]/g, '').trim().replace(/\s+/g, ' ');
 }
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const fm = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.+)$/);
-    if (kv) fm[kv[1]] = kv[2].trim();
-  }
-  return fm;
-}
+import { parseFrontmatter, asList } from './frontmatter.mjs';
 
 function loadPeople() {
   if (!existsSync(PEOPLE_DIR)) return [];
   const people = [];
   for (const f of readdirSync(PEOPLE_DIR)) {
     if (!f.endsWith('.md')) continue;
-    const fm = parseFrontmatter(readFileSync(join(PEOPLE_DIR, f), 'utf-8'));
+    const fm = parseFrontmatter(readFileSync(join(PEOPLE_DIR, f), 'utf-8')).fm;
     const name = (fm.name || f.replace(/\.md$/, '')).replace(/^["']|["']$/g, '');
-    const projects = (fm.projects?.match(/"([^"]+)"/g) || []).map((s) => s.replace(/"/g, ''));
+    const projects = asList(fm.projects);
     const isSelf = fm.is_self === 'true' || fm.isSelf === 'true';
     people.push({ name, projects, file: f, isSelf });
   }

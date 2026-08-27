@@ -62,39 +62,26 @@ function slugify(name) {
   return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const fm = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.+)$/);
-    if (kv) fm[kv[1]] = kv[2].trim();
-  }
-  return fm;
-}
-
-function parseList(raw) {
-  return (raw?.match(/"([^"]*)"/g) || []).map((s) => s.replace(/"/g, ''));
-}
+import { parseFrontmatter, asList } from './frontmatter.mjs';
 
 export function loadOrgs() {
   if (!existsSync(ORGS_DIR)) return [];
   return readdirSync(ORGS_DIR)
     .filter((f) => f.endsWith('.md'))
     .map((f) => {
-      const fm = parseFrontmatter(readFileSync(join(ORGS_DIR, f), 'utf-8'));
+      const fm = parseFrontmatter(readFileSync(join(ORGS_DIR, f), 'utf-8')).fm;
       return {
         slug: f.replace(/\.md$/, ''),
         name: (fm.name || f.replace(/\.md$/, '')).replace(/^["']|["']$/g, ''),
         role: fm.role || 'none',
-        people: parseList(fm.people),
+        people: asList(fm.people),
         file: f,
       };
     });
 }
 
 // Inline-array frontmatter (`people: ["a", "b"]`), matching the format entities/people/*.md
-// already uses for its own `projects:` field — and what parseList()/loadOrgs() expect back.
+// already uses for its own `projects:` field — and what asList()/loadOrgs() expect back.
 function writeOrgFile(org) {
   const peopleLine = `people: [${org.people.map((p) => `"${p}"`).join(', ')}]\n`;
   const body = `---\nentityType: organization\nname: "${org.name}"\nrole: ${org.role}\n${peopleLine}---\n`;

@@ -159,17 +159,7 @@ function fuseRrf(lists, limit, k = RRF_K) {
   return ranked.map(({ score, result }) => ({ ...result, score: score / denom }));
 }
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  if (!m) return { fm: {}, body: raw };
-  const [, fmBlock, body] = m;
-  const fm = {};
-  for (const line of fmBlock.split('\n')) {
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.+)$/);
-    if (kv) fm[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
-  }
-  return { fm, body: body.trim() };
-}
+import { parseFrontmatter } from './frontmatter.mjs';
 
 // Fallback for a paragraph with no blank-line breaks to split on — common in
 // PDF/OCR-extracted text, which markitdown often emits as one dense blob with
