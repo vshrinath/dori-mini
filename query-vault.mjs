@@ -377,19 +377,46 @@ const STOPWORDS = new Set([
   'we', 'they', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'not', 'no', 'yes',
 ]);
 
-function toPrefixOrQuery(q) {
+// Split on any run of characters that isn't a letter/digit/underscore/hyphen — not just
+// whitespace. Splitting on whitespace alone (the old behavior) left "agents.md" as one
+// glued-together token ("agentsmd") that matches nothing in the index, since FTS5's own
+// tokenizer treats the period as a separator when the content was indexed. That token
+// then poisoned the AND-first match below (runSearch): one term that can never match
+// makes the whole AND query return zero rows, silently falling through to the weaker OR
+// path even though every OTHER term in the query matched fine. Splitting the same way
+// the index itself splits keeps query tokens and index tokens on the same footing.
+function meaningfulTokens(q) {
   const tokens = q
-    .split(/\s+/)
-    .map((t) => t.replace(/[^\p{L}\p{N}_-]/gu, '').trim())
+    .split(/[^\p{L}\p{N}_-]+/gu)
+    .map((t) => t.trim())
     .filter((t) => t.length > 0);
-  if (tokens.length === 0) return '';
+  if (tokens.length === 0) return [];
   const meaningful = tokens.filter((t) => !STOPWORDS.has(t.toLowerCase()));
-  const kept = meaningful.length > 0 ? meaningful : tokens;
-  // Quote each token: an unquoted bareword containing '-' (e.g. "Go-Live") is
-  // misparsed by FTS5's own query-grammar (confirmed: throws "no such column")
-  // — a real bug in dori-portal's searchVaultDocumentsFts, mirrored here and
-  // fixed as a dori-mini prototype. Quoting preserves prefix-OR semantics.
+  return meaningful.length > 0 ? meaningful : tokens;
+}
+
+// Quote each token: an unquoted bareword containing '-' (e.g. "Go-Live") is
+// misparsed by FTS5's own query-grammar (confirmed: throws "no such column")
+// — a real bug in dori-portal's searchVaultDocumentsFts, mirrored here and
+// fixed as a dori-mini prototype. Quoting preserves prefix semantics.
+function toPrefixOrQuery(q) {
+  const kept = meaningfulTokens(q);
+  if (kept.length === 0) return '';
   return kept.map((t) => `"${t.replace(/"/g, '')}"*`).join(' OR ');
+}
+
+// AND of the same tokens — tried first (see runSearch): a generic multi-word query like
+// "SHA locked test cases" OR-matches almost any doc that mentions "test" or "cases"
+// anywhere, and bm25 has no way to know those are the filler terms — a doc that happens
+// to repeat "test"/"cases" a lot can outrank the one doc that actually contains every
+// term. Requiring ALL terms first (when there are 2+) finds the doc containing every
+// word in the query, which is both far more precise and closer to how someone reads their
+// own query. Falls back to the existing OR behavior when AND has no hits at all, so a
+// short/single-word or genuinely partial-match query still works exactly as before.
+function toPrefixAndQuery(q) {
+  const kept = meaningfulTokens(q);
+  if (kept.length < 2) return null;
+  return kept.map((t) => `"${t.replace(/"/g, '')}"*`).join(' AND ');
 }
 
 function searchStmt(db, scoped) {
@@ -413,10 +440,16 @@ function searchStmt(db, scoped) {
 }
 
 function runSearch(stmt, q, n, scopeSlug) {
-  const match = toPrefixOrQuery(q);
-  if (!match) return [];
+  const run = (match) => (scopeSlug ? stmt.all(match, `%/${scopeSlug}/%`, n) : stmt.all(match, n));
   try {
-    return scopeSlug ? stmt.all(match, `%/${scopeSlug}/%`, n) : stmt.all(match, n);
+    const andMatch = toPrefixAndQuery(q);
+    if (andMatch) {
+      const andHits = run(andMatch);
+      if (andHits.length > 0) return andHits;
+    }
+    const orMatch = toPrefixOrQuery(q);
+    if (!orMatch) return [];
+    return run(orMatch);
   } catch (err) {
     console.error(`FTS query failed: ${err.message}`);
     process.exit(1);
@@ -449,15 +482,35 @@ function bytesOf(hits) {
 // sees.
 const RERANK_MAX_DOC_CHARS = 2000;
 
-function attachContent(db, hits) {
+// A plain slice(0, N) truncates from the doc's start — fine for a short doc, but on a
+// long one (this meeting file included) the matched passage can sit well past 2000 chars,
+// so the reranker would score a window that never contains the words the query actually
+// hit. Center the window on the earliest query-token occurrence instead — a small lead-in
+// keeps some heading/context before it. Falls back to slice(0, N) when no token is found
+// in the content at all (e.g. only the snippet was available), same as before.
+function windowedContent(text, tokens) {
+  if (text.length <= RERANK_MAX_DOC_CHARS) return text;
+  const lower = text.toLowerCase();
+  let earliest = -1;
+  for (const t of tokens) {
+    const idx = lower.indexOf(t.toLowerCase());
+    if (idx !== -1 && (earliest === -1 || idx < earliest)) earliest = idx;
+  }
+  if (earliest === -1) return text.slice(0, RERANK_MAX_DOC_CHARS);
+  const start = Math.max(0, earliest - 200);
+  return text.slice(start, start + RERANK_MAX_DOC_CHARS);
+}
+
+function attachContent(db, hits, query) {
   const stmt = db.prepare('SELECT content FROM vault_documents WHERE vault_id = ? AND rel_path = ?');
+  const tokens = meaningfulTokens(query);
   return hits.map((h) => {
     const row = stmt.get(h.vault_id, h.rel_path);
     // Falls back to the (weaker) snippet rather than dropping the candidate if content is
     // somehow missing — searchStmt's INNER JOIN guarantees a matching row exists today, but
     // failing open here costs nothing and avoids a crash if that ever stops being true.
     const text = row?.content || h.snippet || '';
-    return { ...h, text: text.length > RERANK_MAX_DOC_CHARS ? text.slice(0, RERANK_MAX_DOC_CHARS) : text };
+    return { ...h, text: windowedContent(text, tokens) };
   });
 }
 
@@ -471,7 +524,7 @@ function stripInternalFields(hits) {
 
 async function rerankFtsHits(db, query, hits) {
   if (!RERANK_ENABLED || hits.length <= 1) return hits;
-  return rerank(query, attachContent(db, hits));
+  return rerank(query, attachContent(db, hits, query));
 }
 
 async function searchDocs(db, q, limit) {
