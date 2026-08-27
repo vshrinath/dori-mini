@@ -21,6 +21,7 @@
 //
 // The guidelines/description prose isn't a CLI flag — like every other vault file, edit the
 // body of entities/brands/<slug>.md directly; `set` only ever touches the frontmatter block.
+import { parseFrontmatter } from './frontmatter.mjs';
 import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
@@ -42,17 +43,6 @@ const THEME_FIELDS = {
 
 function slugify(name) {
   return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
-
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  if (!m) return { fm: {}, body: raw };
-  const fm = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^([a-zA-Z]+):\s*(.+)$/);
-    if (kv) fm[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
-  }
-  return { fm, body: m[2] };
 }
 
 export function loadBrands() {
