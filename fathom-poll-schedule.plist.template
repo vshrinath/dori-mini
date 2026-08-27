@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd job for fathom-poll.mjs — fires every 2 hours between 9am and 7pm (six runs:
+  9/11/13/15/17/19), each run covering the whole 9am-8pm window. StartCalendarInterval
+  takes an array of {Hour,Minute} dicts for this, same mechanism digest-schedule.plist
+  uses for a single fixed time.
+
+  Install:
+    cp fathom-poll-schedule.plist.template ~/Library/LaunchAgents/com.dori.fathom-poll.plist
+    # edit the __PLACEHOLDER__ paths below first
+    launchctl load ~/Library/LaunchAgents/com.dori.fathom-poll.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.dori.fathom-poll.plist
+    rm ~/Library/LaunchAgents/com.dori.fathom-poll.plist
+
+  To change the hours later, edit the Hour values in the installed plist, then
+  unload/load again (same pattern as digest-schedule.plist).
+
+  Logs: ~/.dori/fathom-poll.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.dori.fathom-poll</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE_PATH__</string>
+    <string>__REPO_PATH__/fathom-poll.mjs</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__REPO_PATH__</string>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>11</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>13</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>17</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>19</integer><key>Minute</key><integer>0</integer></dict>
+  </array>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.dori/fathom-poll.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.dori/fathom-poll.log</string>
+</dict>
+</plist>

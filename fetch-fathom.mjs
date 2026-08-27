@@ -29,18 +29,25 @@ function loadApiKey() {
   throw new Error(`FATHOM_API_KEY not set — export it, or put "FATHOM_API_KEY=..." in ${envPath}`);
 }
 
-async function fathomFetch(path, params = {}) {
+export async function fathomFetch(path, params = {}) {
   const url = new URL(API_BASE + path);
   for (const [k, v] of Object.entries(params)) {
     if (v == null) continue;
     url.searchParams.set(k, v);
   }
-  const res = await fetch(url, { headers: { 'X-Api-Key': loadApiKey() } });
-  if (!res.ok) throw new Error(`Fathom API ${res.status}: ${await res.text()}`);
-  return res.json();
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, { headers: { 'X-Api-Key': loadApiKey() } });
+    if (res.status === 429 && attempt < 5) {
+      const wait = Number(res.headers.get('retry-after')) * 1000 || 2 ** attempt * 1000;
+      await new Promise((r) => setTimeout(r, wait));
+      continue;
+    }
+    if (!res.ok) throw new Error(`Fathom API ${res.status}: ${await res.text()}`);
+    return res.json();
+  }
 }
 
-async function listAllMeetings({ since } = {}) {
+export async function listAllMeetings({ since } = {}) {
   const items = [];
   let cursor;
   do {
@@ -51,8 +58,9 @@ async function listAllMeetings({ since } = {}) {
   return items;
 }
 
-// Any vault .md whose frontmatter already has fathom_recording_id: <id> counts as filed.
-function findFiledRecordingIds() {
+// Any vault .md whose frontmatter already has fathom_recording_id: <id> (or the older
+// fathom_id: <id> field used by earlier filed meetings) counts as filed.
+export function findFiledRecordingIds() {
   const ids = new Set();
   function walk(dir) {
     if (!existsSync(dir)) return;
@@ -62,7 +70,7 @@ function findFiledRecordingIds() {
         if (entry.name === 'node_modules' || entry.name === '.git') continue;
         walk(p);
       } else if (entry.name.endsWith('.md')) {
-        const m = readFileSync(p, 'utf-8').match(/^fathom_recording_id:\s*['"]?(\d+)['"]?/m);
+        const m = readFileSync(p, 'utf-8').match(/^fathom_(?:recording_)?id:\s*['"]?(\d+)['"]?/m);
         if (m) ids.add(m[1]);
       }
     }
@@ -71,7 +79,7 @@ function findFiledRecordingIds() {
   return ids;
 }
 
-function formatTranscript(segments) {
+export function formatTranscript(segments) {
   return (segments || [])
     .map((s) => `[${s.timestamp}] ${s.speaker?.display_name || 'Unknown'}: ${s.text}`)
     .join('\n');
