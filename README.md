@@ -76,6 +76,10 @@ does. See the comment at the top of each `.mjs` file for exactly what it mirrors
 - **`fetch-fathom.mjs`** — pulls unfiled meetings straight from the Fathom API (needs
   your own `FATHOM_API_KEY`) and feeds them into the same meeting-routing/minutes flow as
   a pasted transcript.
+- **`file-meetings-backlog.mjs`** / **`fathom-poll.mjs`** — file every Fathom meeting not
+  already in the vault as a raw transcript under `meetings/`: once for the backlog, or on
+  a schedule (`setup.sh` offers to install the launchd job). Neither writes minutes — they
+  just make sure nothing sits unfiled in Fathom and gets forgotten.
 - **`research-person.mjs`** — looks up a new meeting attendee via Tavily search (needs
   your own `TAVILY_API_KEY`) — fetches only, doesn't auto-file.
 - **`research-and-recommend.mjs`** — the same web research placed next to what you

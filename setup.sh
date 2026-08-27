@@ -245,6 +245,38 @@ else
   echo "  (Automatic digest scheduling needs launchd — macOS only, skipped on $(uname))"
 fi
 
+# --- Fathom meeting poll (macOS only — launchd; needs a Fathom key) ---
+if [ "$(uname)" = "Darwin" ] && [ -n "$FATHOM_KEY_INPUT" ]; then
+  echo
+  echo "A meeting recorded in Fathom stays there until something files it. The poll"
+  echo "checks every two hours (9am-7pm) and files anything new as a raw transcript;"
+  echo "full minutes stay a deliberate step you ask for."
+  read -r -p "Poll Fathom for new meetings automatically? [y/N] " FATHOM_POLL_REPLY
+  if [[ "$FATHOM_POLL_REPLY" =~ ^[Yy]$ ]]; then
+    NODE_ABS="$(command -v node)"
+    LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
+    mkdir -p "$LAUNCH_AGENTS_DIR"
+    FATHOM_PLIST="$LAUNCH_AGENTS_DIR/com.dori.fathom-poll.plist"
+    sed -e "s|__NODE_PATH__|$NODE_ABS|g" \
+        -e "s|__REPO_PATH__|$SCRIPT_DIR|g" \
+        -e "s|__HOME__|$HOME|g" \
+        "$SCRIPT_DIR/fathom-poll-schedule.plist.template" > "$FATHOM_PLIST"
+    launchctl unload "$FATHOM_PLIST" >/dev/null 2>&1 || true
+    launchctl load "$FATHOM_PLIST"
+    echo "✓ Fathom poll scheduled (log: $HOME/.dori/fathom-poll.log)"
+  else
+    echo "  Skipped — run 'node fathom-poll.mjs' by hand any time, or install it later"
+    echo "  following fathom-poll-schedule.plist.template."
+  fi
+  echo
+  read -r -p "File every past Fathom meeting not already in the vault now? [y/N] " FATHOM_BACKLOG_REPLY
+  if [[ "$FATHOM_BACKLOG_REPLY" =~ ^[Yy]$ ]]; then
+    node file-meetings-backlog.mjs || echo "  Backlog filing failed — run 'node file-meetings-backlog.mjs --dry-run' to see why."
+  else
+    echo "  Skipped — 'node file-meetings-backlog.mjs --dry-run' shows what it would file."
+  fi
+fi
+
 # --- daily auto-update check (macOS only — launchd) ---
 if [ "$(uname)" = "Darwin" ]; then
   echo

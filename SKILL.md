@@ -92,6 +92,14 @@ Returns `{ title, recorded_at, invitees, url, transcript_text }`. Feed `transcri
 
 If `FATHOM_API_KEY` isn't set (env var or `.env` in this directory), tell the user how to get one (Fathom → Settings → API Access) rather than guessing or asking them to paste it inline.
 
+**Unattended filing.** The confirmation rule above is about *minutes* — the interpretive
+step. Getting a transcript into the vault at all is not, so two scripts do it in bulk
+without asking: `file-meetings-backlog.mjs` (one-off, `--dry-run` shows what it would
+file) and `fathom-poll.mjs` (launchd, every two hours 9am–7pm; `setup.sh` offers to
+install it). Both write raw transcripts under `meetings/` and nothing else — no LLM call,
+no summary, nothing leaving the machine. A meeting worth real minutes still comes back
+through branch 3.
+
 ## 5. Person research (enrich a new attendee/contact on request)
 
 When the user asks to look up or research a person (typically a new meeting attendee with no `entities/people/*.md` file yet, or thin context):
