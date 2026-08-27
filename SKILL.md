@@ -21,6 +21,13 @@ two message shapes get two different rules (see also `AGENTS.md`):
   research. These are plain sentences that could just as easily be about whatever else
   is going on in this session.
 
+**Canvas refresh:** if `CANVAS_VAULT_ROOT` is set (env var or `.env` in this directory),
+a bare `Dori` means refresh that Canvas vault: run its collector with `CANVAS_BASE_URL`,
+then run this skill's `reindex-vault.mjs` with `VAULT_ROOT` set to that vault and
+`PORTAL_DB_PATH` set to its `dori-mini-index.sqlite`. Report only new or changed material
+and any failures. Do not print or request the stored Canvas token. With neither variable
+set, a bare `Dori` has no special meaning — treat it as an ordinary message.
+
 ## 1. YouTube link (`youtube.com/...` or `youtu.be/...`)
 
 Transcript only (default, fastest) — `--write-info-json` also lands the uploader's own chapters and description alongside the captions, in the same call:
