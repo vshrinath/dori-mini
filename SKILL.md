@@ -1,6 +1,6 @@
 ---
 name: dori
-description: Route a pasted YouTube link, document, meeting transcript, or expense/bill message to the right conversion — YouTube link -> yt-dlp transcript/download, document (PDF/DOCX/PPTX/XLSX/HTML) -> markitdown conversion to Markdown, meeting transcript -> structured minutes-of-meeting, expense/bill message -> a trip ledger row. Also fetches new meetings straight from Fathom on request. Then asks where to save the result. Answers vault recall ("what did I decide", "last meeting with X") via query-vault.mjs. Also stores/looks up API keys, passwords, and account IDs in a local encrypted credentials store (credentials-store.mjs) — use for "what is my X key/id", "store this credential/password/API key", or a script that needs a stored secret. Use whenever the user pastes a youtube.com/youtu.be URL, attaches or references a document file, pastes/points to a meeting transcript, asks to pull/sync/check Fathom for new meetings, mentions spending money / shares a bill or receipt, asks what they decided or discussed in a past meeting, or asks about a stored credential/key/password/account ID.
+description: Route a pasted YouTube link, document, meeting transcript, or expense/bill message to the right conversion — YouTube link -> yt-dlp transcript/download, document (PDF/DOCX/PPTX/XLSX/HTML) -> markitdown conversion to Markdown, meeting transcript -> structured minutes-of-meeting, expense/bill message -> a trip ledger row. Also fetches new meetings straight from Fathom on request. Then asks where to save the result. Answers vault recall ("what did I decide", "last meeting with X") via query-vault.mjs, including multi-hop connection questions ("who else is connected to X", "who's on Y's team") via its `related` command. Also stores/looks up API keys, passwords, and account IDs in a local encrypted credentials store (credentials-store.mjs) — use for "what is my X key/id", "store this credential/password/API key", or a script that needs a stored secret. Use whenever the user pastes a youtube.com/youtu.be URL, attaches or references a document file, pastes/points to a meeting transcript, asks to pull/sync/check Fathom for new meetings, mentions spending money / shares a bill or receipt, asks what they decided or discussed in a past meeting, or asks about a stored credential/key/password/account ID.
 ---
 
 # Capture Router
@@ -316,6 +316,12 @@ node ~/.claude/skills/dori/query-vault.mjs show "<path or title>"
 node ~/.claude/skills/dori/query-vault.mjs search "<keywords>"
 ```
 Default stdout is metadata plus named minutes sections (Decisions Log, Action Items) or FTS snippets. Full body only with `--full`.
+
+For a multi-hop connection question that no single document answers directly — "who else is connected to X", "who's on Y's team, and what have they been in since" — use `related` instead of `search`. It walks a co-meeting/person-org graph built from `people:` frontmatter and `entities/people/*.md` `org:` fields (rebuilt by every `reindex-vault.mjs` run), not a document match:
+```bash
+node ~/.claude/skills/dori/query-vault.mjs related <person-or-org-slug> [--hops 2] [--type co_meeting,person_org]
+```
+Each hit carries the `rel_paths` that justify the connection — cite those, don't present the graph traversal itself as the source. `shrinath-v` (present in nearly every meeting) is a hub node, so a 2-hop query through him returns most of the vault's people — treat a hub-routed hit as weaker evidence than a hit reached through a more selective node.
 
 Before trusting a recall answer (or when in doubt), check whether the cache is actually current — mirrors dori-engine's `SearchIndex.vaultStats().isStale` fix (commit `5f88e2d`, it used to hardcode `isStale: false`):
 ```bash

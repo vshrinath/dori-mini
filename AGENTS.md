@@ -7,7 +7,7 @@ then run the matching script directly via `node <script>.mjs <args>` instead of
 reasoning the routing/search from scratch.
 
 - `route-destination.mjs` / `route-meeting.mjs` — where a capture or meeting file goes
-- `query-vault.mjs` — vault recall (last meeting, decisions, "tell me about <person>", "what's the NDA with <org>"); default output omits full document body
+- `query-vault.mjs` — vault recall (last meeting, decisions, "tell me about <person>", "what's the NDA with <org>"); default output omits full document body. Its `related <person-or-org>` command walks the co-meeting/org graph for a multi-hop question ("who else is connected to X", "who's on Y's team, and what have they been in since") that no single document answers directly.
 - `list-tasks.mjs` — open tasks from dori-engine's real task store ("what are my pending tasks")
 - `reindex-vault.mjs` / `semantic-index.mjs` — keyword / semantic search over the vault
 - `apply-template.mjs` — scaffold folders for a project
