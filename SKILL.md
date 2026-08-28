@@ -321,7 +321,7 @@ For a multi-hop connection question that no single document answers directly —
 ```bash
 node ~/.claude/skills/dori/query-vault.mjs related <person-or-org-slug> [--hops 2] [--type co_meeting,person_org]
 ```
-Each hit carries the `rel_paths` that justify the connection — cite those, don't present the graph traversal itself as the source. `shrinath-v` (present in nearly every meeting) is a hub node, so a 2-hop query through him returns most of the vault's people — treat a hub-routed hit as weaker evidence than a hit reached through a more selective node.
+Each hit carries the `rel_paths` that justify the connection — cite those, don't present the graph traversal itself as the source. The vault owner's own slug (present in nearly every meeting, since they're the one taking notes) is typically the graph's hub node, so a 2-hop query routed through them returns most of the vault's people — treat a hub-routed hit as weaker evidence than a hit reached through a more selective node.
 
 Before trusting a recall answer (or when in doubt), check whether the cache is actually current — mirrors dori-engine's `SearchIndex.vaultStats().isStale` fix (commit `5f88e2d`, it used to hardcode `isStale: false`):
 ```bash
