@@ -28,8 +28,8 @@ function toPrefixOrQuery(q) {
   return kept.map((t) => `"${t.replace(/"/g, '')}"*`).join(' OR ');
 }
 
-assert.equal(toPrefixOrQuery('Vybe'), '"Vybe"*');
-assert.equal(toPrefixOrQuery('when will Vybe launch'), '"Vybe"* OR "launch"*');
+assert.equal(toPrefixOrQuery('Pulse'), '"Pulse"*');
+assert.equal(toPrefixOrQuery('when will Pulse launch'), '"Pulse"* OR "launch"*');
 assert.equal(toPrefixOrQuery('foo "bar" baz?'), '"foo"* OR "bar"* OR "baz"*');
 assert.equal(toPrefixOrQuery('   '), '');
 // all-stopword query: fall back to the unfiltered tokens rather than returning empty

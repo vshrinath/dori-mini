@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import { matchProject } from './scope.mjs';
 
-const SLUGS = ['founding-fuel', 'work'];
-const PEOPLE = [{ name: 'Charles Assisi', projects: ['founding-fuel'] }];
+const SLUGS = ['lighthouse-media', 'work'];
+const PEOPLE = [{ name: 'Daniel Cross', projects: ['lighthouse-media'] }];
 
 // Direct project-name hit.
-assert.equal(matchProject('what happened with founding fuel launch', SLUGS, []), 'founding-fuel');
+assert.equal(matchProject('what happened with lighthouse media launch', SLUGS, []), 'lighthouse-media');
 
 // Person name resolves to their linked project.
-assert.equal(matchProject('Charles was going to narrate the video', SLUGS, PEOPLE), 'founding-fuel');
+assert.equal(matchProject('Daniel was going to narrate the video', SLUGS, PEOPLE), 'lighthouse-media');
 
 // matchProject only ever matches candidates it's given — the fix for "work" wrongly
 // matching (a personal catch-all folder, no client) lives in discoverProjects, which
@@ -22,10 +22,10 @@ assert.equal(matchProject('what time did we go live', SLUGS, []), null);
 // Ambiguous (both a project and an unrelated person's linked project match) -> fail open,
 // never guess.
 const AMBIGUOUS_PEOPLE = [{ name: 'Someone Else', projects: ['work'] }];
-assert.equal(matchProject('someone else and founding fuel', SLUGS, AMBIGUOUS_PEOPLE), null);
+assert.equal(matchProject('someone else and lighthouse media', SLUGS, AMBIGUOUS_PEOPLE), null);
 
 // Short first names (<4 chars) are not used alone, to avoid common-word false positives.
-const SHORT_NAME_PEOPLE = [{ name: 'Al Smith', projects: ['founding-fuel'] }];
+const SHORT_NAME_PEOPLE = [{ name: 'Al Smith', projects: ['lighthouse-media'] }];
 assert.equal(matchProject('al went to the store', SLUGS, SHORT_NAME_PEOPLE), null);
 
 console.log('scope matcher (project/person resolution, fail-open on ambiguity): all assertions passed');

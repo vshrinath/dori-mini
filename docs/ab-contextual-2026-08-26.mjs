@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// A/B harness: re-runs the baseline eval's Founding Fuel questions against the (now
+// A/B harness: re-runs the baseline eval's Lighthouse Media questions against the (now
 // partly contextualized) index and compares rank-of-target against the recorded baseline.
 // Baseline ranks are transcribed from docs/baseline-retrieval-eval-2026-08-26.md.
 // '-' means the target did not appear within limit 20.
@@ -22,7 +22,7 @@ const DOC = {
   'FF-Launch': 'Launch morning check in mom',
   'FF-Tax': 'Taxonomy tech onboarding sync mom',
   'FF-Osc': 'Video production oscars strategy mom',
-  'FF-Arch': 'Technical architecture audit achyut',
+  'FF-Arch': 'Technical architecture audit arjun',
 };
 
 // [id, question, [targets], baselineSemantic, baselineFts]  ('-' = miss)
@@ -40,7 +40,7 @@ const Q = [
   ['Q15', 'what share of our pages does the new search engine handle', ['FF-Arch'], '-', '-'],
   ['Q16', 'how many failed AI pilots did the soft drinks company have', ['FF-Arch'], '-', '-'],
   ['Q17', 'we had a mess with stories written by two people, did that get sorted before launch', ['FF-Tax', 'FF-Launch'], '-', '-'],
-  ['Q18', 'Charles was going to narrate the site tour video, is that what actually happened', ['FF-Osc', 'FF-Launch'], '-', 2],
+  ['Q18', 'Daniel was going to narrate the site tour video, is that what actually happened', ['FF-Osc', 'FF-Launch'], '-', 2],
   ['Q19', 'old articles had dead audio players, what did we decide to do and who was finding them', ['FF-Tax', 'FF-Pre'], 3, 16],
   ['Q20', 'we agreed a time to flip the switch, did the site actually go live that morning', ['FF-Pre', 'FF-Launch'], '-', '-'],
 ];

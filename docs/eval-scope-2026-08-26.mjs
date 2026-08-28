@@ -5,7 +5,7 @@
 // effect rather than re-measuring reranking.
 //
 // A dry run before wiring this into query-vault.mjs already found the matcher fires on only
-// 1/20 of these questions (Q18, via "Charles" -> founding-fuel) — these eval questions were
+// 1/20 of these questions (Q18, via "Daniel" -> lighthouse-media) — these eval questions were
 // deliberately written to avoid source vocabulary (Part 13's baseline doc, section 2), which
 // includes project and person names. This eval measures the actual outcome against that
 // prediction rather than assuming a near-zero-activation mechanism can't move the number.
@@ -22,10 +22,10 @@ const DOC = {
   'FF-Launch': 'Launch morning check in mom',
   'FF-Tax': 'Taxonomy tech onboarding sync mom',
   'FF-Osc': 'Video production oscars strategy mom',
-  'FF-Arch': 'Technical architecture audit achyut',
-  'SC-EMR': 'lvpei-emr---decision-with-sceh-management',
+  'FF-Arch': 'Technical architecture audit arjun',
+  'SC-EMR': 'vision-institute-emr---decision-with-meridian-health-management',
   'SC-P1': 'phase-1-proposal',
-  'SM-EC': '2026-06-20-shishu-mandir-ec-meeting',
+  'SM-EC': '2026-06-20-sunrise-school-ec-meeting',
 };
 
 const Q = [
@@ -46,13 +46,13 @@ const Q = [
   ['Q15', 'what share of our pages does the new search engine handle', ['FF-Arch']],
   ['Q16', 'how many failed AI pilots did the soft drinks company have', ['FF-Arch']],
   ['Q17', 'we had a mess with stories written by two people, did that get sorted before launch', ['FF-Tax', 'FF-Launch']],
-  ['Q18', 'Charles was going to narrate the site tour video, is that what actually happened', ['FF-Osc', 'FF-Launch']],
+  ['Q18', 'Daniel was going to narrate the site tour video, is that what actually happened', ['FF-Osc', 'FF-Launch']],
   ['Q19', 'old articles had dead audio players, what did we decide to do and who was finding them', ['FF-Tax', 'FF-Pre']],
   ['Q20', 'we agreed a time to flip the switch, did the site actually go live that morning', ['FF-Pre', 'FF-Launch']],
-  ['N1', 'what are we paying Gowtham per month', []],
+  ['N1', 'what are we paying Neel per month', []],
   ['N2', 'what uptime did we promise after the launch', []],
-  ['N3', 'which investor put money into Founding Fuel', []],
-  ['N4', 'how many newsletter subscribers did Founding Fuel have at launch', []],
+  ['N3', 'which investor put money into Lighthouse Media', []],
+  ['N4', 'how many newsletter subscribers did Lighthouse Media have at launch', []],
 ];
 
 function search(query, scopeOn) {

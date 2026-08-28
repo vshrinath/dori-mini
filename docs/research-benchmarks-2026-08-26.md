@@ -29,7 +29,7 @@ real meeting files by hand looking for the same info. **99.9% reduction.**
 
 ### 1.3 Routing
 Deterministic project routing (`route-destination.mjs`) against a real project name
-("aligna"): 24ms, no ambiguity. Not a token/context case — a correctness-and-speed case.
+("orbitpay"): 24ms, no ambiguity. Not a token/context case — a correctness-and-speed case.
 
 ### 1.4 PDF needle-in-haystack, case A (résumé, revenue %)
 Real résumé PDF via real `markitdown`. Question: "What % of revenue came from the GPS
@@ -75,18 +75,18 @@ this transcript is real ASR garbage, not a clean scripted one.
 These four were run specifically to find failure modes. All four found one.
 
 ### 2.1 Paraphrase brittleness — natural phrasing fails, near-literal phrasing works
-Fact: Vybe's daily standup is at 2:30 (`2025-03-19-sprint-planning.md`, line 149).
+Fact: Pulse's daily standup is at 2:30 (`2025-03-19-sprint-planning.md`, line 149).
 
 | Query phrasing | Correct file in top 5? |
 |---|---|
 | `"we have a stand-up at 2.30"` (near-exact) | Yes — tied for rank 1 |
-| `"what time is the Vybe team's daily stand-up"` | **No** — 5 wrong files, all real Vybe dev-sync docs, none containing the answer |
-| `"when does the team meet each day to sync on progress"` (generic paraphrase) | **No** — 5 wrong files, wrong project entirely (Founding Fuel, not Vybe) |
+| `"what time is the Pulse team's daily stand-up"` | **No** — 5 wrong files, all real Pulse dev-sync docs, none containing the answer |
+| `"when does the team meet each day to sync on progress"` (generic paraphrase) | **No** — 5 wrong files, wrong project entirely (Lighthouse Media, not Pulse) |
 
-Same pattern on a second, independent fact (Vybe's launch timing, "the season starts in
+Same pattern on a second, independent fact (Pulse's launch timing, "the season starts in
 June"): the literal phrase `"proper launch season starts June"` finds the file at rank 2
-(0.984); the natural phrasing `"when will Vybe launch"` does not surface it in the top 20
-results at all — instead returning older, generic "Vybe development sync" files that
+(0.984); the natural phrasing `"when will Pulse launch"` does not surface it in the top 20
+results at all — instead returning older, generic "Pulse development sync" files that
 happen to score higher on lexical/semantic overlap with the word "launch" without
 actually answering the question.
 
@@ -100,15 +100,15 @@ Same query, run against the real, actually-deployed `portal.db` FTS index (not t
 semantic index):
 
 ```
-node query-vault.mjs search "when will Vybe launch" --limit 10
+node query-vault.mjs search "when will Pulse launch" --limit 10
 ```
 
 Before the fix: 5 hits, all from one unrelated, giant `conversations/` dev-log file
-(dori-mini's own build transcripts, which happen to mention "vybe" and "launch" once each
+(dori-mini's own build transcripts, which happen to mention "pulse" and "launch" once each
 purely as incidental self-referential noise). Root cause, confirmed by direct testing
 against the actual `node:sqlite` `DatabaseSync` API (not guessed): `searchDocs()` ran a
 **phrase-then-bareword-AND fallback that dori-mini invented on its own** — first try the
-whole query as one exact FTS5 phrase (`"when will Vybe launch"`, almost never matches
+whole query as one exact FTS5 phrase (`"when will Pulse launch"`, almost never matches
 anything), and if that returns zero rows, fall back to a bareword multi-term query, which
 FTS5 evaluates as an implicit AND **across the whole row**, not per-column and not
 proximity-weighted. On a small, short document this is usually fine; on one giant
@@ -125,20 +125,20 @@ different: **OR of prefix tokens, ranked by BM25 `rank`** — `tokens.map(t => t
 ([query-vault.mjs](../query-vault.mjs)), replacing the invented AND-fallback. Added a
 minimal self-check ([test-query-vault.mjs](../test-query-vault.mjs)).
 
-Re-run after the fix: 8 real, on-topic hits — Founding Fuel launch planning docs, ADRs,
+Re-run after the fix: 8 real, on-topic hits — Lighthouse Media launch planning docs, ADRs,
 launch-morning minutes — no more filler-word garbage. Honest residual limitation, also
 inherited faithfully from the real OR-ranked design: a broad word like "launch" that
-appears very often across a large, unrelated project (Founding Fuel, which dominates the
+appears very often across a large, unrelated project (Lighthouse Media, which dominates the
 vault's "launch" mentions) can still outrank a document that matches a rarer, more
-specific combination (Vybe's actual "June" launch line) — because OR-ranking sums
+specific combination (Pulse's actual "June" launch line) — because OR-ranking sums
 relevance per matched token rather than rewarding a document for matching more of the
 distinct terms. That's a real, disclosed trade-off in the actual production ranking
 approach, not a bug introduced by this fix.
 
 ### 2.3 No "not found" signal — every query returns confident-looking top scores
 Two negative-case queries, for facts that provably do not exist anywhere in the vault:
-- `"Vybe Series C funding round amount raised"` (Vybe never raised institutional funding — the resume explicitly separates this: Silae.io "raised angel investment", Vybe did not)
-- `"what is the tax filing deadline for Vybe in Delaware"` (Vybe has no Delaware entity in any vault document)
+- `"Pulse Series C funding round amount raised"` (Pulse never raised institutional funding — the resume explicitly separates this: Silae.io "raised angel investment", Pulse did not)
+- `"what is the tax filing deadline for Pulse in Delaware"` (Pulse has no Delaware entity in any vault document)
 
 Both returned 5 results with scores **1.000, 0.984, 0.968, 0.953, 0.938** — the exact
 same score pattern as every genuine hit in this whole test suite. There is no visible
@@ -168,11 +168,11 @@ entirely on whatever prompt/model consumes that retrieval (e.g., mom-prompt.md's
 explicit "flag for review" instructions), not on retrieval catching the miss itself.
 
 ### 2.4 Multi-hop: a single query only retrieves one half of a two-document fact
-Real fact chain, Founding Fuel project:
+Real fact chain, Lighthouse Media project:
 - `Pre launch readiness sync mom.md` (2026-03-13): decision — go-live planned for "Monday, March 16 early morning cutover."
 - `Launch morning check in mom.md` (2026-03-16): the actual launch-morning meeting, confirming it happened on schedule.
 
-Query: `"Founding Fuel launch go-live time decision and outcome"` (deliberately phrased to
+Query: `"Lighthouse Media launch go-live time decision and outcome"` (deliberately phrased to
 need both documents) — checked at limit 20.
 
 Result: `Launch morning check in mom.md` surfaces at rank 2. **`Pre launch readiness sync
@@ -220,13 +220,13 @@ faithfully — it's also a cheap place to prototype fixes for what testing finds
 be ported back to real dori-engine/dori-portal if they hold up. Two attempts below; one
 worked, one didn't and was reverted rather than shipped half-working.
 
-### 4.1 Stopword dilution behind 2.1's "Vybe launch" paraphrase failure — partially fixed
+### 4.1 Stopword dilution behind 2.1's "Pulse launch" paraphrase failure — partially fixed
 Root cause, confirmed: neither dori-engine nor dori-portal filter natural-language
 stopwords before building an FTS query (checked, nothing named `stopword` exists in
 either codebase) — only FTS operator keywords (AND/OR/NOT/NEAR) get stripped. In a
-natural question like "when will Vybe launch," the common words "when"/"will" still match
+natural question like "when will Pulse launch," the common words "when"/"will" still match
 a huge share of the vault, and their summed BM25 contribution can outrank a document that
-only matches the two words that actually distinguish the question ("Vybe", "launch").
+only matches the two words that actually distinguish the question ("Pulse", "launch").
 
 Added a stopword filter to `query-vault.mjs`'s `toPrefixOrQuery` (falls back to the
 unfiltered token list if a query is *all* stopwords, so it never returns empty). This is
@@ -234,10 +234,10 @@ explicitly a dori-mini-only prototype — not yet real Dori behavior — flagged
 the code comment, candidate to port to `dori-portal/lib/vault-indexer.ts` if it proves out.
 
 Re-ran the exact failing query. Result: **better, not solved.** `Pre launch readiness
-sync mom.md` (the doc with Vybe's actual — wait, this is the Founding Fuel doc, not
-Vybe's — decision) now ranks #2 instead of missing from the top 8 entirely. But the
-underlying dynamic — Founding Fuel's much larger "launch" corpus still outranks the
-smaller, more specific Vybe content for this query — persists. That's a deeper ranking
+sync mom.md` (the doc with Pulse's actual — wait, this is the Lighthouse Media doc, not
+Pulse's — decision) now ranks #2 instead of missing from the top 8 entirely. But the
+underlying dynamic — Lighthouse Media's much larger "launch" corpus still outranks the
+smaller, more specific Pulse content for this query — persists. That's a deeper ranking
 question (why isn't BM25's own IDF term discounting "launch" enough, given it's common
 across ~825 real vault files) that a stopword filter alone doesn't resolve. Left open,
 correctly labeled as "improved, not fixed."
@@ -253,13 +253,13 @@ Calibration check across 5 real queries, threshold `0.35`:
 | Query | Known status | Raw top cosine | Would this threshold flag it? |
 |---|---|---|---|
 | `"we have a stand-up at 2.30"` | **answerable** — near-exact match exists | 0.294 | Yes — **false alarm** |
-| `"Vybe Series C funding round amount raised"` | **not answerable** — fact doesn't exist | > 0.35 | No — **missed** |
-| `"what is the tax filing deadline for Vybe in Delaware"` | **not answerable** | > 0.35 | No — **missed** |
+| `"Pulse Series C funding round amount raised"` | **not answerable** — fact doesn't exist | > 0.35 | No — **missed** |
+| `"what is the tax filing deadline for Pulse in Delaware"` | **not answerable** | > 0.35 | No — **missed** |
 
 The one query we know is answerable scored *lower* than both queries we know are not.
 Reason: this embedding model's cosine similarity tracks topical closeness ("this is about
-Vybe") more than fact-presence ("this specific claim is in here") — a query about a
-fact that doesn't exist can still score high raw cosine against real Vybe content, while
+Pulse") more than fact-presence ("this specific claim is in here") — a query about a
+fact that doesn't exist can still score high raw cosine against real Pulse content, while
 a real answer phrased slightly differently than the source can score lower. A single flat
 threshold on top-1 raw cosine can't separate these cases with this model. Shipping it
 would have meant a warning that fires on good matches and stays silent on bad ones — worse
@@ -327,7 +327,7 @@ understanding layer in front.**
 |---|---|---|
 | 2.1/4.1 — paraphrase brittleness | **Yes, directly** | This *is* the RAG-Fusion pattern: generate several phrasings, search each, fuse results. The exact mechanism, aimed at a different symptom. |
 | 2.4 — multi-hop | **Yes, directly** | This is literally query decomposition's documented use case. |
-| 4.1 residual — Founding Fuel's larger "launch" corpus burying Vybe's specific line | **Indirectly** | A rewritten, more specific query ("Vybe project launch date" instead of "when will Vybe launch") adds a distinguishing term explicitly — same LLM-query-layer mechanism, framed as rewriting rather than splitting. Doesn't fix the underlying BM25/IDF weighting question, but sidesteps it for this case. |
+| 4.1 residual — Lighthouse Media's larger "launch" corpus burying Pulse's specific line | **Indirectly** | A rewritten, more specific query ("Pulse project launch date" instead of "when will Pulse launch") adds a distinguishing term explicitly — same LLM-query-layer mechanism, framed as rewriting rather than splitting. Doesn't fix the underlying BM25/IDF weighting question, but sidesteps it for this case. |
 | 2.3/4.2 — no "not found" signal | **Partially, as a signal, not a fix** | If 3 differently-phrased queries return *no overlapping documents at all*, that disagreement is itself a cheap, ground-truth-free proxy for "the vault probably has nothing on this" — cheaper than the calibrated cosine-floor approach that failed in 4.2. Not equivalent to a real fix: Google's own research on this problem (cited below) uses an LLM-judged "sufficient context" signal specifically because embedding/consistency-based proxies are known to produce uncalibrated confidence (a 0.5 threshold gives 90% recall on one dataset, 60% on another) — cross-query agreement would need the same kind of calibration check 4.2 failed, before trusting it. |
 
 **Bottom line:** one investment — teaching the agent layer to issue multiple targeted or
@@ -353,7 +353,7 @@ retrieval-side heuristic — 4.2 already showed a retrieval-side heuristic faili
 ## Part 5 — Option 1 built and tested against the real multi-hop case (2026-08-26, later still)
 
 Added the SKILL.md instruction from 4.3's option 1 (`## Multi-fact recall` section) and
-tested it live against the exact 2.4 case: "was the Founding Fuel launch on schedule" —
+tested it live against the exact 2.4 case: "was the Lighthouse Media launch on schedule" —
 needs both `Pre launch readiness sync mom.md` (the decision) and `Launch morning check in
 mom.md` (the outcome).
 
@@ -362,7 +362,7 @@ success would have.**
 
 - Splitting into two natural-language targeted queries — one aimed at "the plan," one at
   "the outcome" — still **did not** surface `Pre launch readiness sync mom.md` in either.
-  Both queries landed on the same handful of generic, frequently-repeated Founding Fuel
+  Both queries landed on the same handful of generic, frequently-repeated Lighthouse Media
   launch documents.
 - A third query, using near-literal vocabulary from the actual document ("Pre-Launch
   Readiness Sync Go-Live Window Sunday night Monday cutover" — words pulled straight from
@@ -379,26 +379,26 @@ concluding the vault has nothing.
 ### The real cause behind the residual BM25 dilution (4.1) — found it
 
 Chasing why even a "plan"-targeted query kept surfacing the *same* handful of generic
-Founding Fuel docs turned up something more concrete than an algorithmic ranking problem:
+Lighthouse Media docs turned up something more concrete than an algorithmic ranking problem:
 **the vault has real, byte-identical duplicate files.**
 
 ```
-$ md5 ".../entities/projects/founding-fuel/Founding Fuel Modernization – Project History (Canonical Reference) (1).md" \
-      ".../projects/founding-fuel/Founding Fuel Modernization – Project History (Canonical Reference) (1).md"
+$ md5 ".../entities/projects/lighthouse-media/Lighthouse Media Modernization – Project History (Canonical Reference) (1).md" \
+      ".../projects/lighthouse-media/Lighthouse Media Modernization – Project History (Canonical Reference) (1).md"
 d0531c720ff46ac60756dcec22ed8721   (identical)
 ```
 
-Same file exists — often 4–10+ times over — under `entities/projects/founding-fuel/`,
-`projects/founding-fuel/` (two parallel directory trees mirroring the same project),
-`_site/projects/founding-fuel/` (a rendered HTML copy), and
-`profile/website/{my-website,older-website}/case study/Founding Fuel Rebuild/`. Both
+Same file exists — often 4–10+ times over — under `entities/projects/lighthouse-media/`,
+`projects/lighthouse-media/` (two parallel directory trees mirroring the same project),
+`_site/projects/lighthouse-media/` (a rendered HTML copy), and
+`profile/website/{my-website,older-website}/case study/Lighthouse Media Rebuild/`. Both
 `semantic-index.mjs` and `query-vault.mjs` walk the whole vault tree and index every
 `rel_path` as its own row — so exact-duplicate content gets embedded and FTS-indexed
 multiple times over, each copy counted as independent evidence. For a broad term like
-"launch" that's already common in Founding Fuel's own content, this duplication compounds
+"launch" that's already common in Lighthouse Media's own content, this duplication compounds
 the dilution problem found in 4.1 — it's not solely (maybe not even mostly) a BM25/IDF
 weighting question, it's real vault data hygiene inflating document frequency for exactly
-the terms competing with Vybe's more specific, non-duplicated content.
+the terms competing with Pulse's more specific, non-duplicated content.
 
 **What this means for "what we need to fix in the BM25 case":** the highest-leverage next
 step isn't a ranking-algorithm change at all — it's **content-hash-aware indexing**:
@@ -441,22 +441,22 @@ reindex, but real data nonetheless).
 Dedup scan: 529 duplicate groups found, 53 already-indexed duplicates de-chunked
 (780 chunks removed)
 ```
-Confirms the Part 5 hypothesis at real scale, not just the one Founding Fuel example —
+Confirms the Part 5 hypothesis at real scale, not just the one Lighthouse Media example —
 this vault has substantial genuine duplication (mirrored `entities/projects/` vs.
 `projects/` trees, repeated meeting captures under `captures/` vs `meetings/`, etc.).
 
 **But re-running the two target queries after dedup: neither flipped.** `Pre launch
 readiness sync mom.md` still doesn't surface for the natural-language multi-hop query, and
-`2025-03-19-sprint-planning.md` still doesn't surface for "when will Vybe launch." Chased
+`2025-03-19-sprint-planning.md` still doesn't surface for "when will Pulse launch." Chased
 why: counted *distinct, non-duplicate* real files mentioning "launch" —
 
 | Topic | Distinct real files (post-dedup) |
 |---|---|
-| Founding Fuel | **63** |
-| Vybe | **18** |
+| Lighthouse Media | **63** |
+| Pulse | **18** |
 
-Founding Fuel genuinely has ~3.5× more real, non-duplicate content about "launch" than
-Vybe does. Dedup correctly removed the 35 exact-duplicate files inflating that count
+Lighthouse Media genuinely has ~3.5× more real, non-duplicate content about "launch" than
+Pulse does. Dedup correctly removed the 35 exact-duplicate files inflating that count
 (98 → 63) — but 63 vs. 18 is real, legitimate topic-size imbalance, not noise. No dedup
 fix should try to erase that; it's true signal about what's actually in the vault.
 
@@ -489,9 +489,9 @@ real surfaced two genuine bugs that a quick sanity check wouldn't have caught.
 
 First run: `dedupe` reported 529 duplicate groups (matching semantic-index.mjs's earlier
 number) — but a regression check on a previously-working query (`query-vault.mjs search
-"aligna"`) came back with **zero hits**, where it had real results before. Traced it: a
+"orbitpay"`) came back with **zero hits**, where it had real results before. Traced it: a
 project's near-empty `STATUS.md` (frontmatter only, no body) got `duplicate_of` pointed at
-a completely unrelated person's profile file (`entities/people/shrinath-v.md`) — also
+a completely unrelated person's profile file (`entities/people/jordan-lee.md`) — also
 frontmatter-only. **Every frontmatter-only/empty-body file in the vault hashes to the same
 trivial value and was getting wrongly cross-matched as "duplicates" of each other.** Found
 80 such files vault-wide.
@@ -504,12 +504,12 @@ excluded. Added regression cases to `test-dedupe.mjs`.
 
 ### Bug 2 — lexicographic canonical can pick an unsearchable path
 
-Re-checked the "aligna" regression after Bug 1's fix — **still zero hits.** Deeper trace:
-`entities/projects/aligna/README.md` and `projects/aligna/README.md` are real duplicates,
+Re-checked the "orbitpay" regression after Bug 1's fix — **still zero hits.** Deeper trace:
+`entities/projects/orbitpay/README.md` and `projects/orbitpay/README.md` are real duplicates,
 byte-identical. Lexicographic sort picks `entities/...` as canonical (comes first
-alphabetically) — but `entities/projects/aligna/*` had **never had an FTS row indexed in
+alphabetically) — but `entities/projects/orbitpay/*` had **never had an FTS row indexed in
 the first place**, a pre-existing gap in this vault unrelated to dedup (confirmed by
-checking the pre-dedup backup — only `projects/aligna/*` ever had FTS rows). Result: the
+checking the pre-dedup backup — only `projects/orbitpay/*` ever had FTS rows). Result: the
 real, previously-searchable duplicate lost its FTS row (because dedup correctly treats a
 non-canonical member as removable from search), while the newly-crowned "canonical" was
 never searchable to begin with. Net effect: a working query went from real results to
@@ -553,12 +553,12 @@ embeddings for the first time as part of establishing them as canonicals. `0` de
 this run makes sense — Bug 1's fix already removed the (correctly-scoped) 52 real
 already-chunked duplicates back in Part 6, and this run started from that clean state.
 
-**Verified after both fixes, against both indexes:** `query-vault.mjs search "aligna"`
-and `semantic-index.mjs search "aligna"` both return real, correct results again (5
-relevant Aligna docs each). `duplicate_of` now correctly points
-`entities/projects/aligna/README.md` (the file that was never searchable) at
-`projects/aligna/README.md` (the one that always was) — the opposite of what the buggy
-lexicographic rule had chosen. No regression on the "when will Vybe launch" or literal-
+**Verified after both fixes, against both indexes:** `query-vault.mjs search "orbitpay"`
+and `semantic-index.mjs search "orbitpay"` both return real, correct results again (5
+relevant Orbitpay docs each). `duplicate_of` now correctly points
+`entities/projects/orbitpay/README.md` (the file that was never searchable) at
+`projects/orbitpay/README.md` (the one that always was) — the opposite of what the buggy
+lexicographic rule had chosen. No regression on the "when will Pulse launch" or literal-
 vocabulary queries from Parts 5/6, re-checked against both indexes after every fix.
 
 **Takeaway for anyone building this for real:** a dedup pass that only reasons about
@@ -612,9 +612,9 @@ originally-quoted 3,026. Real vault churn (captures/inbox turnover), not a bug.
   magnitude both hold; the specific "473,866" figure from the original doc should be
   retired rather than repeated, since this run can't independently confirm it.
 - **1.3 (routing) — reran with the exact documented command shape**
-  (`node route-destination.mjs document aligna`): still deterministic, still fast
+  (`node route-destination.mjs document orbitpay`): still deterministic, still fast
   (measured 23–29ms across three runs, in line with the original 24ms), still correct
-  (`projects/aligna/...`). Holds without qualification.
+  (`projects/orbitpay/...`). Holds without qualification.
 
 ### 8.2 New PDF numeric case (case C) — a client case-study PDF, a multiplier stat
 
@@ -624,8 +624,8 @@ already used in 1.4 (résumé, revenue %) or 1.5 (CliftonStrengths, ordinal rank
 ~15 PDF/markdown pairs across résumés, proposals, and case studies (`find … -iname
 '*.pdf'` cross-referenced against sibling `.md` files); most proposal-style PDFs in this
 vault turned out to be qualitative (dates, phase names, no $ or % figures). One good real
-candidate: `entities/projects/founding-fuel/agentic-engineering-case-study.md` /
-`projects/founding-fuel/agentic-engineering-case-study.md` (PDF-derived client case study,
+candidate: `entities/projects/lighthouse-media/agentic-engineering-case-study.md` /
+`projects/lighthouse-media/agentic-engineering-case-study.md` (PDF-derived client case study,
 **26,711 chars**), with a metrics block: "10 Years | Content Archive", "2,000+ |
 Long-form Articles", "**50x** | Traffic Capacity Increase", "0ms | Logic Layer Latency."
 
@@ -638,7 +638,7 @@ not as a second confirmation of "deep needle-in-haystack."
 ```
 node query-vault.mjs search "traffic capacity increase after modernization" --limit 5
 ```
-Rank 1: `projects/founding-fuel/agentic-engineering-case-study.md`, snippet: "…Long-form
+Rank 1: `projects/lighthouse-media/agentic-engineering-case-study.md`, snippet: "…Long-form
 Articles\n- 50x | Traffic Capacity Increase\n- 0ms | Logic Layer Latency (SSG…" — correct
 file, correct number, immediately. Total bytes returned across all 5 hits: 526.
 **Reduction: 98.0%** (526 / 26,711 chars).
@@ -647,7 +647,7 @@ Semantic search (`semantic-index.mjs search`) on the **same natural-language phr
 did **not** surface this file in the top 5 at all — returned five unrelated docs that
 happen to share the words "capacity"/"traffic increase" (a performance-optimization doc,
 a book excerpt, an unrelated capacity-planning doc). Retried with an explicit,
-proper-noun-anchored query ("Founding Fuel traffic capacity increase modernization"): the
+proper-noun-anchored query ("Lighthouse Media traffic capacity increase modernization"): the
 correct chunk appeared at **rank 2 of 8** (score 1.000, tied for top). Verified directly
 against `vectors.db`'s `search_chunks` table that this specific 674-char chunk contains
 the literal string "50x" (`SELECT … WHERE text LIKE '%50x%'` — one match, this chunk).
@@ -663,7 +663,7 @@ there is no reliable way to predict which phrasing will work from outside.**
 
 ### 8.3 Hallucination eval, expanded — second real transcript, ground-truth-first
 
-Second real transcript: `meetings/arpan-shrinath-sync.md` (2026-05-28, "Arpan <> Shrinath
+Second real transcript: `meetings/marcus-jordan-sync.md` (2026-05-28, "Marcus <> Jordan
 sync", 1,329 lines, real ASR output with timestamps — ranked #1 by line count among files
 matching `*.md` directly under `meetings/`, and independently confirmed to have several
 real hedges/contradictions/ASR-garbled names on inspection, which is exactly what this
@@ -675,18 +675,18 @@ exact `[HH:MM:SS]` timestamps from the source:
 
 | # | Question | Ground truth (source-cited) |
 |---|---|---|
-| 1 | What % of his content workflow did Arpan say he's automated? | **Ambiguous/self-contradictory.** [00:00:00]: "automated 70% of it… content generation, another 30%, 20% is posters, and 10% is scheduling" — the numbers don't sum cleanly (130%); the source itself is jumbled mid-sentence. |
-| 2 | What is the name of the tool Shrinath is building? | **ASR-garbled, two different spellings.** [00:06:40] "called Noon"; [00:06:56] "Okay, null"; [00:13:16] "Null is the tool that you are creating, correct?" Transcript alone doesn't resolve which spelling is correct. |
-| 3 | What company did Arpan do a launch event for? | REA Group, "one of Australia's largest real estate, Housing.com's parent" [00:09:33–00:09:43]. Unambiguous. |
-| 4 | What memory/search tool did Shrinath name? | "Lance" [00:25:33–00:25:48] (likely LanceDB); adjacent ASR noise ("BBJ here") but the tool name itself is clear. |
-| 5 | How long ago did Shrinath start building "the portal"? | **Contradictory in one breath.** [00:27:09]: "I started building the portal about two weeks ago, but the current shape and form has been from Monday" — two different start-point framings, not reconciled. |
-| 6 | What WhatsApp-automation library did Shrinath mention? | "Baileys" [00:36:02], "an artificial hack." Unambiguous. |
-| 7 | What scheduling tool does Arpan use, and is it charged per account? | oneup.app (O-N-E-U-P) [00:42:31–00:42:37], explicitly "not charging me per account." Unambiguous. |
-| 8 | Who is Shrinath's target user — technical or non-technical? | **Contradictory/evolving.** [00:38:16]: "I'm looking at a non-techie… it could even be a mother"; earlier [00:30:34] "target audience is a CXO"; then [00:38:34] Shrinath agrees with Arpan that tech-savvy founders would be the easiest early adopters ("that's a good point"). No single settled answer in this transcript. |
-| 9 | Who gave the "drop an invoice, it auto-classifies" example, and what was it? | Shrinath (not Arpan) [00:12:26–00:12:30]: "You can drop in, for instance, an invoice. It will generate that it's an invoice." |
-| 10 | What did the Aptify founder do to his tech team, per Arpan? | Reduced it from 50 people to 5 [00:39:07–00:39:17]. **Secondhand** — Arpan is relaying someone else's account, not something he witnessed directly; the transcript doesn't corroborate it independently. |
+| 1 | What % of his content workflow did Marcus say he's automated? | **Ambiguous/self-contradictory.** [00:00:00]: "automated 70% of it… content generation, another 30%, 20% is posters, and 10% is scheduling" — the numbers don't sum cleanly (130%); the source itself is jumbled mid-sentence. |
+| 2 | What is the name of the tool Jordan is building? | **ASR-garbled, two different spellings.** [00:06:40] "called Noon"; [00:06:56] "Okay, null"; [00:13:16] "Null is the tool that you are creating, correct?" Transcript alone doesn't resolve which spelling is correct. |
+| 3 | What company did Marcus do a launch event for? | REA Group, "one of Australia's largest real estate, Housing.com's parent" [00:09:33–00:09:43]. Unambiguous. |
+| 4 | What memory/search tool did Jordan name? | "Lance" [00:25:33–00:25:48] (likely LanceDB); adjacent ASR noise ("BBJ here") but the tool name itself is clear. |
+| 5 | How long ago did Jordan start building "the portal"? | **Contradictory in one breath.** [00:27:09]: "I started building the portal about two weeks ago, but the current shape and form has been from Monday" — two different start-point framings, not reconciled. |
+| 6 | What WhatsApp-automation library did Jordan mention? | "Baileys" [00:36:02], "an artificial hack." Unambiguous. |
+| 7 | What scheduling tool does Marcus use, and is it charged per account? | oneup.app (O-N-E-U-P) [00:42:31–00:42:37], explicitly "not charging me per account." Unambiguous. |
+| 8 | Who is Jordan's target user — technical or non-technical? | **Contradictory/evolving.** [00:38:16]: "I'm looking at a non-techie… it could even be a mother"; earlier [00:30:34] "target audience is a CXO"; then [00:38:34] Jordan agrees with Marcus that tech-savvy founders would be the easiest early adopters ("that's a good point"). No single settled answer in this transcript. |
+| 9 | Who gave the "drop an invoice, it auto-classifies" example, and what was it? | Jordan (not Marcus) [00:12:26–00:12:30]: "You can drop in, for instance, an invoice. It will generate that it's an invoice." |
+| 10 | What did the Aptify founder do to his tech team, per Marcus? | Reduced it from 50 people to 5 [00:39:07–00:39:17]. **Secondhand** — Marcus is relaying someone else's account, not something he witnessed directly; the transcript doesn't corroborate it independently. |
 | 11 | Does the system's classifier use an LLM? | **Contradictory across two different components**, easy to flatten into one wrong answer. [00:14:28–00:14:55]: the entity-classifier itself is "not a neural network… Python strings," explicitly not an LLM. But [00:15:31–00:15:34], separately: the initial profile-building conversation "is an LLM task." Two different steps; a single yes/no answer is wrong either way. |
-| 12 | What local database/runtime did Shrinath say handles this without cloud lock-in? | "Ulama" [00:32:39] — near-certainly Ollama (a local LLM runtime), but the transcript spells it inconsistently with no clean alternate spelling to confirm against. |
+| 12 | What local database/runtime did Jordan say handles this without cloud lock-in? | "Ulama" [00:32:39] — near-certainly Ollama (a local LLM runtime), but the transcript spells it inconsistently with no clean alternate spelling to confirm against. |
 
 **Scoring** (naive single-pass reading vs. a structured extraction that explicitly checks
 for repeated/contradicted mentions before answering, same method as the original 10):
@@ -710,18 +710,18 @@ bottom line.
 **FTS search fix (2.2) — reran both versions against the live `portal.db`, read-only, per
 the safety method above.**
 
-`node <old-query-vault.mjs> search "when will Vybe launch" --limit 10` (pre-fix, from
+`node <old-query-vault.mjs> search "when will Pulse launch" --limit 10` (pre-fix, from
 `git show HEAD:query-vault.mjs`): 8 hits, **all 8** from `conversations/*.md` — dori-mini's
-own internal build-transcript logs, which happen to contain the words "vybe" and "launch"
-somewhere, unrelated to each other. Zero real Vybe content in the top 8.
+own internal build-transcript logs, which happen to contain the words "pulse" and "launch"
+somewhere, unrelated to each other. Zero real Pulse content in the top 8.
 
-`node query-vault.mjs search "when will Vybe launch" --limit 10` (current, post-fix): 8
-hits, **all 8** genuinely on-topic — `shrinath-v---resume.md`, three different real Vybe
-capture docs (`vybe-forward-looking-plan.md`, `vybe-user-feedback-session.md`,
-`vybe-dev-sync-2025.md` ×2), two Vybe-adjacent interview docs, and the founder-advisory
+`node query-vault.mjs search "when will Pulse launch" --limit 10` (current, post-fix): 8
+hits, **all 8** genuinely on-topic — `jordan-lee---resume.md`, three different real Pulse
+capture docs (`pulse-forward-looking-plan.md`, `pulse-user-feedback-session.md`,
+`pulse-dev-sync-2025.md` ×2), two Pulse-adjacent interview docs, and the founder-advisory
 kit. Zero filler-word garbage. (Note: this rerun's exact hit list differs in composition
-from the original doc's description — the original found Founding Fuel launch docs;
-today's vault state surfaces mostly Vybe docs instead. Vault content has changed since the
+from the original doc's description — the original found Lighthouse Media launch docs;
+today's vault state surfaces mostly Pulse docs instead. Vault content has changed since the
 original run; the qualitative result — junk gone, real content in — is what's being
 verified here, not an identical hit list.)
 
@@ -737,7 +737,7 @@ this session and rerunning `dedupe` against real data again wasn't necessary or 
 - **Live re-check today** (read-only query against the current `portal.db`, no mutation):
   `SELECT COUNT(DISTINCT duplicate_of) FROM vault_documents WHERE duplicate_of IS NOT
   NULL` → **515** groups, matching Part 7's number exactly. `query-vault.mjs search
-  "aligna"` still returns real results (the specific regression Part 7 fixed). Confirms
+  "orbitpay"` still returns real results (the specific regression Part 7 fixed). Confirms
   the fix is still in effect, not just recorded.
 
 **"Savings," quantified concretely — and one important correction to what "savings" means
@@ -885,7 +885,7 @@ so a quoted `"Pre-Launch"*` still matches indexed text containing "pre launch" a
 tokens) via both an isolated in-memory-table check and a live query against the real
 `portal.db`. Added a regression test (`test-query-vault.mjs`) that executes the built query
 string against a real FTS5 table, not just checking the string's shape. Re-ran the two
-existing regression cases (`search "aligna"`, `search "when will Vybe launch"`) — both still
+existing regression cases (`search "orbitpay"`, `search "when will Pulse launch"`) — both still
 correct, no change in behavior for non-hyphenated queries. **Candidate to port back to real
 dori-portal** — this is a genuine production bug fix, not a stylistic prototype.
 
@@ -893,7 +893,7 @@ dori-portal** — this is a genuine production bug fix, not a stylistic prototyp
 
 With the crash fixed, re-ran the *original* 2.4 combined query as a single shot:
 ```
-node query-vault.mjs search "Founding Fuel launch go-live time decision and outcome" --limit 20
+node query-vault.mjs search "Lighthouse Media launch go-live time decision and outcome" --limit 20
 ```
 Result: 8 hits. `Pre launch readiness sync mom.md` (the plan-side doc) now appears at rank
 2 — an improvement over the original 2.4 write-up, likely a side effect of the FTS fix
@@ -913,7 +913,7 @@ independent, unrelated bugs got fixed in between.
 Then ran the SKILL.md's new proactive approach — two targeted sub-queries, issued
 immediately instead of as a fallback retry, one aimed at each side of the fact:
 ```
-node query-vault.mjs search "Founding Fuel launch morning check in outcome" --limit 5
+node query-vault.mjs search "Lighthouse Media launch morning check in outcome" --limit 5
 node query-vault.mjs search "Pre Launch Readiness Sync Monday cutover" --limit 5
 ```
 **Both sub-queries independently surfaced BOTH documents in their own top 5** —
@@ -972,15 +972,15 @@ Implementation notes:
 
 ### 10.1 The headline result: naive multi-query makes 2.1 *worse*, not better
 
-Tested against 2.1's canonical failure — "when will Vybe launch" never surfaces
+Tested against 2.1's canonical failure — "when will Pulse launch" never surfaces
 `captures/2025-03-19-sprint-planning.md`, which contains the answer ("It is called the
 season starts in June", line 935). Confirmed first that this doc is indexed and not marked
 a duplicate, so this is genuine ranking, not a coverage gap.
 
 | # | Approach | Target doc found? |
 |---|---|---|
-| A | `search "when will Vybe launch"`, limit 20 | **No** (the original 2.1 failure, still reproducible) |
-| B | `search-multi` × 3 **natural** rephrasings ("what is the timeline for launching Vybe", "Vybe go to market date") | **No** — and all three agreed 3/3 on the same wrong docs |
+| A | `search "when will Pulse launch"`, limit 20 | **No** (the original 2.1 failure, still reproducible) |
+| B | `search-multi` × 3 **natural** rephrasings ("what is the timeline for launching Pulse", "Pulse go to market date") | **No** — and all three agreed 3/3 on the same wrong docs |
 | C | `search-multi` × 3 = 2 natural + 1 source-vocabulary ("the season starts in June") | **No** |
 | E | `search "proper launch season starts June"` alone | **Yes — rank 2** |
 | F | `search-multi` × 2 = 1 natural + 1 source-vocabulary | **Yes — rank 3** |
@@ -1129,8 +1129,8 @@ smaller than the transcript.** The reduction is entirely at query time.
 ### 11.1 The video, the command, and the pre-checks
 
 Picked from the user's real, already-captured `yt/` directory rather than downloading
-something arbitrary: **`yt/2026-08-20-e182-blind-spots-to-big-bets-shrinath-v.md`** —
-"E182 | Blind Spots To Big Bets | Shrinath V" (https://youtu.be/hiYTq9xnkPw, channel
+something arbitrary: **`yt/2026-08-20-e182-blind-spots-to-big-bets-jordan-lee.md`** —
+"E182 | Blind Spots To Big Bets | Jordan Lee" (https://youtu.be/hiYTq9xnkPw, channel
 "Inspire Someone today", uploaded 2026-08-20). **46:08 (2,768 s)** — the closest thing the
 vault has to the marketing story's "45-minute video," and long enough to be a genuine
 scrub-through problem.
@@ -1227,7 +1227,7 @@ node semantic-index.mjs search "<question>" 5
 | # | Question | FTS (`query-vault`) | Semantic (`semantic-index`) |
 |---|---|---|---|
 | 1 | how much did the Silicon Valley company spend on tokens | **MISS** | **rank 1** |
-| 2 | which two companies did Shrinath get laid off from | rank 3 | **MISS** |
+| 2 | which two companies did Jordan get laid off from | rank 3 | **MISS** |
 | 3 | what was wrong with the teacher persona in the education product | **rank 1** | **rank 1** (also 3, 4) |
 | 4 | who does he admire for behavioural research in India | **MISS** | **MISS** |
 | 5 | what does he mean by operationally lazy | **rank 1** | **MISS** |
@@ -1283,7 +1283,7 @@ only because that particular snippet happened to contain the number:
 
 | Q | Snippet actually returned | Contains the answer? |
 |---|---|---|
-| 2 | "…**Shrinath V:** We keep hearing news today about someone getting laid off…" | **No** — never names Motorola or Nokia |
+| 2 | "…**Jordan Lee:** We keep hearing news today about someone getting laid off…" | **No** — never names Motorola or Nokia |
 | 3 | "…the education space working with teachers. They showed me their persona: a…" | **No** — cuts off immediately before it |
 | 5 | "…**Operationally lazy, not intellectually lazy**\n\nThe stated…" | Partially — gives the phrase, not the meaning |
 
@@ -1436,7 +1436,7 @@ reported in that same paragraph was the unnoticed evidence.
   sync mom.md` still appears; `Launch morning check in mom.md` still does not. **Part 9's
   conclusion survives** — it was simply never tested at the depth it claimed.
 - **The limit increase does NOT rescue the 2.1 case.** `semantic-index.mjs search "when
-  will Vybe launch" 20` still does not surface `captures/2025-03-19-sprint-planning.md`.
+  will Pulse launch" 20` still does not surface `captures/2025-03-19-sprint-planning.md`.
   (`semantic-index.mjs` never had a cap, so its earlier limit-20 results were genuine and
   need no correction.) Honest negative result: aggressive truncation was **not** the cause
   of the paraphrase-brittleness failure, and the research-suggested top-20 win does not
@@ -1472,7 +1472,7 @@ Measured composition of `vectors.db` before any change (30,184 chunks):
 | `references/Clippings/` | 260 | 14 | 0.9% | Saved web articles |
 
 **This was demonstrably costing rank, not just space.** Observed in this session's own
-test runs, before the fix: `docs/nool/CHANGELOG-engine.md` ranked #4 on a Founding Fuel
+test runs, before the fix: `docs/nool/CHANGELOG-engine.md` ranked #4 on a Lighthouse Media
 launch query, and `references/kindle/Hastings-Meyer-No Rules Rules.md` ranked #4 on a
 launch-timing query. Junk was outranking real project content on exactly the queries that
 had been failing all session — meaning part of what Parts 2.1/10.1 diagnosed as a *ranking*
@@ -1480,25 +1480,25 @@ problem was really a *corpus* problem.
 
 ### 13.2 What was excluded, and what deliberately was not
 
-The vault owner reviewed the list and chose **`hermes/` and Vybe only**. `references/kindle/`,
+The vault owner reviewed the list and chose **`hermes/` and Pulse only**. `references/kindle/`,
 `docs/`, `inbox/`, and `Clippings/` were explicitly **kept** — they are the owner's own
 material, and this is their call to make, not the indexer's.
 
-Vybe was excluded as known-bad data (flagged twice as "dirty and old"; last touched 58 days
+Pulse was excluded as known-bad data (flagged twice as "dirty and old"; last touched 58 days
 prior). **Note this retires section 2.1's headline case study**: the canonical
-paraphrase-brittleness example ("when will Vybe launch" → `2025-03-19-sprint-planning.md`)
-was built entirely on Vybe content, which is no longer indexed. The *finding* stands — it
+paraphrase-brittleness example ("when will Pulse launch" → `2025-03-19-sprint-planning.md`)
+was built entirely on Pulse content, which is no longer indexed. The *finding* stands — it
 was independently reproduced on a case-study PDF in 8.2 and a video transcript in 11.4 —
 but that specific query is no longer reproducible, and should not be quoted as a live
 example.
 
-Implementation: a `VAULT_IGNORE` env var in both scripts, defaulting to `hermes,*vybe*`.
+Implementation: a `VAULT_IGNORE` env var in both scripts, defaulting to `hermes,*pulse*`.
 *(That default was a latent ship-blocker and was removed in Part 17 — patterns now live in
 `<vault>/.doriignore`. The mechanism below is unchanged.)*
 Two pattern forms, because vault junk comes in two shapes — a bare name is a directory
 prefix (`hermes` → `hermes/**`), and a name containing `*` is a case-insensitive glob over
 the whole relative path. The glob form is not decoration: **a retired project's files are
-usually scattered rather than foldered.** Vybe's live under `captures/*vybe*`, so a
+usually scattered rather than foldered.** Pulse's live under `captures/*pulse*`, so a
 prefix-only matcher would have silently matched nothing while appearing to work — the same
 class of failure as Part 12's silent limit clamp. Self-check in `test-ignore.mjs` covers
 both forms, case-insensitivity, regex-metacharacter escaping, and the near-miss cases
@@ -1507,7 +1507,7 @@ both forms, case-insensitivity, regex-metacharacter escaping, and the near-miss 
 ### 13.3 Measured result
 
 Both real DBs backed up (`.bak-prehermes-2026-08-26`) before running. Dry-run predicted 324
-files dropped (284 hermes + 40 vybe); both indexers pruned **exactly 324** and **298**
+files dropped (284 hermes + 40 pulse); both indexers pruned **exactly 324** and **298**
 respectively, matching prediction.
 
 | | Before | After | Change |
@@ -1518,12 +1518,12 @@ respectively, matching prediction.
 
 **Retrieval quality improved for content that was kept.** Re-running
 `search "Pre Launch Readiness Sync Monday cutover"`: the top 5 previously included
-`docs/nool/CHANGELOG-engine.md` and a Kindle excerpt; it is now 4/5 genuine Founding Fuel
+`docs/nool/CHANGELOG-engine.md` and a Kindle excerpt; it is now 4/5 genuine Lighthouse Media
 meeting documents. Removing junk shifted relative ranking even for categories that were
 *not* excluded — which is the expected BM25/RRF behaviour, and worth stating plainly:
 corpus hygiene is a retrieval-quality lever, not only a storage one.
 
-Regression-checked after the prune: `search "aligna"` and Founding Fuel queries return
+Regression-checked after the prune: `search "orbitpay"` and Lighthouse Media queries return
 real results on both indexes.
 
 ### 13.4 Consequence for the contextual-retrieval decision
@@ -1556,7 +1556,7 @@ without destroying a credential or any history.
 
 Verified after the move: `hermes/` absent from the vault, 0 hermes rows in both indexes,
 vault at 2,495 `.md` files against 2,455 indexed documents — the 40-file gap being exactly
-the Vybe files still held out by `VAULT_IGNORE`, so the counts reconcile.
+the Pulse files still held out by `VAULT_IGNORE`, so the counts reconcile.
 
 The `hermes` pattern is deliberately left in the `VAULT_IGNORE` default. It now matches
 nothing, which costs nothing, and keeps the exclusion in place if the directory is ever
@@ -1593,15 +1593,15 @@ The LLM call goes through the session's OAuth via `claude -p`, not the stored AP
 Backup taken first: `vectors.db.bak-precontextual-2026-08-26`.
 
 Two batches ran: 39 files / 773 chunks (1 failed), then a targeted
-`founding-fuel/meetings` top-up of 21 files / 133 chunks (0 failed). Result: **62 of 2,455
-indexed files contextualized (2.5%)**, all five Founding Fuel eval targets among them
+`lighthouse-media/meetings` top-up of 21 files / 133 chunks (0 failed). Result: **62 of 2,455
+indexed files contextualized (2.5%)**, all five Lighthouse Media eval targets among them
 (verified by querying `contextualized_at`, not assumed).
 
-The first batch was nearly wasted: filter `"founding-fuel"` with a 40-file cap could not
+The first batch was nearly wasted: filter `"lighthouse-media"` with a 40-file cap could not
 reach the eval targets, which sit at positions 51–59 in that filter's ordering. Caught
 before the run, not after.
 
-Re-running the 16 Founding Fuel questions from the baseline eval (Part 13) at limit 20:
+Re-running the 16 Lighthouse Media questions from the baseline eval (Part 13) at limit 20:
 
 ```
 Q     semantic(base->now)   fts(base->now)     either
@@ -1736,9 +1736,9 @@ one place. Two of those four were correctly-grounded answers from a document the
 did not name:
 
 - **Q19** ("dead audio players — what did we decide and who was finding them") was answered
-  from a Sveta/Indrajit/Charles/Ramnath meeting note with two disk-verified quotes naming
-  the decision (temporarily remove the broken SoundCloud embeds) and the people (Ramnath
-  isolating the listings, Gowtham scanning for broken links). That is the right answer. The
+  from a Nadia/Farhan/Daniel/Omar meeting note with two disk-verified quotes naming
+  the decision (temporarily remove the broken SoundCloud embeds) and the people (Omar
+  isolating the listings, Neel scanning for broken links). That is the right answer. The
   key had named FF-Tax and FF-Pre.
 - **Q4** ("what would alert us if the site went down") retrieved `tech docs/MONITORING_SETUP.md`,
   which has an "Alerting System" section. Groundable, just not from the named target.
@@ -1759,11 +1759,11 @@ Q7 is a real false positive and not the kind anticipated. Asked "roughly how man
 stories are sitting in the archive," the check answered `sufficient` with a quote that
 **passes disk verification**:
 
-> "The YourStory archive is a large older cluster under plain `Shrinath V`. Search result
+> "The YourStory archive is a large older cluster under plain `Jordan Lee`. Search result
 > indicates 47 stories." — `content/writing/public-writing-index.md`
 
 The quote is real. The document is real. It is the wrong archive: the question means the
-Founding Fuel content archive, which FF-Tax records as **2,500 articles**. Q17 produced the
+Lighthouse Media content archive, which FF-Tax records as **2,500 articles**. Q17 produced the
 same shape in the first run — asked about "stories written by two people" (the real answer:
 ~18 articles with multi-author bylines and a migration script for legacy joint stories), it
 returned a graphic-novel authorship dispute between two named people, with a verified quote.
@@ -1866,7 +1866,7 @@ causes and only one of them is a mistake:
 - **Q7 is genuine ambiguity, not error.** "Roughly how many old stories are sitting in the
   archive" never says *which* archive. Answering "47" from the YourStory byline cluster is a
   defensible reading of the question as written; it simply isn't the one intended (the
-  Founding Fuel archive, 2,500 articles). **The referent lives in the conversation, not in
+  Lighthouse Media archive, 2,500 articles). **The referent lives in the conversation, not in
   the question string.** The caller knows it; the tool cannot infer it.
 
 That split is why one mechanism was not enough.
@@ -1895,14 +1895,14 @@ pinning it, including that `UNCLEAR` must not behave like `NO`.
 
 | case | before | after |
 |---|---|---|
-| Q7, no scope | `sufficient`, no indication anything was wrong | `sufficient`, but `about`: *"The YourStory archive, a body of older stories published under the name Shrinath V"* — the mismatch is now legible |
-| Q7, `--scope "the Founding Fuel content archive"` | — | `scope_match: NO` → **`insufficient`**, reason: *"Passages 1–2 answer the question for YourStory, not Founding Fuel"* |
-| Q17, no scope | `partial`, wrong answer, no signal | `partial`, `about`: *"A graphic novel by Shrinath (with Charles involved)"*, reason explicitly hedges: *"don't clearly establish 'two people' as separate story writers"* |
-| Q17, `--scope "Founding Fuel"` (generic) | — | `scope_match: **YES**` → still **`insufficient`**: *"Passages describe a single graphic novel, not multiple stories by two writers"* |
-| Q17, `--scope "Founding Fuel article bylines and author attribution"` | — | `scope_match: NO` → **`insufficient`** |
+| Q7, no scope | `sufficient`, no indication anything was wrong | `sufficient`, but `about`: *"The YourStory archive, a body of older stories published under the name Jordan Lee"* — the mismatch is now legible |
+| Q7, `--scope "the Lighthouse Media content archive"` | — | `scope_match: NO` → **`insufficient`**, reason: *"Passages 1–2 answer the question for YourStory, not Lighthouse Media"* |
+| Q17, no scope | `partial`, wrong answer, no signal | `partial`, `about`: *"A graphic novel by Jordan (with Daniel involved)"*, reason explicitly hedges: *"don't clearly establish 'two people' as separate story writers"* |
+| Q17, `--scope "Lighthouse Media"` (generic) | — | `scope_match: **YES**` → still **`insufficient`**: *"Passages describe a single graphic novel, not multiple stories by two writers"* |
+| Q17, `--scope "Lighthouse Media article bylines and author attribution"` | — | `scope_match: NO` → **`insufficient`** |
 
 The Q17 generic-scope row is the interesting one. The scope check **correctly** said YES —
-the graphic novel really is a Founding Fuel matter — and the answer was refused anyway, by
+the graphic novel really is a Lighthouse Media matter — and the answer was refused anyway, by
 mechanism 3. A scope filter alone would have passed it. This is the case for keeping the
 referent rule in the prompt rather than relying on the caller always supplying a precise
 scope, which callers will not reliably do.
@@ -1933,7 +1933,7 @@ supplied.
   visible, but a caller that does not read it inherits the same error. Mechanism 1 is a
   disclosure, not a guard.
 - **Scope quality is the caller's problem.** A scope too generic to discriminate (Q17 with
-  "Founding Fuel") leans entirely on mechanism 3; a scope that restates the answer would
+  "Lighthouse Media") leans entirely on mechanism 3; a scope that restates the answer would
   measure nothing, which is why the eval's scopes name the project only.
 - **Non-determinism (15.5) is untouched** and applies to `scope_match` as much as to the
   verdict.
@@ -1992,12 +1992,12 @@ code since Part 13 passing every test.
 ### 17.1 The hazard
 
 ```js
-const IGNORE_PATTERNS = (process.env.VAULT_IGNORE ?? 'hermes,*vybe*')
+const IGNORE_PATTERNS = (process.env.VAULT_IGNORE ?? 'hermes,*pulse*')
 ```
 
-`hermes` and `*vybe*` are two *specific projects belonging to one user*, hardcoded as the
+`hermes` and `*pulse*` are two *specific projects belonging to one user*, hardcoded as the
 default in both indexers. For most users the patterns match nothing and cost nothing. For any
-user with a directory named `hermes` or a project whose files contain "vybe", the effect is:
+user with a directory named `hermes` or a project whose files contain "pulse", the effect is:
 
 **their real notes are silently dropped from both search indexes — no error, no warning, no
 log line, and nothing on the surface that would lead them to look at an ignore list.** They
@@ -2038,7 +2038,7 @@ something is not noticeable enough to be recoverable.
 
 Tests added asserting the parser returns `[]` for an absent, empty, and comment-only file.
 `~/proto-space/dori/dori-vault/.doriignore` was created carrying the two existing patterns,
-so this vault's behaviour is unchanged — verified: the loader returns `["*vybe*", "hermes"]`.
+so this vault's behaviour is unchanged — verified: the loader returns `["*pulse*", "hermes"]`.
 
 ### 17.4 What else was checked for the same class of problem
 

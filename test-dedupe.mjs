@@ -29,11 +29,11 @@ assert.equal(shouldDedupe('a'.repeat(MIN_DEDUP_BODY_CHARS)), true);
 // duplicate group: canonical is the alphabetically-first path, regardless of input order
 {
   const { canonical, duplicates } = pickCanonical([
-    { relPath: 'projects/founding-fuel/x.md' },
-    { relPath: 'entities/projects/founding-fuel/x.md' },
+    { relPath: 'projects/lighthouse-media/x.md' },
+    { relPath: 'entities/projects/lighthouse-media/x.md' },
   ]);
-  assert.equal(canonical.relPath, 'entities/projects/founding-fuel/x.md');
-  assert.deepEqual(duplicates.map((d) => d.relPath), ['projects/founding-fuel/x.md']);
+  assert.equal(canonical.relPath, 'entities/projects/lighthouse-media/x.md');
+  assert.deepEqual(duplicates.map((d) => d.relPath), ['projects/lighthouse-media/x.md']);
 }
 
 // singleton group: no duplicates, canonical is just itself

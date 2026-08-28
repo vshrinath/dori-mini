@@ -31,18 +31,18 @@ const DOC = {
   'FF-Launch': 'Launch morning check in mom',
   'FF-Tax': 'Taxonomy tech onboarding sync mom',
   'FF-Osc': 'Video production oscars strategy mom',
-  'FF-Arch': 'Technical architecture audit achyut',
-  'SC-EMR': 'lvpei-emr---decision-with-sceh-management',
+  'FF-Arch': 'Technical architecture audit arjun',
+  'SC-EMR': 'vision-institute-emr---decision-with-meridian-health-management',
   'SC-P1': 'phase-1-proposal',
-  'SM-EC': '2026-06-20-shishu-mandir-ec-meeting',
+  'SM-EC': '2026-06-20-sunrise-school-ec-meeting',
 };
 
 // The 4th field is the scope a real caller would have supplied — the project the
 // conversation is about. Pass --scope on the command line to run the eval with it. These are
-// the scopes a caller genuinely knows, NOT a restatement of the answer: "the Founding Fuel
+// the scopes a caller genuinely knows, NOT a restatement of the answer: "the Lighthouse Media
 // website relaunch", never "the 2,500-article archive". Writing the answer into the scope
 // would measure nothing.
-const FF = 'the Founding Fuel website relaunch';
+const FF = 'the Lighthouse Media website relaunch';
 const Q = [
   ['Q1', 'what time of night were we going to push the new site live', ['FF-Pre'], FF],
   ['Q2', 'why did we skip load balancing for the new site', ['FF-Pre'], FF],
@@ -54,20 +54,20 @@ const Q = [
   ['Q8', 'what are we using to send the sign-in emails', ['FF-Tax'], FF],
   ['Q9', 'who writes our film awards coverage', ['FF-Osc'], FF],
   ['Q10', 'who was the original developer we asked to look over the new setup', ['FF-Arch'], FF],
-  ['Q11', 'what database is the hospital records system we are evaluating built on', ['SC-EMR'], 'the SCEH eye hospital EMR evaluation'],
-  ['Q12', 'how much of my week did I commit to the eye hospital advisory work', ['SC-P1'], 'the SCEH eye hospital advisory engagement'],
-  ['Q13', 'when is the school society annual general meeting happening', ['SM-EC'], 'the Shishu Mandir school society'],
-  ['Q14', 'how many people do they want on the governing committee now', ['SM-EC'], 'the Shishu Mandir school society'],
+  ['Q11', 'what database is the hospital records system we are evaluating built on', ['SC-EMR'], 'the Meridian Health eye hospital EMR evaluation'],
+  ['Q12', 'how much of my week did I commit to the eye hospital advisory work', ['SC-P1'], 'the Meridian Health eye hospital advisory engagement'],
+  ['Q13', 'when is the school society annual general meeting happening', ['SM-EC'], 'the Sunrise School school society'],
+  ['Q14', 'how many people do they want on the governing committee now', ['SM-EC'], 'the Sunrise School school society'],
   ['Q15', 'what share of our pages does the new search engine handle', ['FF-Arch'], FF],
   ['Q16', 'how many failed AI pilots did the soft drinks company have', ['FF-Arch'], FF],
   ['Q17', 'we had a mess with stories written by two people, did that get sorted before launch', ['FF-Tax', 'FF-Launch'], FF],
-  ['Q18', 'Charles was going to narrate the site tour video, is that what actually happened', ['FF-Osc', 'FF-Launch'], FF],
+  ['Q18', 'Daniel was going to narrate the site tour video, is that what actually happened', ['FF-Osc', 'FF-Launch'], FF],
   ['Q19', 'old articles had dead audio players, what did we decide to do and who was finding them', ['FF-Tax', 'FF-Pre'], FF],
   ['Q20', 'we agreed a time to flip the switch, did the site actually go live that morning', ['FF-Pre', 'FF-Launch'], FF],
-  ['N1', 'what are we paying Gowtham per month', [], FF],
+  ['N1', 'what are we paying Neel per month', [], FF],
   ['N2', 'what uptime did we promise after the launch', [], FF],
-  ['N3', 'which investor put money into Founding Fuel', [], FF],
-  ['N4', 'how many newsletter subscribers did Founding Fuel have at launch', [], FF],
+  ['N3', 'which investor put money into Lighthouse Media', [], FF],
+  ['N4', 'how many newsletter subscribers did Lighthouse Media have at launch', [], FF],
 ];
 
 const USE_SCOPE = process.argv.includes('--scope');
@@ -120,7 +120,7 @@ for (const [id, question, targets, scope] of Q) {
     // NOT automatically a false positive. The ground-truth key names ONE canonical document
     // per question, but the vault covers several of these facts in more than one place
     // (Q4's alerting plan is also in tech docs/MONITORING_SETUP.md; Q19's audio-player
-    // decision is also in a Sveta/Indrajit/Charles/Ramnath meeting note). Scoring "the
+    // decision is also in a Nadia/Farhan/Daniel/Omar meeting note). Scoring "the
     // document I named was not retrieved" as a false positive would have counted two
     // correctly-grounded answers as hallucinations. Whether the quote actually answers the
     // question asked cannot be decided mechanically — flag for adjudication instead of

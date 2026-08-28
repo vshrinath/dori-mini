@@ -2,10 +2,10 @@
 title: "Baseline retrieval accuracy — natural-phrasing eval, 2026-08-26"
 status: internal (not published to site)
 scope: 24 questions over 24 ground-truth facts extracted from 8 real vault documents
-  (Founding Fuel, SCEH, Shishu Mandir), run against the REAL post-prune production
+  (Lighthouse Media, Meridian Health, Sunrise School), run against the REAL post-prune production
   indexes — portal.db (2,455 documents, independently re-counted read-only) and the
   live vectors.db. Ground truth was written and frozen to disk BEFORE any search ran.
-  No synthetic fixtures. No Vybe, no hermes. Read-only: no index/dedupe/reindex.
+  No synthetic fixtures. No Pulse, no hermes. Read-only: no index/dedupe/reindex.
 ---
 
 # Baseline retrieval accuracy: what the search tools actually find when you ask normally
@@ -52,14 +52,14 @@ measured at the depth it claims.
 
 **Corpus is the cleaned one.** `portal.db` re-counted read-only at **2,455 documents**,
 matching Part 13.3's post-prune figure exactly. This baseline is therefore measured against
-the corpus after `hermes/` and Vybe were removed, as 13.4 requires. (`vectors.db` chunk
+the corpus after `hermes/` and Pulse were removed, as 13.4 requires. (`vectors.db` chunk
 count could not be re-verified independently — see §8.)
 
 **Duplicate-path scoring, as instructed.** The vault carries near-copies of project content
 under both `projects/…` and `entities/projects/…`. **A hit on either path is scored
-correct.** Verified by hash: SCEH copies are byte-identical (`phase-1-proposal.md` exists in
-**four** identical copies); Founding Fuel copies differ by exactly one frontmatter line
-(`account: founding-fuel`) and are otherwise identical. Both tools already return the
+correct.** Verified by hash: Meridian Health copies are byte-identical (`phase-1-proposal.md` exists in
+**four** identical copies); Lighthouse Media copies differ by exactly one frontmatter line
+(`account: lighthouse-media`) and are otherwise identical. Both tools already return the
 `entities/…` path as canonical, so in practice the dedup layer is doing its job on this axis.
 
 ---
@@ -69,7 +69,7 @@ correct.** Verified by hash: SCEH copies are byte-identical (`phase-1-proposal.m
 All 24 facts, with verified proof strings. Paths are given as `projects/…`; the
 `entities/projects/…` copy of each scores identically.
 
-**Document keys:** FF-Pre = `/Users/shri/proto-space/dori/dori-vault/projects/founding-fuel/meetings/Pre launch readiness sync mom.md` (2026-03-13) · FF-Launch = `…/projects/founding-fuel/meetings/Launch morning check in mom.md` (2026-03-16) · FF-Tax = `…/projects/founding-fuel/meetings/Taxonomy tech onboarding sync mom.md` (2026-03-09) · FF-Osc = `…/projects/founding-fuel/meetings/Video production oscars strategy mom.md` (2026-03-11) · FF-Arch = `…/projects/founding-fuel/meetings/Technical architecture audit achyut.md` (2025-11-27) · SC-EMR = `…/projects/sceh/2026-05-19-lvpei-emr---decision-with-sceh-management.md` · SC-P1 = `…/projects/sceh/context/phase-1-proposal.md` · SM-EC = `…/captures/2026-06-20-shishu-mandir-ec-meeting.md` (2026-06-20)
+**Document keys:** FF-Pre = `<vault>/projects/lighthouse-media/meetings/Pre launch readiness sync mom.md` (2026-03-13) · FF-Launch = `…/projects/lighthouse-media/meetings/Launch morning check in mom.md` (2026-03-16) · FF-Tax = `…/projects/lighthouse-media/meetings/Taxonomy tech onboarding sync mom.md` (2026-03-09) · FF-Osc = `…/projects/lighthouse-media/meetings/Video production oscars strategy mom.md` (2026-03-11) · FF-Arch = `…/projects/lighthouse-media/meetings/Technical architecture audit arjun.md` (2025-11-27) · SC-EMR = `…/projects/meridian-health/2026-05-19-vision-institute-emr---decision-with-meridian-health-management.md` · SC-P1 = `…/projects/meridian-health/context/phase-1-proposal.md` · SM-EC = `…/captures/2026-06-20-sunrise-school-ec-meeting.md` (2026-06-20)
 
 | # | Fact | Doc | Verified proof string |
 |---|---|---|---|
@@ -82,17 +82,17 @@ All 24 facts, with verified proof strings. Paths are given as `projects/…`; th
 | F7 | The legacy archive is ~2,500 articles | FF-Tax | `2,500-article archive` |
 | F8 | AWS SES powers magic-link login and the 5-email onboarding sequence | FF-Tax | `AWS SES** configuration for Magic Link logins and the 5-email onboarding sequence` |
 | F9 | Ronan Roy is the Oscars-coverage contributor | FF-Osc | `contributor **Ronan Roy**` |
-| F10 | Achyut Nayak, the platform's original architect, did the peer-review audit | FF-Arch | `Achyut Nayak (AN)** — Original Architect` |
-| F11 | The LVPEI EMR backend uses MongoDB | SC-EMR | `backend they are using the MongoDB` |
-| F12 | The SCEH advisory commitment is ~2 days per week | SC-P1 | `~2 days per week of engagement` |
-| F13 | The Shishu Mandir AGM is on 18 July | SM-EC | `which is on the 18th of July` |
+| F10 | Arjun Nayak, the platform's original architect, did the peer-review audit | FF-Arch | `Arjun Nayak (AN)** — Original Architect` |
+| F11 | The VISION-INSTITUTE EMR backend uses MongoDB | SC-EMR | `backend they are using the MongoDB` |
+| F12 | The Meridian Health advisory commitment is ~2 days per week | SC-P1 | `~2 days per week of engagement` |
+| F13 | The Sunrise School AGM is on 18 July | SM-EC | `which is on the 18th of July` |
 | F14 | KPMG proposed raising EC membership from 7 to 9 | SM-EC | `increase the number of EC members from 7 to 9` |
 | F15 | Meilisearch serves 90% of non-article pages | FF-Arch | `Meilisearch now serves 90% of non-article pages` |
-| F16 | Pepsi had 125+ failed AI POCs (Achyut's cautionary example) | FF-Arch | `Pepsi's 125+ failed POCs` |
+| F16 | Pepsi had 125+ failed AI POCs (Arjun's cautionary example) | FF-Arch | `Pepsi's 125+ failed POCs` |
 | F17 | ~18 archive articles had complex co-author chains; name-only placeholders planned | FF-Tax | `~18 articles with complex co-author chains` / `GM will create "name-only" profile placeholders` |
 | F18 | Multi-author byline support shipped; migration script to run on legacy joint stories | FF-Launch | `Support for multiple authors is now in place` |
 | F19 | Product-tour video was planned with **CA** doing voiceover + PIP bubbles | FF-Osc | `CA providing voiceover and "bubbles" (PIP) commentary` |
-| F20 | That reversed: Charles proposed voiceover-only, IJ insisted on face-on-screen via PIP | FF-Launch | `IJ insisted on having the face on screen (via PIP)` |
+| F20 | That reversed: Daniel proposed voiceover-only, IJ insisted on face-on-screen via PIP | FF-Launch | `IJ insisted on having the face on screen (via PIP)` |
 | F21 | Policy: broken embeds get disabled/removed, not fixed, for Phase 1 | FF-Tax | `Broken embeds will be identified and disabled/removed from active views` |
 | F22 | GM's script finds them; RN removes/hides them from published articles | FF-Pre | `GM's script will flag archival articles with broken YouTube/SoundCloud embeds` |
 | F23 | Decision logged: target Monday March 16 early-morning cutover | FF-Pre | `Target Monday, March 16 early morning cutover` |
@@ -101,14 +101,14 @@ All 24 facts, with verified proof strings. Paths are given as `projects/…`; th
 ### Negative controls — verified ABSENT
 
 Each checked with a case-insensitive regex `grep -l` across all 2,702 indexed `.md` files
-(the full vault minus `hermes/` and Vybe, which Part 13 removed from both indexes).
+(the full vault minus `hermes/` and Pulse, which Part 13 removed from both indexes).
 
 | # | Claim | Corpus hits |
 |---|---|---|
-| N1 | Gowtham's monthly pay / developer retainer rate | **0** |
+| N1 | Neel's monthly pay / developer retainer rate | **0** |
 | N2 | Any uptime or SLA commitment made after launch | **0** |
-| N3 | Any investor or funding round for Founding Fuel | **0** |
-| N4 | Founding Fuel newsletter-subscriber count at launch | **0** |
+| N3 | Any investor or funding round for Lighthouse Media | **0** |
+| N4 | Lighthouse Media newsletter-subscriber count at launch | **0** |
 
 ---
 
@@ -137,13 +137,13 @@ or "POC", F12's never says "engagement" or "days per week."
 | Q15 | number | what share of our pages does the new search engine handle | FF-Arch |
 | Q16 | number | how many failed AI pilots did the soft drinks company have | FF-Arch |
 | Q17 | multi-hop | we had a mess with stories written by two people, did that get sorted before launch | FF-Tax **+** FF-Launch |
-| Q18 | multi-hop | Charles was going to narrate the site tour video, is that what actually happened | FF-Osc **+** FF-Launch |
+| Q18 | multi-hop | Daniel was going to narrate the site tour video, is that what actually happened | FF-Osc **+** FF-Launch |
 | Q19 | multi-hop | old articles had dead audio players, what did we decide to do and who was finding them | FF-Tax **+** FF-Pre |
 | Q20 | multi-hop | we agreed a time to flip the switch, did the site actually go live that morning | FF-Pre **+** FF-Launch |
-| N1 | negative | what are we paying Gowtham per month | — none — |
+| N1 | negative | what are we paying Neel per month | — none — |
 | N2 | negative | what uptime did we promise after the launch | — none — |
-| N3 | negative | which investor put money into Founding Fuel | — none — |
-| N4 | negative | how many newsletter subscribers did Founding Fuel have at launch | — none — |
+| N3 | negative | which investor put money into Lighthouse Media | — none — |
+| N4 | negative | how many newsletter subscribers did Lighthouse Media have at launch | — none — |
 
 ---
 
@@ -240,7 +240,7 @@ question was re-run once using the source document's own vocabulary:
 |---|---|---|---|
 | Q7 | `2,500-article archive SoundCloud broken embeds legacy stories` | **1** | **2** |
 | Q8 | `AWS SES Magic Link logins 5-email onboarding sequence` | 6 | **1** |
-| Q10 | `Achyut Nayak original architect technical architecture audit` | **3** | **1** |
+| Q10 | `Arjun Nayak original architect technical architecture audit` | **3** | **1** |
 | Q11 | `MongoDB Angular Azure microservices EMR architecture` | 11 | 6 |
 | Q12 | `~2 days per week of engagement in-person visits weekly sync-ups` | **2** | **1** |
 | Q15 | `Meilisearch serves 90% of non-article pages RDS load` | **2** | **1** |
@@ -264,7 +264,7 @@ questions, `semantic-index.mjs` returned a mean of **14.33 distinct files per 20
 
 | Q | Distinct files in semantic top-20 |
 |---|---|
-| Q11 | **7** — `SCEH-Data-Strategy-Fixed.md` alone occupies 8 slots |
+| Q11 | **7** — `Meridian Health-Data-Strategy-Fixed.md` alone occupies 8 slots |
 | Q9 | 8 |
 | Q12 | 9 |
 | Q14 | 9 |
@@ -272,7 +272,7 @@ questions, `semantic-index.mjs` returned a mean of **14.33 distinct files per 20
 
 So a caller asking `semantic-index` for 20 results is effectively getting a top-14 by
 document. On Q11 the target was not merely out-ranked; it was crowded out — 18 of 20 slots
-went to four SCEH *data-strategy* documents while the EMR meeting transcript that actually
+went to four Meridian Health *data-strategy* documents while the EMR meeting transcript that actually
 names MongoDB never appeared. Note this is **not** the `projects/` vs `entities/projects/`
 duplication — the dedup layer is collapsing that correctly, and every returned path was the
 canonical `entities/…` one. This is repeated chunks of a single file.
@@ -325,9 +325,9 @@ absence in any way.
 | Q | Scores | Top hit |
 |---|---|---|
 | N1 | `1.000 0.984 0.968 0.953 0.938` | `references/kindle/Briggman-Kickstarter Launch Formula.md` |
-| N2 | `1.000 0.984 0.968 0.953 0.938` | `…/founding-fuel/meetings/Pre launch readiness sync mom.md` |
-| N3 | `1.000 0.984 0.968 0.953 0.938` | `entities/people/charles-assisi.md` |
-| N4 | `1.000 0.984 0.968 0.953 0.938` | `entities/people/charles-assisi.md` |
+| N2 | `1.000 0.984 0.968 0.953 0.938` | `…/lighthouse-media/meetings/Pre launch readiness sync mom.md` |
+| N3 | `1.000 0.984 0.968 0.953 0.938` | `entities/people/daniel-cross.md` |
+| N4 | `1.000 0.984 0.968 0.953 0.938` | `entities/people/daniel-cross.md` |
 
 **The same ladder, from three of this eval's genuine rank-1 successes:**
 
@@ -424,7 +424,7 @@ as directional only.
   snippets did not contain the answer they were retrieved for.
 - **Do not claim multi-hop works.** 2 of 4, both by accident of channel, and the one
   documented case (Q20) failed again — with the retrieved half flipped by phrasing alone.
-- **Do not cite the Vybe paraphrase example.** Retired by Part 13.2; that content is no
+- **Do not cite the Pulse paraphrase example.** Retired by Part 13.2; that content is no
   longer indexed.
 
 ---

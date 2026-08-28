@@ -2,14 +2,14 @@
 // Self-check for the VAULT_IGNORE matcher shared by semantic-index.mjs and
 // reindex-vault.mjs. Two pattern forms: a bare name is a directory prefix, a name with '*'
 // is a case-insensitive glob over the whole relative path. The glob form exists because a
-// retired project's files are usually scattered rather than living in one folder — Vybe's
-// are under captures/*vybe*, so a prefix-only matcher would have silently missed all of
+// retired project's files are usually scattered rather than living in one folder — Pulse's
+// are under captures/*pulse*, so a prefix-only matcher would have silently missed all of
 // them while appearing to work.
 import assert from 'node:assert';
 
 // Mirrors the .doriignore parser in both indexers. The default MUST be empty: a project
 // name baked into shipped code silently drops a different user's real data out of search,
-// with no error and nothing to notice. Shipping 'hermes,*vybe*' as a default would have
+// with no error and nothing to notice. Shipping 'hermes,*pulse*' as a default would have
 // done exactly that to anyone with a project of either name.
 function parseIgnoreFile(text) {
   return text
@@ -29,8 +29,8 @@ assert.deepEqual(parseIgnoreFile('# only a comment\n# and another\n'), []);
 
 // real file shape: comments, blanks, and both pattern forms
 assert.deepEqual(
-  parseIgnoreFile('# header\n\n*vybe*\n\n# note about hermes\nhermes\n'),
-  ['*vybe*', 'hermes'],
+  parseIgnoreFile('# header\n\n*pulse*\n\n# note about hermes\nhermes\n'),
+  ['*pulse*', 'hermes'],
 );
 // trailing comment on a pattern line, and stray slashes trimmed
 assert.deepEqual(parseIgnoreFile('/archive/  # retired\n'), ['archive']);
@@ -50,16 +50,16 @@ assert.equal(ignoreMatches('hermes-notes/x.md', 'hermes'), false);
 assert.equal(ignoreMatches('projects/hermes/x.md', 'hermes'), false);
 
 // glob form — the scattered-project case
-assert.equal(ignoreMatches('captures/2025-03-17-vybe-forward-looking-plan.md', '*vybe*'), true);
-assert.equal(ignoreMatches('entities/projects/vybe/README.md', '*vybe*'), true);
-assert.equal(ignoreMatches('captures/2024-10-08-VYBE-development-sync.md', '*vybe*'), true); // case-insensitive
-assert.equal(ignoreMatches('projects/founding-fuel/launch.md', '*vybe*'), false);
+assert.equal(ignoreMatches('captures/2025-03-17-pulse-forward-looking-plan.md', '*pulse*'), true);
+assert.equal(ignoreMatches('entities/projects/pulse/README.md', '*pulse*'), true);
+assert.equal(ignoreMatches('captures/2024-10-08-PULSE-development-sync.md', '*pulse*'), true); // case-insensitive
+assert.equal(ignoreMatches('projects/lighthouse-media/launch.md', '*pulse*'), false);
 
 // regex metacharacters in a pattern are escaped, not interpreted
 assert.equal(ignoreMatches('a+b/x.md', 'a+b'), true);
 assert.equal(ignoreMatches('axxb/x.md', 'a+b'), false);
 
 // a project whose name is a substring of another must not be over-matched by the prefix form
-assert.equal(ignoreMatches('projects/aligna/README.md', 'projects/align'), false);
+assert.equal(ignoreMatches('projects/orbitpay/README.md', 'projects/align'), false);
 
 console.log('VAULT_IGNORE matcher: all assertions passed');

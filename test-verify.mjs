@@ -41,7 +41,7 @@ const SOURCE = `# Video production oscars strategy
 Discussed the awards slate. This year features a two-tier strategy
 by contributor **Ronan Roy**.
 
-Charles said the site tour narration would be handed to Aparna — he
+Daniel said the site tour narration would be handed to Aparna — he
 didn't have the bandwidth this cycle.`;
 
 // --- quotes that MUST verify -------------------------------------------------
@@ -75,7 +75,7 @@ assert.deepEqual(
 // --- quotes that MUST be rejected --------------------------------------------
 // the teeth: plausible, on-topic, and entirely invented
 assert.deepEqual(
-  checkQuote('The Oscars coverage is written by Charles Assisi.', SOURCE),
+  checkQuote('The Oscars coverage is written by Daniel Cross.', SOURCE),
   { ok: false, why: 'not_in_source' },
 );
 // two real fragments stitched into a claim the document never makes
@@ -91,7 +91,7 @@ assert.deepEqual(checkQuote('  \n ', SOURCE), { ok: false, why: 'too_short' });
 // their INDEXED text; that prefix was never written into the document. Validating against
 // the file on disk is what makes a quote lifted from it fail — matching against the chunk
 // text instead would have let this through as grounded.
-const CONTEXT_PREFIX = 'This chunk is from a Founding Fuel meeting about Oscars video strategy.';
+const CONTEXT_PREFIX = 'This chunk is from a Lighthouse Media meeting about Oscars video strategy.';
 assert.deepEqual(checkQuote(CONTEXT_PREFIX, SOURCE), { ok: false, why: 'not_in_source' });
 assert.equal(checkQuote(CONTEXT_PREFIX, CONTEXT_PREFIX + '\n\n' + SOURCE).ok, true,
   'sanity: the prefix WOULD have verified against chunk text — disk is what rejects it');
