@@ -84,7 +84,7 @@ if (!ftsSql || !ftsSql.sql.includes('porter')) {
   rebuildFts.run();
 }
 
-import { parseFrontmatter } from './frontmatter.mjs';
+import { parseFrontmatter, asList } from './frontmatter.mjs';
 
 // Same ignore mechanism as semantic-index.mjs — see the long note there, including why the
 // default is empty rather than a baked-in project name. Both indexers walk the same vault,
@@ -257,3 +257,75 @@ for (const file of target) {
 }
 
 console.log(`Indexed ${indexed} (${duplicates} exact duplicates, not added to search), skipped ${skipped} (unchanged), pruned ${pruned} (stale) — db: ${DB_PATH}`);
+
+// entity_edges: co-occurrence + person-org graph, rebuilt fully every run (cheap — an
+// in-memory scan of what was just indexed) so `query-vault.mjs related` can answer a
+// multi-hop question ("who's connected to X, and what have THEY been in since") without
+// needing one document that mentions both ends. Always recomputed from the FULL current
+// vault_documents/entities state, never just `target`, so this stays correct even after a
+// single-file reindex — no partial-run caveat to track.
+db.exec(`
+CREATE TABLE IF NOT EXISTS entity_edges (
+  a_slug TEXT NOT NULL,
+  b_slug TEXT NOT NULL,
+  edge_type TEXT NOT NULL,
+  weight INTEGER NOT NULL DEFAULT 1,
+  rel_paths TEXT NOT NULL DEFAULT '[]',
+  PRIMARY KEY (a_slug, b_slug, edge_type)
+)`);
+
+function slugify(s) {
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// Undirected co_meeting edges get a canonical (a,b) order (sorted) so "X met Y" and
+// "Y met X" accumulate onto the same row instead of two.
+const edges = new Map();
+function addEdge(a, b, type, relPath) {
+  if (!a || !b || a === b) return;
+  const [x, y] = [a, b].sort();
+  const key = `${x} ${y} ${type}`;
+  let e = edges.get(key);
+  if (!e) { e = { a: x, b: y, type, weight: 0, rel_paths: new Set() }; edges.set(key, e); }
+  e.weight++;
+  if (relPath) e.rel_paths.add(relPath);
+}
+
+for (const row of db.prepare(`SELECT rel_path, frontmatter_json FROM vault_documents WHERE vault_id = ? AND duplicate_of IS NULL`).all(VAULT_ID)) {
+  let fm;
+  try { fm = JSON.parse(row.frontmatter_json); } catch { continue; }
+  const people = asList(fm.people);
+  for (let i = 0; i < people.length; i++) {
+    for (let j = i + 1; j < people.length; j++) addEdge(people[i], people[j], 'co_meeting', row.rel_path);
+  }
+}
+
+// person_org: entities/people/<slug>.md's `org:` field. Namespaced `org:<slug>` so an
+// org's node can never collide with a person slug that happens to normalize the same way.
+try {
+  for (const f of readdirSync(join(VAULT_ROOT, 'entities/people'))) {
+    if (!f.endsWith('.md')) continue;
+    const slug = f.replace(/\.md$/, '');
+    const { fm } = parseFrontmatter(readFileSync(join(VAULT_ROOT, 'entities/people', f), 'utf-8'));
+    if (fm.org) addEdge(slug, `org:${slugify(fm.org)}`, 'person_org', `entities/people/${f}`);
+  }
+} catch {}
+
+const upsertEdge = db.prepare(`
+  INSERT INTO entity_edges (a_slug, b_slug, edge_type, weight, rel_paths)
+  VALUES (?, ?, ?, ?, ?)
+  ON CONFLICT(a_slug, b_slug, edge_type) DO UPDATE SET weight=excluded.weight, rel_paths=excluded.rel_paths
+`);
+const currentEdgeKeys = new Set();
+for (const e of edges.values()) {
+  upsertEdge.run(e.a, e.b, e.type, e.weight, JSON.stringify([...e.rel_paths]));
+  currentEdgeKeys.add(`${e.a} ${e.b} ${e.type}`);
+}
+const deleteEdge = db.prepare(`DELETE FROM entity_edges WHERE a_slug = ? AND b_slug = ? AND edge_type = ?`);
+let edgesPruned = 0;
+for (const row of db.prepare(`SELECT a_slug, b_slug, edge_type FROM entity_edges`).all()) {
+  if (currentEdgeKeys.has(`${row.a_slug} ${row.b_slug} ${row.edge_type}`)) continue;
+  deleteEdge.run(row.a_slug, row.b_slug, row.edge_type);
+  edgesPruned++;
+}
+console.log(`Entity graph: ${edges.size} edges (${edgesPruned} pruned) — db: ${DB_PATH}`);

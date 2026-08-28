@@ -12,6 +12,7 @@
 //   node query-vault.mjs last-meeting [--person <name>] [--sections decisions,actions] [--full]
 //   node query-vault.mjs show <path-or-title> [--sections decisions,actions] [--full]
 //   node query-vault.mjs search "<keywords>" [--limit 5]
+//   node query-vault.mjs related <person-or-org-slug> [--hops 2] [--type co_meeting,person_org]
 import { DatabaseSync } from 'node:sqlite';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
@@ -55,6 +56,7 @@ function usage(msg) {
   node query-vault.mjs show <path-or-title> [--sections decisions,actions] [--full]
   node query-vault.mjs search "<keywords>" [--limit ${DEFAULT_SEARCH_LIMIT}]
   node query-vault.mjs search-multi "<phrasing 1>" "<phrasing 2>" ["<phrasing 3>"] [--limit ${DEFAULT_SEARCH_LIMIT}]
+  node query-vault.mjs related <person-or-org-slug> [--hops 2] [--type co_meeting,person_org]
   node query-vault.mjs stats`);
   process.exit(1);
 }
@@ -606,6 +608,58 @@ function searchMulti(db, queries, limit) {
   });
 }
 
+// Same slugify as reindex-vault.mjs's entity_edges builder — duplicated rather than shared
+// because that script never imports this one's runtime (top-level dispatch, see fuseByRelPath's
+// comment above for the same tradeoff). A raw slug ("priya-menon") passes through unchanged;
+// a display name normalizes to the same slug the frontmatter `people:` list already uses.
+function slugify(s) {
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// BFS over entity_edges, built by reindex-vault.mjs from `people:` co-occurrence and
+// entities/people/*.md `org:` fields — see that script for the schema. Answers a two-hop
+// question ("who's connected to X, and what have THEY been in") that no single document
+// contains: hop 1 finds who shares a doc with X, hop 2 finds who shares a doc with THEM.
+// Every hit carries the rel_paths that justify the edge, so a multi-hop answer is still
+// traceable to real documents, never a graph-only inference.
+function relatedCmd(db, startRaw, hops, typeFilter) {
+  const hasTable = db.prepare(`SELECT 1 FROM sqlite_master WHERE name = 'entity_edges'`).get();
+  if (!hasTable) {
+    console.error('No entity graph found — run reindex-vault.mjs first (it builds entity_edges as part of the normal reindex).');
+    process.exit(1);
+  }
+  const start = startRaw.startsWith('org:') ? startRaw : slugify(startRaw);
+  const edgeStmt = db.prepare(`SELECT a_slug, b_slug, edge_type, weight, rel_paths FROM entity_edges WHERE a_slug = ? OR b_slug = ?`);
+  const visited = new Set([start]);
+  const related = [];
+  let frontier = [start];
+  for (let hop = 1; hop <= hops && frontier.length; hop++) {
+    const next = [];
+    for (const node of frontier) {
+      for (const row of edgeStmt.all(node, node)) {
+        if (typeFilter && !typeFilter.has(row.edge_type)) continue;
+        const other = row.a_slug === node ? row.b_slug : row.a_slug;
+        if (visited.has(other)) continue;
+        visited.add(other);
+        related.push({ slug: other, hop, via: node, edge_type: row.edge_type, weight: row.weight, rel_paths: JSON.parse(row.rel_paths || '[]') });
+        next.push(other);
+      }
+    }
+    frontier = next;
+  }
+  related.sort((a, b) => a.hop - b.hop || b.weight - a.weight);
+  if (!related.length) {
+    console.error(`No entity found matching "${startRaw}" (looked up as "${start}") or it has no recorded edges.`);
+    process.exit(1);
+  }
+  printResult({
+    db: DB_PATH,
+    query: { cmd: 'related', start, hops, types: typeFilter ? [...typeFilter] : 'all' },
+    bytes: { full_content: 0, returned: 0 },
+    related,
+  });
+}
+
 const args = parseArgs(process.argv.slice(2));
 const sections = parseSections(args.flags.sections);
 const full = Boolean(args.bools.full);
@@ -627,6 +681,12 @@ try {
     const queries = args.positional.map((q) => q.trim()).filter(Boolean);
     if (queries.length < 2) usage('search-multi requires 2+ quoted queries');
     searchMulti(db, queries, args.flags.limit);
+  } else if (args.cmd === 'related') {
+    const start = args.positional.join(' ').trim();
+    if (!start) usage('related requires a person or org slug');
+    const hops = Math.min(Math.max(Number(args.flags.hops) || 2, 1), 3);
+    const typeFilter = args.flags.type ? new Set(args.flags.type.split(',').map((s) => s.trim())) : null;
+    relatedCmd(db, start, hops, typeFilter);
   } else if (args.cmd === 'stats') {
     statsCmd(db);
   } else {
