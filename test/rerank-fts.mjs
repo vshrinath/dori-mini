@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Self-check for query-vault.mjs's FTS-channel reranker wiring (Part 18): the parts that
-// are specific to that channel and NOT covered by test-rerank.mjs (which tests the shared
+// are specific to that channel and NOT covered by test/rerank.mjs (which tests the shared
 // reranker.mjs contract). Three things matter here: internal fields (vault_id, the fetched
 // full-text) must never leak into printed output, a missing content row must fail open to
 // the snippet rather than dropping the candidate or crashing, and long content must be

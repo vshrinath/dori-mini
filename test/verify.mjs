@@ -8,7 +8,7 @@
 // exact failure (a confident answer with no grounding) that 2.3 is about.
 //
 // Mirrors the logic in semantic-index.mjs. Duplicated rather than imported because that
-// file runs its CLI dispatch at module scope; test-ignore.mjs does the same for the same
+// file runs its CLI dispatch at module scope; test/ignore.mjs does the same for the same
 // reason. checkQuote takes source text directly here so the test stays hermetic.
 import assert from 'node:assert';
 

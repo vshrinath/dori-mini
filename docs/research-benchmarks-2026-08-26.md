@@ -123,7 +123,7 @@ logic was never real Dori behavior to begin with. The real mechanism is simpler 
 different: **OR of prefix tokens, ranked by BM25 `rank`** — `tokens.map(t => t+'*').join(' OR ')`,
 `ORDER BY rank`. Ported that directly into `query-vault.mjs`'s `searchDocs()`
 ([query-vault.mjs](../query-vault.mjs)), replacing the invented AND-fallback. Added a
-minimal self-check ([test-query-vault.mjs](../test-query-vault.mjs)).
+minimal self-check ([test/query-vault.mjs](../test/query-vault.mjs)).
 
 Re-run after the fix: 8 real, on-topic hits — Lighthouse Media launch planning docs, ADRs,
 launch-morning minutes — no more filler-word garbage. Honest residual limitation, also
@@ -2178,7 +2178,7 @@ shares the same budget. Re-measured: 28s. Still ~7x the dense channel's per-quer
 same candidate count, and that residual gap is expected, not a bug: FTS candidates remain
 longer than pre-chunked dense candidates even after capping.
 
-`test-rerank-fts.mjs` pins the actual regression — a 50,000-char fixture document must come
+`test/rerank-fts.mjs` pins the actual regression — a 50,000-char fixture document must come
 back truncated to exactly the cap, not passed through whole.
 
 ### 18.3 Result

@@ -8,7 +8,7 @@
 // The cross-encoder's actual judgment needs the real model, exercised against the live
 // vault by docs/eval-rerank-2026-08-26.mjs and docs/eval-rerank-fts-2026-08-26.mjs.
 import assert from 'node:assert';
-import { rerankWithScorer } from './reranker.mjs';
+import { rerankWithScorer } from '../reranker.mjs';
 
 const candidates = [
   { chunkId: 'a', text: 'alpha document', score: 0.1 },

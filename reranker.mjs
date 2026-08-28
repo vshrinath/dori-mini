@@ -48,7 +48,7 @@ async function modelScorer(query, texts) {
   return scores;
 }
 
-// The pure contract, with the scorer injectable — this is what test-rerank.mjs exercises
+// The pure contract, with the scorer injectable — this is what test/rerank.mjs exercises
 // directly, with a fake scorer, so the fail-open/scoring-replaces/disabled/short-array
 // behavior is tested against the REAL code path rather than a hand-mirrored copy of it.
 // `rerank()` below is just this wired to the real cross-encoder.

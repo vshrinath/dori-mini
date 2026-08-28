@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { matchProject } from './scope.mjs';
+import { matchProject } from '../scope.mjs';
 
 const SLUGS = ['lighthouse-media', 'work'];
 const PEOPLE = [{ name: 'Daniel Cross', projects: ['lighthouse-media'] }];
