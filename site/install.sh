@@ -6,8 +6,13 @@
 # any install script: https://github.com/vshrinath/dori-mini/blob/main/site/install.sh
 set -eu
 
+# Installs under ~/.claude/skills/dori by default -- AGENTS.md's own routing text
+# ("check ~/.claude/skills/dori/ first") assumes this exact path, and it's also the
+# path Claude Code's own Skill auto-discovery scans (~/.claude/skills/*/SKILL.md).
+# git clone creates missing parent directories on its own, so this works even if
+# ~/.claude doesn't exist yet (e.g. Claude Code has never been opened).
 REPO="https://github.com/vshrinath/dori-mini"
-DEST="${DORI_MINI_DIR:-$HOME/dori}"
+DEST="${DORI_MINI_DIR:-$HOME/.claude/skills/dori}"
 
 if ! command -v git >/dev/null 2>&1; then
   echo "git is required — install it first." >&2

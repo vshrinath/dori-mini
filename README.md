@@ -149,11 +149,13 @@ irm https://mini.mydori.app/install.ps1 | iex
 Works in Windows PowerShell 5.1, the default on Windows 10/11. WSL or Git Bash still work
 too, via the curl command above.
 
-...or clone it directly if you'd rather inspect it first:
+...or clone it directly if you'd rather inspect it first. Clone it to `~/.claude/skills/dori`
+specifically -- that's the path `AGENTS.md`'s own routing text assumes, and it's also where
+Claude Code's Skill auto-discovery looks:
 
 ```bash
-git clone https://github.com/vshrinath/dori-mini dori
-cd dori
+git clone https://github.com/vshrinath/dori-mini ~/.claude/skills/dori
+cd ~/.claude/skills/dori
 ./setup.sh
 ```
 

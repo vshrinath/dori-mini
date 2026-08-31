@@ -11,7 +11,7 @@
 # tree / diverged branch) — never on the common no-op "already up to date" case, that'd
 # just be daily noise.
 #
-# Usage: ./update.sh   (run from inside the cloned repo, e.g. ~/dori)
+# Usage: ./update.sh   (run from inside the cloned repo, e.g. ~/.claude/skills/dori)
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 

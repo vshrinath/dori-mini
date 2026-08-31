@@ -6,6 +6,46 @@ source:
     - install.sh, setup.sh (bash originals this constraint governs the port of)
     - site/vercel.json (static hosting, confirms site/*.sh URL mapping)
 constraints:
+  - id: constraint.windows.install-location-matches-agents-md
+    type: workflow
+    rule: >
+      install.ps1's default $Dest (when $env:DORI_MINI_DIR is unset) MUST be
+      `Join-Path $HOME '.claude\skills\dori'`, not a bare `~/dori`-style
+      path. This mirrors the same fix applied to install.sh (DEST default
+      changed from $HOME/dori to $HOME/.claude/skills/dori) and README.md's
+      manual-clone fallback -- all three MUST agree on the same canonical
+      path, since AGENTS.md's own routing text hardcodes
+      `~/.claude/skills/dori/` as a literal string, not a variable.
+    verified: >
+      AGENTS.md:5 (dori-mini/AGENTS.md, the file setup.sh/setup.ps1 wire
+      into every agent's global config) reads "check
+      `~/.claude/skills/dori/` first... then run the matching script
+      directly via `node <script>.mjs <args>`" -- a hardcoded path, not
+      $SCRIPT_DIR. Before this fix, install.sh/install.ps1 both defaulted
+      to a different path ($HOME/dori), so a fresh install's wired global
+      config pointed at a file that never got created -- confirmed by
+      grepping every setup script for "skills/dori" and finding no
+      directory-creation step anywhere. `~/.claude/skills/dori/` is also
+      the exact path Claude Code's own Skill auto-discovery scans (this
+      session's own available-skills list includes the "dori" skill,
+      loaded from this same path on the machine that authored AGENTS.md's
+      text) -- confirmed git clone creates missing parent directories on
+      its own (tested directly: `git clone ... a/b/c/testrepo` from
+      nothing), so this works even when ~/.claude doesn't exist yet, on
+      both Windows and macOS/Linux.
+    rationale: >
+      Raised by the user after asking "will it work in Claude if he calls
+      Dori" about the Windows install -- investigation found the wired
+      global config pointed at a path no installer ever created, on every
+      platform, not just Windows. Fixing only install.ps1 while leaving
+      install.sh's matching bug in place would still leave the text in
+      AGENTS.md wrong for every existing macOS/Linux user, so both were
+      fixed together, plus README.md's manual-clone instructions and two
+      doc references (docs/how-it-works.html, update.sh's usage comment)
+      that named the old default path.
+    applies_to:
+      requirement_ids:
+        - windows.install.native-setup
   - id: constraint.windows.setup-script-bypasses-execution-policy
     type: workflow
     rule: >

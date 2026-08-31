@@ -74,10 +74,17 @@ requirements:
       assumed to already have a developer tool preinstalled the way
       install.sh safely assumes on macOS (git ships with the Xcode Command
       Line Tools stub there).
+      THE SYSTEM SHALL default the install location to
+      $HOME/.claude/skills/dori (not a bare $HOME/dori-style path) -- the
+      exact path AGENTS.md's own routing text hardcodes and the path Claude
+      Code's Skill auto-discovery scans, so a fresh Windows install's wired
+      global config actually points at a real, existing file.
     failure: >
       The Windows install command errors out, silently skips a step
-      setup.sh performs on macOS/Linux, or requires the user to already have
-      WSL, Git Bash, or git itself installed.
+      setup.sh performs on macOS/Linux, requires the user to already have
+      WSL, Git Bash, or git itself installed, or installs to a location
+      AGENTS.md's own routing text doesn't point at (leaving "Dori, ..."
+      requests in Claude Code unable to find the real scripts).
     variants: >
       Fresh machine with no Node installed, fresh machine with no git
       installed, Node already installed but wrong version, existing vault

@@ -9,9 +9,14 @@
 # (constraint.windows.powershell-5.1-compatible).
 $ErrorActionPreference = 'Stop'
 
+# Installs under ~/.claude/skills/dori by default -- AGENTS.md's own routing text
+# ("check ~/.claude/skills/dori/ first") assumes this exact path, and it's also the
+# path Claude Code's own Skill auto-discovery scans (~/.claude/skills/*/SKILL.md).
+# git clone creates missing parent directories on its own (verified: same behavior
+# on Windows as macOS/Linux), so this works even if ~/.claude doesn't exist yet.
 $Repo = 'https://github.com/vshrinath/dori-mini'
 $Dest = $env:DORI_MINI_DIR
-if (-not $Dest) { $Dest = Join-Path $HOME 'dori' }
+if (-not $Dest) { $Dest = Join-Path $HOME '.claude\skills\dori' }
 
 # git isn't preinstalled on Windows the way it is on macOS (Xcode CLT stub) -- install
 # it via winget rather than erroring out immediately, matching setup.ps1's own
