@@ -17,7 +17,7 @@ function TiptapEditor({ initialContent, onChange, onSave }) {
     content: initialContent,
     editorProps: {
       attributes: {
-        class: 'prose prose-headings:font-display max-w-none focus:outline-none min-h-[400px] p-6 text-foreground',
+        class: 'prose dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-6 text-foreground text-[17px] leading-[1.75]',
       },
     },
     onUpdate: ({ editor }) => {
@@ -340,7 +340,7 @@ export function FileSlideover({ relPath, onClose, onSaved }) {
 
               {doc.html ? (
                 <div
-                  className="prose dark:prose-invert max-w-none text-[15.5px] leading-relaxed"
+                  className="prose dark:prose-invert max-w-none text-[17px] leading-[1.8] font-normal prose-headings:font-semibold prose-headings:text-foreground prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-[17px] prose-p:leading-[1.8] prose-p:text-foreground prose-li:text-[17px] prose-strong:font-semibold prose-strong:text-foreground"
                   dangerouslySetInnerHTML={{ __html: doc.html }}
                 />
               ) : (

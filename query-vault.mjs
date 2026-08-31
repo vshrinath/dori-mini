@@ -615,18 +615,55 @@ export function getProjectDetails(projectPath) {
         let name = att;
         if (att.includes('@')) {
           const localPart = att.split('@')[0];
-          name = localPart.replace(/[._+]/g, ' ').split(' ').map((s) => s ? s[0].toUpperCase() + s.slice(1) : '').join(' ');
+          name = localPart.replace(/[._+]/g, ' ').split(' ').map((s) => (s ? s[0].toUpperCase() + s.slice(1) : '')).join(' ');
+        } else if (att.includes('-')) {
+          name = att.split('-').map((s) => (s ? s[0].toUpperCase() + s.slice(1) : '')).join(' ');
         }
-        if (name && name !== 'Shrinath V' && !name.toLowerCase().includes('dori')) {
-          const key = `attendee:${name.toLowerCase()}`;
-          if (!peopleMap.has(key)) {
-            peopleMap.set(key, {
-              relPath: m.relPath,
-              name,
-              role: 'Meeting Participant',
-              org: '',
-            });
+
+        const norm = att.toLowerCase().replace(/[^a-z0-9]+/g, '');
+        if (
+          !norm ||
+          norm === 'shrinathv' ||
+          norm === 'shrinathvignesh' ||
+          norm === 'shrinath' ||
+          norm.includes('dori')
+        ) {
+          continue;
+        }
+
+        // Check if already represented in peopleMap
+        let exists = false;
+        for (const existing of peopleMap.values()) {
+          const exNorm = (existing.name + ' ' + existing.relPath).toLowerCase().replace(/[^a-z0-9]+/g, '');
+          if (exNorm.includes(norm) || norm.includes(exNorm)) {
+            exists = true;
+            break;
           }
+        }
+
+        if (!exists) {
+          // Check if an entity file exists for this slug in entities/people
+          const possibleEntityFile = join(VAULT_ROOT, 'entities', 'people', `${att}.md`);
+          if (existsSync(possibleEntityFile)) {
+            try {
+              const content = readFileSync(possibleEntityFile, 'utf-8');
+              const parsed = parseFrontmatter(content);
+              peopleMap.set(`entities/people/${att}.md`, {
+                relPath: `entities/people/${att}.md`,
+                name: parsed.fm.title || parsed.fm.name || name,
+                role: parsed.fm.role || '',
+                org: parsed.fm.org || parsed.fm.company || '',
+              });
+              continue;
+            } catch {}
+          }
+
+          peopleMap.set(`attendee:${norm}`, {
+            relPath: m.relPath,
+            name,
+            role: 'Meeting Participant',
+            org: '',
+          });
         }
       }
     }

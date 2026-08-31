@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-08-31] — Deduplicate Linked People and Enhance Slideover HTML Typography (17px)
+
+**Branch**: `main`
+
+### What changed
+- Normalized Person Deduplication (`query-vault.mjs`):
+  - Deduplicated people extracted from meeting attendee lists against known entity profiles using normalized slug matching (`durgaprasad-shanmugam` matches `Durgaprasad Shanmugam`).
+  - Automatically prioritized rich entity files in `entities/people/` over plain meeting participant badges.
+  - Filtered out self (`shrinath-v`, `shrinath-vignesh`, `shrinath.v@gmail.com`).
+- Upgraded Slideover HTML Typography (`FileSlideover.jsx`):
+  - Increased font size to `17px` (`text-[17px] leading-[1.8]`) with clear heading hierarchies (`text-2xl`, `text-xl`, `text-lg`), strong contrast, and spacious paragraph spacing.
+  - Matched editor styling to 17px body font for seamless viewing and editing.
+
+### Why
+Prevent duplicate person chips across meeting attendees and entities, and ensure document contents are easily readable with crisp 17px publication-quality HTML typography.
+
+### Files touched
+- `query-vault.mjs` — Added normalized slug deduplication and self-filtering for people.
+- `electron-app/src/components/FileSlideover.jsx` — Upgraded HTML typography and editor to 17px leading-[1.8].
+
 ## [2026-08-31] — 50% Slideover Width, Person Linked Meetings, and Scannable Brief Highlights
 
 **Branch**: `main`
