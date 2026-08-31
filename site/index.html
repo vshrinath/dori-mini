@@ -79,11 +79,18 @@
     background: var(--navy-deep); border-radius: var(--r-md); overflow: hidden;
     box-shadow: 0 12px 32px rgba(19,23,55,0.25);
   }
-  .term-bar { display: flex; gap: 6px; padding: 12px 16px; background: rgba(255,255,255,0.04); }
+  .term-bar { display: flex; align-items: center; gap: 6px; padding: 12px 16px; background: rgba(255,255,255,0.04); }
   .term-bar i { width: 10px; height: 10px; border-radius: 50%; }
   .term-bar i:nth-child(1) { background: var(--coral); }
   .term-bar i:nth-child(2) { background: var(--amber); }
   .term-bar i:nth-child(3) { background: var(--green); }
+  .term-copy {
+    margin-left: auto; display: flex; align-items: center; gap: 6px;
+    background: none; border: none; cursor: pointer; padding: 4px 6px;
+    color: #8590ab; font-family: var(--font-mono); font-size: 11.5px;
+  }
+  .term-copy:hover { color: #d9deee; }
+  .term-copy svg { width: 14px; height: 14px; }
   .term pre {
     margin: 0; padding: 18px 20px 22px; font-family: var(--font-mono); font-size: 13px;
     line-height: 1.8; color: #d9deee; overflow-x: auto;
@@ -154,10 +161,17 @@
   </p>
 
   <div class="term">
-    <div class="term-bar"><i></i><i></i><i></i></div>
-    <pre><span class="dim">$</span> curl -fsSL https://mini.mydori.app/install.sh | sh</pre>
+    <div class="term-bar">
+      <i></i><i></i><i></i>
+      <button class="term-copy" type="button" onclick="copyInstallCmd(this)" aria-label="Copy install command">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+    <pre id="install-cmd"><span class="dim">$</span> curl -fsSL https://mini.mydori.app/install.sh | sh</pre>
   </div>
   <p class="copy-hint">Reads before it runs anything — clones the repo, then hands off to its own <code>setup.sh</code> for the rest.</p>
+  <p class="copy-hint">On Windows, run this inside <a class="underline" href="https://learn.microsoft.com/windows/wsl/install" target="_blank" rel="noopener">WSL</a> or Git Bash — it won't work in PowerShell or cmd.</p>
 
   <h2>What it actually does</h2>
   <p class="h2-sub">Not a guess at what Dori does — every script mirrors specific real source.</p>
@@ -213,6 +227,18 @@
 </div>
 
 <footer>dori mini — github.com/vshrinath/dori-mini</footer>
+
+<script>
+  function copyInstallCmd(btn) {
+    const cmd = 'curl -fsSL https://mini.mydori.app/install.sh | sh'
+    navigator.clipboard.writeText(cmd).then(() => {
+      const label = btn.querySelector('span')
+      const prev = label.textContent
+      label.textContent = 'Copied'
+      setTimeout(() => { label.textContent = prev }, 1500)
+    })
+  }
+</script>
 
 </body>
 </html>
