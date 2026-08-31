@@ -40,4 +40,13 @@ git checkout main
 if ($LASTEXITCODE -ne 0) { throw "git checkout failed (exit $LASTEXITCODE)" }
 Pop-Location
 
-& (Join-Path $Dest 'setup.ps1')
+# A default Windows client's execution policy ('Restricted') blocks running a .ps1
+# FILE from disk, even one we just created ourselves -- it does not affect this
+# script, since irm|iex evaluates downloaded text in-memory, never as a file. Bypass
+# it for just this one child-process invocation (not a permanent policy change) by
+# re-invoking whichever host is currently running (powershell.exe or pwsh.exe) with
+# -ExecutionPolicy Bypass, so setup.ps1 still runs with $PSScriptRoot intact.
+$SetupPath = Join-Path $Dest 'setup.ps1'
+$HostExe = (Get-Process -Id $PID).Path
+& $HostExe -NoProfile -ExecutionPolicy Bypass -File $SetupPath
+if ($LASTEXITCODE -ne 0) { throw "setup.ps1 failed (exit $LASTEXITCODE)" }

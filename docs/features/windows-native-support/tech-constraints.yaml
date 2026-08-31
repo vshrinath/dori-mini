@@ -6,6 +6,35 @@ source:
     - install.sh, setup.sh (bash originals this constraint governs the port of)
     - site/vercel.json (static hosting, confirms site/*.sh URL mapping)
 constraints:
+  - id: constraint.windows.setup-script-bypasses-execution-policy
+    type: workflow
+    rule: >
+      install.ps1 MUST NOT launch setup.ps1 with a plain `&` call. It MUST
+      re-invoke the currently-running PowerShell host executable
+      ((Get-Process -Id $PID).Path) with `-ExecutionPolicy Bypass -File
+      <path>`, scoping the bypass to that one child-process invocation only
+      -- it MUST NOT call Set-ExecutionPolicy to change the user's
+      persistent policy.
+    verified: >
+      Windows client installs default the LocalMachine/CurrentUser
+      execution policy to Restricted, which blocks running any .ps1 FILE
+      from disk (Get-ExecutionPolicy's documented default for non-Server
+      SKUs) -- including one this same install just cloned to disk. This
+      does not affect install.ps1 itself: `irm ... | iex` evaluates the
+      downloaded script as in-memory text via Invoke-Expression, which
+      execution policy does not govern (the same mechanism every
+      `irm <url> | iex`-style installer relies on) -- only the following
+      `& setup.ps1` file-launch step was actually at risk, confirmed by
+      testing this exact question against the user's own request ("will
+      this run on all Windows machines").
+    rationale: >
+      A silent "running scripts is disabled on this system" failure right
+      after cloning would reproduce the exact "too difficult" outcome this
+      whole feature exists to fix -- worse, since it happens one step
+      further in, after the user has already watched the clone succeed.
+    applies_to:
+      requirement_ids:
+        - windows.install.native-setup
   - id: constraint.windows.powershell-5.1-compatible
     type: workflow
     rule: >
