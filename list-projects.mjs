@@ -39,7 +39,11 @@ export function listProjects() {
       const { fm } = parseFrontmatter(readFileSync(full, 'utf-8'));
       if (!fm.project_path) return null;
       return {
-        title: (fm.title || fm.project || fm.project_path).replace(/^["']|["']$/g, ''),
+        // fm.title is the *.setup.md document's own title (e.g. "Acme Corp
+        // Setup" — apply-template.mjs's auto-generated setup note), not the
+        // project's name. fm.project is the real name; fall back to it,
+        // then to the path's last segment, before ever touching fm.title.
+        title: (fm.project || fm.project_path.split('/').pop() || fm.title).replace(/^["']|["']$/g, ''),
         projectPath: fm.project_path,
         status: fm.status || 'active',
         updatedAt: statSync(full).mtime.toISOString(),

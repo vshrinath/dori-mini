@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, CircleHelp, Inbox as InboxIcon, Search, X } from 'lucide-react';
-import { InboxItem, InboxView } from './components/InboxItem.jsx';
+import { Check, Inbox as InboxIcon, Search, X } from 'lucide-react';
+import { InboxView } from './components/InboxItem.jsx';
+import { DecisionCard } from './components/DecisionCard.jsx';
 import { Badge } from './components/ui/badge.jsx';
 import { EmptyState } from './components/ui/empty-state.jsx';
 import { FilterChip } from './components/ui/filter-chip.jsx';
@@ -107,31 +108,31 @@ function InboxScreen() {
           }
         />
       )}
-      {filtered?.map((item) => (
-        <InboxItem
-          key={item.clarificationId}
-          title={item.title}
-          subtitle={
-            <Badge variant="muted" size="compact">
-              {item.domain}
-            </Badge>
-          }
-          meta={formatDate(item.createdAt)}
-          statusIcon={<CircleHelp size={16} />}
-          actions={
-            item.clarificationId && (
-              <>
-                <IconButton label="Approve" onClick={() => decide('approve_inbox_item', item.clarificationId)}>
-                  <Check size={14} />
-                </IconButton>
-                <IconButton label="Ignore" onClick={() => decide('ignore_inbox_item', item.clarificationId)}>
-                  <X size={14} />
-                </IconButton>
-              </>
-            )
-          }
-        />
-      ))}
+      {filtered?.length > 0 && (
+        <div className="space-y-3 p-4">
+          {filtered.map((item) => (
+            <DecisionCard
+              key={item.clarificationId || item.relPath}
+              type={item.type}
+              title={item.title}
+              domain={item.domain}
+              createdAt={formatDate(item.createdAt)}
+              actions={
+                item.clarificationId && (
+                  <>
+                    <IconButton label="Approve" onClick={() => decide('approve_inbox_item', item.clarificationId)}>
+                      <Check size={14} />
+                    </IconButton>
+                    <IconButton label="Ignore" onClick={() => decide('ignore_inbox_item', item.clarificationId)}>
+                      <X size={14} />
+                    </IconButton>
+                  </>
+                )
+              }
+            />
+          ))}
+        </div>
+      )}
     </InboxView>
   );
 }
