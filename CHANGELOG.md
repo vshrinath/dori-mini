@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026-08-31] — Strip Frontmatter from Rendered HTML and Add Metadata Property Grid to Slideover
+
+**Branch**: `main`
+
+### What changed
+- Frontmatter Stripping in `get_document` (`actions.mjs`): parsed and separated YAML frontmatter from document body before sending content to `renderMarkdownToHtml`, eliminating raw `---` lines and unformatted key-value text paragraphs from rendered HTML.
+- Structured Metadata Grid in `FileSlideover.jsx`: added a clean property card displaying parsed fields (Role, Organization, Relationship, Projects, Last Contact, Attendees, Status) as styled badges above the document article.
+- Enhanced Document Typography: rendered article body using clean `prose dark:prose-invert` styling with readable line heights and heading styles.
+
+### Why
+Present entity profiles and documents with proper formatting matching Dori Portal, replacing raw YAML text with a structured metadata grid and clean markdown HTML body.
+
+### Files touched
+- `actions.mjs` — Separated frontmatter from body in `get_document`.
+- `electron-app/src/components/FileSlideover.jsx` — Added metadata property block and styled typography.
+
 ## [2026-08-31] — Complete Action Registry Verification for URL Captures and Profile Updates
 
 **Branch**: `main`

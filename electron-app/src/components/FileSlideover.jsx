@@ -269,9 +269,37 @@ export function FileSlideover({ relPath, onClose, onSaved }) {
 
           {doc && !isEditing && (
             <article className="mx-auto w-full max-w-2xl px-6 py-8">
+              {/* Clean Frontmatter Metadata Block if present */}
+              {(() => {
+                const fm = doc.frontmatter || {};
+                const metadataEntries = Object.entries({
+                  Role: fm.role,
+                  Organization: fm.org || fm.company,
+                  Relationship: fm.relationship,
+                  Projects: Array.isArray(fm.projects) ? fm.projects.join(', ') : fm.project,
+                  'Last Contact': fm['last-contact'] || fm.lastContact,
+                  Attendees: Array.isArray(fm.attendees) ? fm.attendees.join(', ') : null,
+                  Status: fm.status,
+                  Date: fm.date && fm.date !== doc?.date ? fm.date : null,
+                }).filter(([, v]) => v != null && v !== '');
+
+                if (metadataEntries.length === 0) return null;
+
+                return (
+                  <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-2.5 rounded-xl border border-border/70 bg-muted/30 p-3.5 text-xs">
+                    {metadataEntries.map(([label, value]) => (
+                      <div key={label} className="flex items-baseline gap-2 min-w-0">
+                        <span className="font-semibold text-muted-foreground shrink-0">{label}:</span>
+                        <span className="font-medium text-foreground truncate">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {doc.html ? (
                 <div
-                  className="prose prose-headings:font-display max-w-none"
+                  className="prose dark:prose-invert max-w-none text-[15.5px] leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: doc.html }}
                 />
               ) : (

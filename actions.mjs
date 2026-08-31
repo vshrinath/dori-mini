@@ -24,6 +24,7 @@ import { listTasks } from './list-tasks.mjs';
 import { buildInbox } from './list-inbox.mjs';
 import { resolve as resolveClarification, dismiss as dismissClarification } from './clarification-store.mjs';
 import { search as searchVault, listDocs, getDocument, getProjectDetails } from './query-vault.mjs';
+import { parseFrontmatter } from './frontmatter.mjs';
 import { renderMarkdownToHtml } from './render-html.mjs';
 import { canonicalOutputPath, isYouTubeUrl, VAULT_ROOT } from './route-destination.mjs';
 import { buildTimeline } from './timeline.mjs';
@@ -184,7 +185,16 @@ export const actions = [
     exposeToMcp: true,
     handler: ({ path }) => {
       const doc = getDocument(path);
-      return doc && { ...doc, html: renderMarkdownToHtml(doc.content) };
+      if (!doc) return null;
+      const { fm, body } = parseFrontmatter(doc.content || '');
+      const frontmatter = { ...doc.frontmatter, ...fm };
+      const bodyContent = body || doc.content || '';
+      return {
+        ...doc,
+        frontmatter,
+        body: bodyContent,
+        html: renderMarkdownToHtml(bodyContent),
+      };
     },
   },
   {
