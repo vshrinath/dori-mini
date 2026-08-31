@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026-08-31] — Polish Inbox Screen Layout and DecisionCard Styling
+
+**Branch**: `dori-go-visual-overhaul`
+
+### What changed
+- Focused Inbox container width to `max-w-3xl` (`page-frame max-w-3xl`) matching Dori Portal's editorial layout.
+- Upgraded `DecisionCard.jsx`: applied `universal-card` elevation, circular icon avatar with `--surface-tint`, uppercase pill type badges, and clear typography hierarchy.
+- Updated Inbox copy and header to real Dori Portal strings (`"Everything waiting on you — approve, file, or dismiss."`, `"[N] waiting"` pill badge, and `"Nothing needs you right now"` empty state).
+
+### Why
+Bring the Inbox screen to the same standard of visual polish, proportional width, and card lift as the Tasks and Library screens.
+
+### Files touched
+- `electron-app/src/App.jsx` — Centered `max-w-3xl` container, waiting pill badge, and empty state copy in `InboxScreen`.
+- `electron-app/src/components/DecisionCard.jsx` — Refined card elevation, icon tint, and eyebrow badge styling.
+
 ## [2026-08-31] — 1:1 Visual & UX Identity Parity with Dori Portal
 
 **Branch**: `dori-go-visual-overhaul`

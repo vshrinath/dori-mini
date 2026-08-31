@@ -65,15 +65,15 @@ function InboxScreen() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-[var(--surface-canvas)]">
-      <div className="page-frame">
+      <div className="page-frame max-w-3xl">
         <RouteHeader
           title="Inbox"
-          description="Review incoming captures and routing decisions awaiting your approval."
+          description="Everything waiting on you — approve, file, or dismiss."
           meta={
-            inbox ? (
-              <Badge variant="muted" size="compact">
-                {inbox.length}
-              </Badge>
+            inbox?.length > 0 ? (
+              <span className="rounded-full bg-[var(--surface-tint)] px-2.5 py-0.5 text-xs font-semibold text-[var(--brand-accent-text)]">
+                {inbox.length} waiting
+              </span>
             ) : null
           }
         />
@@ -115,11 +115,11 @@ function InboxScreen() {
         {filtered?.length === 0 && (
           <EmptyState
             icon={InboxIcon}
-            title={inbox?.length === 0 ? 'Nothing pending' : 'No matches'}
+            title={inbox?.length === 0 ? 'Nothing needs you right now' : 'No matches'}
             description={
               inbox?.length === 0
-                ? 'Captures that need a routing decision will show up here.'
-                : 'Try a different filter or search term.'
+                ? 'When Dori prepares something — a draft to approve, a meeting to file, a suggestion — it lands here.'
+                : 'Nothing in this category matches your search.'
             }
           />
         )}
