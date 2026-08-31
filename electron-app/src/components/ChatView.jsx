@@ -1,10 +1,33 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { Send, AlertCircle, RefreshCw, Folder } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import {
+  Send,
+  AlertCircle,
+  RefreshCw,
+  Folder,
+  Plus,
+  Sparkles,
+  ChevronDown,
+} from 'lucide-react';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { EnginePicker } from './EnginePicker.jsx';
+import { cn } from '../lib/utils.js';
 
-export function ChatView({ projectContext = null, className = '' }) {
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+const STARTER_PROMPTS = [
+  'What’s waiting on me this week?',
+  'Search my notes across the vault',
+  'Draft a follow-up note from yesterday',
+  'What are my open high priority tasks?',
+];
+
+export function ChatView({ projectContext = null, className = '', onOpenSettings }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -18,15 +41,23 @@ export function ChatView({ projectContext = null, className = '' }) {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) scrollToBottom();
   }, [messages, isLoading]);
 
-  const handleSend = async () => {
-    const text = input.trim();
+  useEffect(() => {
+    window.dori?.call('get_engine_config', {})
+      .then((cfg) => {
+        if (cfg?.replyCli) setEngine(cfg.replyCli);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSendText = async (textToSend) => {
+    const text = (textToSend || input).trim();
     if (!text || isLoading) return;
 
     if (engine === 'none') {
-      setErrorMessage('AI is not configured. Please select Claude Code or Codex in the engine picker.');
+      setErrorMessage('AI is not configured. Please select an AI Engine in Settings or the picker below.');
       return;
     }
 
@@ -37,7 +68,6 @@ export function ChatView({ projectContext = null, className = '' }) {
     setIsLoading(true);
     setErrorMessage(null);
 
-    // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -70,7 +100,7 @@ export function ChatView({ projectContext = null, className = '' }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      handleSendText();
     }
   };
 
@@ -81,143 +111,182 @@ export function ChatView({ projectContext = null, className = '' }) {
   };
 
   const isConfigured = engine === 'claude' || engine === 'codex';
+  const isChatting = messages.length > 0 || isLoading;
 
   return (
-    <div className={`flex min-h-0 flex-1 flex-col bg-background ${className}`}>
-      {/* Header */}
-      <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-border bg-card px-5 py-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--surface-tint)]">
-            <img src="./assets/icon.png" alt="" className="h-4 w-4 rounded-full" />
+    <div className={cn('home-focus flex flex-col', isChatting && 'is-chatting', className)}>
+      {/* Header bar (only when chatting or project scoped) */}
+      {isChatting && (
+        <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--surface-canvas)]/90 backdrop-blur-md px-6 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--surface-tint)]">
+              <img src="./assets/icon.png" alt="" className="h-3.5 w-3.5 rounded-sm" />
+            </div>
+            <span className="font-display text-sm font-semibold text-foreground">
+              {projectContext ? `Project: ${projectContext}` : 'Dori'}
+            </span>
           </div>
-          <div>
-            <h1 className="text-sm font-semibold text-foreground">
-              {projectContext ? 'Project Chat' : 'Dori Assistant'}
-            </h1>
-          </div>
-          {projectContext && (
-            <Badge variant="muted" size="compact" className="gap-1 font-mono text-[10px]">
-              <Folder size={11} />
-              <span>{projectContext}</span>
-            </Badge>
-          )}
-        </div>
 
-        <div className="flex items-center gap-2">
-          <EnginePicker onEngineChange={setEngine} />
-          {messages.length > 0 && (
+          <div className="flex items-center gap-2">
+            <EnginePicker onEngineChange={setEngine} />
             <Button
               size="sm"
               variant="ghost"
               onClick={() => setMessages([])}
               className="text-xs text-muted-foreground hover:text-foreground h-7 px-2"
-              title="Clear conversation"
+              title="New Chat"
             >
               <RefreshCw size={13} />
             </Button>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Messages Stream */}
-      <div className="min-h-0 flex-1 overflow-y-auto p-5 space-y-4">
-        {/* Unconfigured state warning banner */}
-        {!isConfigured && (
-          <div className="rounded-panel border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-600 dark:text-amber-400 flex items-start gap-3">
-            <AlertCircle size={16} className="shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <div className="font-semibold mb-1">AI Engine Not Configured</div>
-              <p className="text-muted-foreground leading-relaxed mb-2">
-                Dori Go uses your local coding-agent CLI (Claude Code or Codex) to answer chat. Select a provider in the top right to start chatting.
-              </p>
-            </div>
+      {/* Main Home Canvas Area */}
+      <div className="home-focus-inner">
+        {/* Idle Hero Stage */}
+        {!isChatting && (
+          <div className="home-hero-stage anim-rise">
+            <img
+              src="./assets/icon.png"
+              alt="Dori"
+              className="home-hero-logo"
+            />
+            <p className="home-focus-kicker">{getGreeting()}</p>
+            <h1 className="home-hero-title">
+              {projectContext ? `Where should we begin on ${projectContext}?` : 'Where should we begin?'}
+            </h1>
           </div>
         )}
 
-        {messages.length === 0 && isConfigured && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <img src="./assets/icon.png" alt="" className="h-7 w-7 rounded-full" />
-            </div>
-            <h3 className="text-base font-semibold text-foreground mb-1">
-              {projectContext ? `Ask anything about ${projectContext}` : 'How can Dori help today?'}
-            </h3>
-            <p className="text-xs text-muted-foreground max-w-sm">
-              Search notes, list pending tasks, capture ideas, or ask questions across your vault.
-            </p>
+        {/* Conversation Stream */}
+        {isChatting && (
+          <div className="flex-1 space-y-6 pb-6">
+            {!isConfigured && (
+              <div className="rounded-panel border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-600 dark:text-amber-400 flex items-start gap-3">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="font-semibold mb-0.5">AI Engine Not Configured</div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Select Claude Code or Codex in Settings or using the picker below to enable AI chat.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {messages.map((m, idx) => (
+              <div
+                key={idx}
+                className={cn('flex flex-col anim-rise', m.role === 'user' ? 'items-end' : 'items-start')}
+              >
+                <span className="text-[10px] font-semibold text-muted-foreground mb-1 px-1 uppercase tracking-wider">
+                  {m.role === 'user' ? 'You' : 'Dori'}
+                </span>
+                <div
+                  className={cn(
+                    'rounded-2xl text-sm leading-relaxed',
+                    m.role === 'user'
+                      ? 'max-w-xl bg-primary text-primary-foreground px-4 py-2.5 rounded-tr-sm shadow-xs'
+                      : 'w-full max-w-2xl bg-card border border-[var(--border-soft)] px-5 py-4 rounded-tl-sm shadow-xs prose prose-sm dark:prose-invert'
+                  )}
+                >
+                  {m.text}
+                </div>
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="flex items-start flex-col anim-rise">
+                <span className="text-[10px] font-semibold text-muted-foreground mb-1 px-1 uppercase tracking-wider">
+                  Dori
+                </span>
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-card border border-[var(--border-soft)] px-4 py-3 text-xs text-muted-foreground shadow-xs">
+                  <div className="flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.15s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.3s]" />
+                  </div>
+                  <span className="ml-1 font-medium">Thinking…</span>
+                </div>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-500 flex items-center gap-2">
+                <AlertCircle size={14} className="shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
           </div>
         )}
 
-        {messages.map((m, idx) => (
-          <div
-            key={idx}
-            className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}
+        {/* Signature 20px Dori Composer Capsule */}
+        <div className="w-full">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendText();
+            }}
+            className="chat-dock-composer"
           >
-            <div className="flex items-center gap-2 mb-1 px-1">
-              <span className="text-[10px] font-medium text-muted-foreground">
-                {m.role === 'user' ? 'You' : 'Dori'}
-              </span>
-            </div>
-            <div
-              className={`max-w-2xl rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                m.role === 'user'
-                  ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                  : 'bg-muted/70 text-foreground border border-border/50 rounded-tl-sm prose prose-sm max-w-none dark:prose-invert'
-              }`}
+            <button
+              type="button"
+              className="quick-capture-icon-button"
+              title="Add context"
+              aria-label="Add"
             >
-              {m.text}
+              <Plus size={18} />
+            </button>
+
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder={
+                isConfigured
+                  ? projectContext
+                    ? `Message in ${projectContext}…`
+                    : 'Message, capture, or ask…'
+                  : 'Select an AI engine below to start…'
+              }
+              disabled={isLoading}
+              className="quick-capture-input"
+            />
+
+            <div className="flex items-center gap-2 shrink-0">
+              <EnginePicker onEngineChange={setEngine} />
+
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="quick-capture-send-button"
+                title="Send (Enter)"
+                aria-label="Send"
+              >
+                <Send size={13} className="ml-0.5" />
+              </button>
             </div>
-          </div>
-        ))}
+          </form>
 
-        {isLoading && (
-          <div className="flex items-start flex-col">
-            <span className="text-[10px] font-medium text-muted-foreground mb-1 px-1">Dori</span>
-            <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-muted/70 border border-border/50 px-4 py-3 text-xs text-muted-foreground">
-              <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-              <span>Thinking…</span>
+          {/* Idle Starter Prompt Chips */}
+          {!isChatting && (
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              {STARTER_PROMPTS.map((prompt, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleSendText(prompt)}
+                  className="chat-starter-chip"
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
-          </div>
-        )}
-
-        {errorMessage && (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-500 flex items-center gap-2">
-            <AlertCircle size={14} className="shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Composer Input Bar */}
-      <div className="border-t border-border bg-card p-4">
-        <div className="mx-auto max-w-3xl flex items-end gap-2 rounded-panel border border-border bg-background p-2 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
-          <textarea
-            ref={textareaRef}
-            rows={1}
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              isConfigured
-                ? projectContext
-                  ? `Message in ${projectContext}… (Enter to send)`
-                  : 'Ask Dori anything… (Enter to send, Shift+Enter for new line)'
-                : 'Select an AI engine above to enable chat'
-            }
-            disabled={!isConfigured || isLoading}
-            className="min-h-[38px] max-h-[180px] flex-1 resize-none bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
-          />
-          <Button
-            size="sm"
-            onClick={handleSend}
-            disabled={!input.trim() || !isConfigured || isLoading}
-            className="h-8 w-8 rounded-lg p-0 shrink-0"
-            title="Send (Enter)"
-          >
-            <Send size={14} />
-          </Button>
+          )}
         </div>
       </div>
     </div>

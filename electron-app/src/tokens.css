@@ -246,7 +246,7 @@
    * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
   /* Backgrounds — surface hierarchy (warm) */
-  --background: #ffffff; /* pure white canvas */
+  --background: #fafaf8; /* warm paper canvas */
   --card: #ffffff; /* cards, modals, panels — pure white lifts off canvas */
   --muted: #f3f4f6;
   --accent: #e9eaee;
@@ -266,8 +266,8 @@
   --border-soft: #ececef;
 
   /* Desktop app surface tokens */
-  --surface-canvas: #ffffff;
-  --surface-canvas-top: #ffffff;
+  --surface-canvas: #fafaf8;
+  --surface-canvas-top: #fafaf8;
   --surface-panel: rgba(255, 255, 255, 0.88);
   --surface-panel-solid: #ffffff;
   --surface-panel-soft: rgba(250, 250, 249, 0.72);
@@ -792,4 +792,308 @@ body {
   font-weight: 500;
   white-space: nowrap;
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * SCROLLBARS — subtle Mac desktop scrollbars
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 10px;
+  transition: background var(--dur-quick) var(--ease-out);
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * PAGE FRAME & ROUTE HEADERS
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.page-frame {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding-block: 2rem 3rem;
+  padding-inline: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.route-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.route-header__copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.route-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.route-header__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-heading-lg);
+  font-weight: var(--fw-heading);
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-heading);
+  color: var(--foreground);
+}
+
+.route-header__description {
+  max-width: 56rem;
+  margin-top: 0.35rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-body);
+  font-weight: var(--fw-body);
+  line-height: var(--leading-body);
+}
+
+.route-header__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * COMPOSER & CHAT SHELL
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.home-focus {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  background: var(--surface-canvas);
+}
+
+.home-focus-inner {
+  width: min(100% - 2.5rem, 52rem);
+  margin: 0 auto;
+  padding: 2.5rem 0 3rem;
+  box-sizing: border-box;
+}
+
+.home-focus.is-chatting .home-focus-inner {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  padding-block: 1.25rem;
+}
+
+.home-focus:not(.is-chatting) .home-focus-inner {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.home-hero-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.home-hero-logo {
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 1rem;
+  border-radius: 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.home-focus-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--foreground-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.home-hero-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.85rem, 3.5vw, 2.6rem);
+  font-weight: 450;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  color: var(--foreground);
+}
+
+.chat-dock-composer {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow:
+    0 16px 42px rgba(18, 20, 32, 0.07),
+    0 2px 7px rgba(18, 20, 32, 0.04);
+  transition: border-color var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out);
+}
+
+.chat-dock-composer:focus-within {
+  border-color: var(--hairline-strong);
+  box-shadow:
+    0 18px 48px rgba(18, 20, 32, 0.10),
+    0 4px 12px rgba(18, 20, 32, 0.06);
+}
+
+.quick-capture-input {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+  min-height: 24px;
+  max-height: 180px;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.25rem 0.2rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--foreground);
+  line-height: 1.45;
+}
+
+.quick-capture-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.quick-capture-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--icon-muted);
+  cursor: pointer;
+  transition: background var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
+}
+
+.quick-capture-icon-button:hover {
+  background: var(--surface-field);
+  color: var(--foreground);
+}
+
+.quick-capture-send-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform var(--dur-quick) var(--ease-out), opacity var(--dur-quick) var(--ease-out);
+}
+
+.quick-capture-send-button:hover:not(:disabled) {
+  transform: scale(1.04);
+}
+
+.quick-capture-send-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.chat-runtime-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface-field);
+  color: var(--foreground-secondary);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--dur-quick) var(--ease-out);
+}
+
+.chat-runtime-trigger:hover {
+  background: var(--surface-field-hover);
+  color: var(--foreground);
+}
+
+.chat-starter-chip {
+  padding: 8px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  color: var(--foreground-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition:
+    color var(--dur-quick) var(--ease-out),
+    border-color var(--dur-quick) var(--ease-out),
+    background var(--dur-quick) var(--ease-out),
+    transform var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out);
+}
+
+.chat-starter-chip:hover {
+  color: var(--foreground);
+  border-color: var(--hairline-strong);
+  background: var(--surface-field);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * CARDS & SURFACES
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.universal-card {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-panel);
+  background: var(--card);
+  box-shadow: var(--shadow-xs);
+  transition:
+    background var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out),
+    border-color var(--dur-quick) var(--ease-out),
+    transform var(--dur-quick) var(--ease-out);
+}
+
+.universal-card:hover {
+  border-color: var(--hairline-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
 

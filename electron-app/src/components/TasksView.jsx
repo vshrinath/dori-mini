@@ -1,12 +1,6 @@
-// Desktop layout matches dori-portal's real task table
-// (app/tasks/tasks-workspace.tsx + components/surfaces/data-table.tsx): one
-// bordered panel wrapping a <table>, not a stack of divided EntityItem rows.
-// Status is a checkbox-style toggle centered in its own column, priority is
-// a plain bold span (red only when high, no badge/pill), due date is plain
-// text. No @tanstack/react-table here — dori-mini's one sortable-by-nothing
-// column set doesn't need it, just the same cell markup.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, CheckCheck, Search } from 'lucide-react';
+import { RouteHeader } from './ui/RouteHeader.jsx';
 import { Badge } from './ui/badge.jsx';
 import { EmptyState } from './ui/empty-state.jsx';
 import { FilterChip } from './ui/filter-chip.jsx';
@@ -17,7 +11,7 @@ import { cn } from '../lib/utils.js';
 const STATUSES = [
   { id: 'open', label: 'Open' },
   { id: 'done', label: 'Completed' },
-  { id: 'all', label: 'All' }
+  { id: 'all', label: 'All' },
 ];
 
 function TaskCompleteButton({ done, onClick }) {
@@ -52,7 +46,7 @@ export function TasksView() {
   const refresh = useCallback(() => {
     setTasks(null);
     window.dori
-      .call('list_tasks', { status })
+      ?.call('list_tasks', { status })
       .then(setTasks)
       .catch((e) => setError(e.message));
   }, [status]);
@@ -62,7 +56,7 @@ export function TasksView() {
   const markDone = useCallback(
     (id) => {
       window.dori
-        .call('mark_task_done', { id })
+        ?.call('mark_task_done', { id })
         .then(refresh)
         .catch((e) => setError(e.message));
     },
@@ -76,75 +70,110 @@ export function TasksView() {
   }, [tasks, query]);
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col">
-      <div className="bg-background sticky top-0 z-10 flex flex-col gap-2.5 border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <h1 className="text-sm font-semibold">Tasks</h1>
-          {tasks && (
-            <Badge variant="muted" size="compact">
-              {tasks.length}
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="flex-1 overflow-y-auto bg-[var(--surface-canvas)]">
+      <div className="page-frame">
+        <RouteHeader
+          title="Tasks"
+          description="Action items and follow-ups extracted from meetings or added manually."
+          meta={
+            tasks ? (
+              <Badge variant="muted" size="compact">
+                {tasks.length}
+              </Badge>
+            ) : null
+          }
+        />
+
+        {/* Filter and Search Bar */}
+        <div className="mb-5 flex items-center gap-2.5">
           {STATUSES.map((s) => (
-            <FilterChip key={s.id} selected={status === s.id} onClick={() => setStatus(s.id)}>
+            <FilterChip
+              key={s.id}
+              selected={status === s.id}
+              onClick={() => setStatus(s.id)}
+            >
               {s.label}
             </FilterChip>
           ))}
-          <div className="relative ml-auto max-w-48 flex-1">
-            <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <div className="relative ml-auto max-w-xs flex-1">
+            <Search
+              size={13}
+              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search tasks"
-              className="h-7 pl-7 text-xs"
+              placeholder="Search tasks…"
+              className="h-8 pl-7 text-xs bg-card border-border-soft rounded-control"
             />
           </div>
         </div>
-      </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+
         {!error && !tasks && (
-          <div className="border-border bg-card rounded-panel space-y-px overflow-hidden border p-2">
+          <div className="rounded-panel border border-border-soft bg-card p-4 space-y-2">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
           </div>
         )}
+
         {filtered?.length === 0 && (
           <EmptyState
             icon={CheckCheck}
-            title={tasks.length === 0 ? 'No tasks' : 'No matches'}
+            title={tasks?.length === 0 ? 'No tasks' : 'No matches'}
             description={
-              tasks.length === 0
+              tasks?.length === 0
                 ? 'Tasks extracted from meetings or added manually show up here.'
-                : 'Try a different search term.'
+                : 'Try a different search term or status filter.'
             }
           />
         )}
+
         {filtered?.length > 0 && (
-          <div className="border-border bg-card rounded-panel overflow-hidden border">
+          <div className="rounded-panel border border-border-soft bg-card overflow-hidden shadow-xs">
             <table className="w-full border-collapse">
               <tbody>
                 {filtered.map((task) => (
-                  <tr key={task.id} className="hover:bg-muted/45 transition-colors">
-                    <td className="border-border w-[42px] border-b px-4 py-3 align-top last:border-b-0">
-                      <TaskCompleteButton done={task.status === 'done'} onClick={() => markDone(task.id)} />
+                  <tr
+                    key={task.id}
+                    className="hover:bg-muted/40 transition-colors border-b border-border-soft last:border-b-0"
+                  >
+                    <td className="w-12 px-4 py-3 align-top">
+                      <TaskCompleteButton
+                        done={task.status === 'done'}
+                        onClick={() => markDone(task.id)}
+                      />
                     </td>
-                    <td className="border-border border-b px-2 py-3 align-top last:border-b-0">
+                    <td className="px-2 py-3 align-top">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-medium">{task.title}</span>
+                        <span
+                          className={cn(
+                            'text-sm font-medium',
+                            task.status === 'done'
+                              ? 'line-through text-muted-foreground'
+                              : 'text-foreground'
+                          )}
+                        >
+                          {task.title}
+                        </span>
                         {task.context?.scope && (
-                          <span className="text-muted-foreground text-xs">From {task.context.scope}</span>
+                          <span className="text-muted-foreground text-xs">
+                            From {task.context.scope}
+                          </span>
                         )}
                       </div>
                     </td>
-                    <td className="border-border border-b px-4 py-3 align-top text-sm last:border-b-0">
-                      {task.dueDate || task.due || <span className="text-muted-foreground">—</span>}
+                    <td className="px-4 py-3 align-top text-xs text-muted-foreground whitespace-nowrap">
+                      {task.dueDate || task.due || '—'}
                     </td>
-                    <td className={cn('border-border border-b px-4 py-3 text-right align-top text-xs font-bold last:border-b-0', priorityClass(task.priority))}>
+                    <td
+                      className={cn(
+                        'px-4 py-3 text-right align-top text-xs font-semibold whitespace-nowrap',
+                        priorityClass(task.priority)
+                      )}
+                    >
                       {task.priority || ''}
                     </td>
                   </tr>
@@ -154,6 +183,6 @@ export function TasksView() {
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 }

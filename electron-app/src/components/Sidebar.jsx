@@ -1,43 +1,31 @@
-// Skeleton matches the real dori-portal sidebar (app/sidebar.tsx +
-// app/space-shell.css's `.sidebar-flat`/`.sidebar-nav`/`.sidebar-bottom-bar`):
-// one flex-column region — fixed header, THEN a *single* `flex-1 overflow-y-auto`
-// middle region holding both the nav links and the project tree together (not
-// two separately-scrolling blocks), then a footer pinned via `mt-auto` rather
-// than living outside the scroll region. Tailwind's `flex-1` already resolves
-// to `flex: 1 1 0%` (flex-basis 0), same as the real CSS's `.sidebar-nav { flex: 1 }`
-// — that basis-0 is what lets `overflow-y-auto` actually clip instead of the
-// content pushing the container taller than the window. `h-full` on <nav> gives
-// it the real height to clip against, mirroring the real sidebar's `height: 100vh`
-// anchor (`.app-shell-sidebar { position: sticky; height: 100vh }`).
-//
-// Indentation for nested projects is a `pl-4` wrapper around each level's
-// children (matching `.sidebar-nav-group-children { padding-left: 1rem }`),
-// not per-row inline depth*rem math.
-//
-// Deliberately NOT ported: the project-row kebab menu (dropdown-menu) and the
-// profile footer's popover menu (settings/theme/connections/log out) — both
-// are real dori-portal chrome, but neither has anything to back it here
-// (no rename/archive actions, no settings, no auth to log out of). Wiring
-// those primitives in with no real actions behind them would be decorative
-// fakery, not polish. The profile footer instead does the one real thing it
-// can: navigate to the Profile screen.
 import { useEffect, useState } from 'react';
-import { Inbox, Check, Folder, ChevronRight, Library, Search, Sparkles } from 'lucide-react';
+import {
+  Inbox,
+  Check,
+  Folder,
+  ChevronDown,
+  ChevronRight,
+  Library,
+  Search,
+  SquarePen,
+  Plus,
+  Settings,
+} from 'lucide-react';
 import { cn } from '../lib/utils.js';
 
 const NAV = [
-  { id: 'chat', label: 'Chat', icon: Sparkles },
+  { id: 'chat', label: 'New chat', icon: SquarePen },
   { id: 'inbox', label: 'Inbox', icon: Inbox },
   { id: 'tasks', label: 'Tasks', icon: Check },
-  { id: 'library', label: 'Library', icon: Library }
+  { id: 'library', label: 'Library', icon: Library },
 ];
 
 const navLinkClass = (active) =>
   cn(
-    'flex min-h-[2.15rem] w-full items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-left text-[0.8125rem] font-medium transition-colors',
+    'flex min-h-[2.35rem] w-full items-center gap-3 rounded-[10px] px-3 py-2 text-left text-[0.8125rem] font-medium transition-colors',
     active
-      ? 'bg-[var(--space-sidebar-field)] text-foreground-secondary'
-      : 'text-foreground-secondary hover:bg-[var(--space-nav-hover)]'
+      ? 'bg-[var(--space-sidebar-field)] text-foreground font-semibold shadow-xs'
+      : 'text-foreground-secondary hover:bg-[var(--space-nav-hover)] hover:text-foreground'
   );
 
 function buildProjectTree(projects) {
@@ -58,7 +46,7 @@ function buildProjectTree(projects) {
   return roots;
 }
 
-function ProjectRow({ node, selected, onSelect }) {
+function ProjectRow({ node, selected, onSelect, depth = 0 }) {
   const isSelected = selected === node.projectPath;
   return (
     <div>
@@ -67,17 +55,23 @@ function ProjectRow({ node, selected, onSelect }) {
         className={cn(
           'flex min-h-[2.15rem] w-full items-center gap-2.5 rounded-[10px] px-2.5 text-left text-[0.8125rem] font-medium transition-colors',
           isSelected
-            ? 'bg-[var(--space-nav-hover)] text-foreground-secondary'
-            : 'text-foreground-secondary hover:bg-[var(--space-nav-hover)]'
+            ? 'bg-[var(--space-nav-hover)] text-foreground font-semibold'
+            : 'text-foreground-secondary hover:bg-[var(--space-nav-hover)] hover:text-foreground'
         )}
       >
-        <Folder size={14} className="shrink-0 text-foreground-secondary" />
+        <Folder size={14} className="shrink-0 text-muted-foreground" />
         <span className="min-w-0 flex-1 truncate">{node.title}</span>
       </button>
       {node.children.length > 0 && (
-        <div className="mt-0.5 flex flex-col gap-0.5 pl-4">
+        <div className="mt-0.5 flex flex-col gap-0.5 pl-3.5 border-l border-[var(--space-sidebar-border)] ml-3">
           {node.children.map((child) => (
-            <ProjectRow key={child.projectPath} node={child} selected={selected} onSelect={onSelect} />
+            <ProjectRow
+              key={child.projectPath}
+              node={child}
+              selected={selected}
+              onSelect={onSelect}
+              depth={depth + 1}
+            />
           ))}
         </div>
       )}
@@ -85,108 +79,152 @@ function ProjectRow({ node, selected, onSelect }) {
   );
 }
 
-function ProfileFooter({ onSelect, profileVersion }) {
+function ProfileFooter({ onOpenSettings, profileVersion }) {
   const [profile, setProfile] = useState(undefined);
 
   useEffect(() => {
     window.dori
-      .call('get_profile', {})
+      ?.call('get_profile', {})
       .then(setProfile)
       .catch(() => setProfile(null));
   }, [profileVersion]);
 
-  const name = profile?.name || 'Profile';
-  const initials = profile
+  const name = profile?.name || 'My Space';
+  const role = profile?.role || 'Personal Vault';
+  const initials = profile?.name
     ? profile.name
         .split(/\s+/)
         .map((s) => s[0])
         .slice(0, 2)
         .join('')
         .toUpperCase()
-    : '?';
+    : 'D';
 
   return (
-    <button
-      onClick={() => onSelect('profile')}
-      className="mt-auto flex shrink-0 items-center gap-2.5 border-t border-[var(--space-sidebar-border)] px-2.5 py-2.5 text-left transition-colors hover:bg-[var(--space-nav-hover)]"
-    >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-[0.65rem] font-medium text-[var(--color-cta-text)]">
-        {initials}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[0.8125rem] font-medium text-foreground-secondary">
-          {name}
+    <div className="mt-auto border-t border-[var(--space-sidebar-border)] p-2">
+      <button
+        onClick={onOpenSettings}
+        className="flex w-full items-center gap-2.5 rounded-[10px] p-2 text-left transition-colors hover:bg-[var(--space-nav-hover)]"
+        title="Settings (Cmd+,)"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-[0.65rem] font-semibold text-[var(--color-cta-text)] shadow-xs">
+          {initials}
         </span>
-        {profile?.role && (
-          <span className="block truncate text-[0.68rem] text-muted-foreground">
-            {profile.role}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-xs font-semibold text-foreground">
+            {name}
           </span>
-        )}
-      </span>
-    </button>
+          <span className="block truncate text-[10px] text-muted-foreground">
+            {role}
+          </span>
+        </span>
+        <Settings size={14} className="text-muted-foreground shrink-0 opacity-60 hover:opacity-100" />
+      </button>
+    </div>
   );
 }
 
-export function Sidebar({ active, onSelect, onOpenSearch, profileVersion }) {
+export function Sidebar({
+  active,
+  onSelect,
+  onOpenSearch,
+  onOpenSettings,
+  onNewNote,
+  profileVersion,
+}) {
   const [projects, setProjects] = useState([]);
+  const [projectsOpen, setProjectsOpen] = useState(true);
 
   useEffect(() => {
     window.dori
-      .call('list_projects', {})
+      ?.call('list_projects', {})
       .then((list) => setProjects(buildProjectTree(list)))
       .catch(() => setProjects([]));
   }, []);
 
   return (
-    <nav className="flex h-full w-60 shrink-0 flex-col bg-[var(--space-sidebar-bg)]">
-      <div className="mb-1.5 flex shrink-0 items-center justify-between border-b border-[var(--space-sidebar-border)] px-2.5 pb-3 pt-[0.6rem]">
-        <span className="font-display text-base font-medium tracking-[-0.02em] text-foreground-secondary">
+    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-[var(--space-sidebar-border)] bg-[var(--surface-canvas)]">
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b border-[var(--space-sidebar-border)] px-4 py-3">
+        <span className="font-display text-base font-semibold tracking-[-0.03em] text-foreground">
           Dori
         </span>
+        <button
+          onClick={onNewNote}
+          className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--space-sidebar-field)] text-foreground-secondary transition-colors hover:bg-[var(--space-nav-hover)] hover:text-foreground"
+          title="New Note"
+          aria-label="New Note"
+        >
+          <Plus size={14} />
+        </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-1.5">
-        <div className="flex flex-col gap-0.5 pt-1.5">
-          <button
-            onClick={onOpenSearch}
-            className="flex min-h-[2.15rem] w-full items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-left text-[0.8125rem] font-medium text-foreground-secondary transition-colors hover:bg-[var(--space-nav-hover)]"
-          >
-            <Search size={16} className="shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1 truncate">Search</span>
-            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono">
-              /
-            </span>
-          </button>
+      {/* Navigation Scroll Region */}
+      <div className="flex-1 overflow-y-auto p-2 space-y-3">
+        {/* Search Bar */}
+        <button
+          onClick={onOpenSearch}
+          className="flex min-h-[2.15rem] w-full items-center gap-2 rounded-lg border border-[var(--space-sidebar-border)] bg-card px-2.5 py-1.5 text-left text-xs font-medium text-foreground-secondary transition-all hover:border-[var(--hairline-strong)] hover:bg-[var(--space-nav-hover)]"
+        >
+          <Search size={14} className="shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate">Search</span>
+          <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+            /
+          </kbd>
+        </button>
 
+        {/* Spaces Nav */}
+        <div className="flex flex-col gap-0.5">
           {NAV.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => onSelect(id)} className={navLinkClass(active === id)}>
-              <Icon size={16} className="shrink-0" />
+            <button
+              key={id}
+              onClick={() => onSelect(id)}
+              className={navLinkClass(active === id)}
+            >
+              <Icon size={16} className="shrink-0" strokeWidth={1.75} />
               <span className="min-w-0 flex-1 truncate">{label}</span>
             </button>
           ))}
         </div>
 
+        {/* Projects Accordion */}
         {projects.length > 0 && (
-          <div className="mt-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-2 text-[0.8125rem] font-medium text-foreground-secondary">
-              <ChevronRight size={13} className="shrink-0" />
-              Projects
-            </div>
-            <div className="flex flex-col gap-0.5">
-              {projects.map((node) => (
-                <ProjectRow
-                  key={node.projectPath}
-                  node={node}
-                  selected={active.startsWith('project:') ? active.slice(8) : null}
-                  onSelect={(path) => onSelect(`project:${path}`)}
-                />
-              ))}
-            </div>
+          <div className="pt-2 border-t border-[var(--space-sidebar-border)]">
+            <button
+              type="button"
+              onClick={() => setProjectsOpen(!projectsOpen)}
+              className="flex w-full items-center justify-between px-2 py-1.5 text-left text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <div className="flex items-center gap-1.5">
+                {projectsOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                <span>Projects</span>
+              </div>
+              <span className="rounded-full bg-muted px-1.5 py-0.2 text-[10px] font-mono font-medium">
+                {projects.length}
+              </span>
+            </button>
+
+            {projectsOpen && (
+              <div className="mt-1 flex flex-col gap-0.5 pl-1">
+                {projects.map((node) => (
+                  <ProjectRow
+                    key={node.projectPath}
+                    node={node}
+                    selected={active.startsWith('project:') ? active.slice(8) : null}
+                    onSelect={(path) => onSelect(`project:${path}`)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      <ProfileFooter onSelect={onSelect} profileVersion={profileVersion} />
-    </nav>
+      {/* Bottom Profile Footer */}
+      <ProfileFooter
+        onOpenSettings={onOpenSettings}
+        profileVersion={profileVersion}
+      />
+    </aside>
   );
 }

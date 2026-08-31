@@ -1,5 +1,32 @@
 # Changelog
 
+## [2026-08-31] — 1:1 Visual & UX Identity Parity with Dori Portal
+
+**Branch**: `dori-go-visual-overhaul`
+
+### What changed
+- Restored surface canvas hierarchy in `tokens.css`: set `--surface-canvas: #fafaf8` and `--background: #fafaf8` so pure white cards (`#ffffff`) lift off the canvas with subtle hairlines (`#e3e4e8`) and diffused shadows.
+- Built authentic Dori composer capsule: 20px pill capsule (`.chat-dock-composer`), floating shadow, borderless auto-growing textarea (`.quick-capture-input`), embedded AI Engine trigger, leading `+` action button, and circular navy send button.
+- Added editorial Home Chat canvas (`home-focus`): `"Where should we begin?"` Figtree headline, time-aware greeting kicker, and prompt starter chips.
+- Added `RouteHeader.jsx` component and `.page-frame` container across all screens (`LibraryView`, `TasksView`, `ProjectView`, `InboxScreen`), replacing cramped 40px toolbars with spacious headers and descriptions.
+- Rebuilt `Sidebar.jsx`: brand header with `+` quick create trigger, styled `/` search pill, collapsible **Projects** accordion with count pills and nested tree styling, and bottom profile footer card with popover settings access.
+- Built `SettingsModal.jsx` matching Dori Portal: multi-tab dialog (`General`, `AI Engine / Intelligence`, `Shortcuts`) accessible via `Cmd+,` keyboard shortcut and profile menu.
+- Added subtle Mac desktop scrollbars (`*::-webkit-scrollbar`).
+
+### Why
+Eliminate the raw prototype feel and achieve full visual, component, and UX parity between Dori Go and Dori Portal.
+
+### Files touched
+- `electron-app/src/tokens.css` — Warm canvas tokens, RouteHeader classes, composer capsule styles, and scrollbars.
+- `electron-app/src/components/ui/RouteHeader.jsx` — Reusable RouteHeader component.
+- `electron-app/src/components/SettingsModal.jsx` — Multi-tab Settings dialog (`Cmd+,`).
+- `electron-app/src/components/Sidebar.jsx` — Refined brand header, `/` search pill, Projects accordion, and profile footer.
+- `electron-app/src/components/ChatView.jsx` — Signature 20px composer capsule and editorial idle hero stage.
+- `electron-app/src/components/LibraryView.jsx` — Upgraded to `page-frame` with `RouteHeader` and elevated card grid.
+- `electron-app/src/components/TasksView.jsx` — Upgraded to `page-frame` with `RouteHeader` and elevated table panel.
+- `electron-app/src/components/ProjectView.jsx` — Upgraded to `page-frame` with `RouteHeader` and contextual chat.
+- `electron-app/src/App.jsx` — Mounted `SettingsModal`, registered `Cmd+,` shortcut, and upgraded `InboxScreen`.
+
 ## [2026-08-31] — Implement Dori Go Slice 3 (Shell Polish)
 
 **Branch**: `electron-frontend-experiment`
