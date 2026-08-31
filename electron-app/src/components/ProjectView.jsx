@@ -783,42 +783,53 @@ export function ProjectView({
               </div>
             )}
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendText();
-              }}
-              className="chat-dock-composer"
-            >
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder={`Message, capture, or ask in ${project.title}…`}
-                disabled={isLoading}
-                className="quick-capture-input"
-              />
-
-              <div className="flex items-center gap-3 shrink-0">
-                <EnginePicker onEngineChange={setEngine} />
-
-                <button
-                  type="submit"
-                  disabled={!input.trim() || isLoading}
-                  className="quick-capture-send-button flex items-center justify-center"
-                  title="Send (Enter)"
-                  aria-label="Send"
-                >
-                  <Send size={16} />
-                </button>
+            <div className="chat-composer-stack">
+              {/* Sticky d-source context tab above composer */}
+              <div className="chat-context-shelf" aria-label="Composer context">
+                <div className="chat-context-segment">
+                  <Folder size={13} className="text-[var(--brand-accent)] shrink-0" />
+                  <span className="text-xs font-semibold text-foreground">d-source:</span>
+                  <span className="text-xs font-mono text-muted-foreground">projects/{projectPath}</span>
+                </div>
               </div>
-            </form>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendText();
+                }}
+                className="chat-dock-composer"
+              >
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder={`Message, capture, or ask in ${project.title}…`}
+                  disabled={isLoading}
+                  className="quick-capture-input"
+                />
+
+                <div className="flex items-center gap-3 shrink-0">
+                  <EnginePicker onEngineChange={setEngine} />
+
+                  <button
+                    type="submit"
+                    disabled={!input.trim() || isLoading}
+                    className="quick-capture-send-button flex items-center justify-center"
+                    title="Send (Enter)"
+                    aria-label="Send"
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

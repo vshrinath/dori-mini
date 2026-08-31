@@ -281,12 +281,14 @@ export function getProjectDetails(projectPath) {
   const meetingMap = new Map();
   const peopleMap = new Map();
 
+  const IGNORED_FILES = new Set(['.setup.md', '.DS_Store', 'entities.json', 'mempalace.yaml', 'config.yaml']);
+
   // 1. Filesystem scan of projects/<projectPath>
   try {
     if (existsSync(projectDir)) {
       const entries = readdirSync(projectDir, { withFileTypes: true });
       for (const e of entries) {
-        if (e.isDirectory() || e.name === '.DS_Store') continue;
+        if (e.isDirectory() || e.name.startsWith('.') || IGNORED_FILES.has(e.name)) continue;
         const full = join(projectDir, e.name);
         const st = statSync(full);
         const ext = e.name.split('.').pop()?.toLowerCase() || '';
@@ -315,18 +317,20 @@ export function getProjectDetails(projectPath) {
         const date = rowDate(r.rel_path, fm, r.updated_at);
 
         // Project files
-        if (r.rel_path.startsWith(projectPrefix) && !r.rel_path.endsWith('.DS_Store')) {
+        if (r.rel_path.startsWith(projectPrefix)) {
           const name = r.rel_path.slice(projectPrefix.length);
-          const ext = name.split('.').pop()?.toLowerCase() || '';
-          if (!fileMap.has(r.rel_path)) {
-            fileMap.set(r.rel_path, {
-              relPath: r.rel_path,
-              name,
-              title: r.title,
-              extension: ext,
-              date,
-              type: fm.type || null,
-            });
+          if (!name.startsWith('.') && !IGNORED_FILES.has(name)) {
+            const ext = name.split('.').pop()?.toLowerCase() || '';
+            if (!fileMap.has(r.rel_path)) {
+              fileMap.set(r.rel_path, {
+                relPath: r.rel_path,
+                name,
+                title: r.title,
+                extension: ext,
+                date,
+                type: fm.type || null,
+              });
+            }
           }
         }
 
@@ -353,6 +357,7 @@ export function getProjectDetails(projectPath) {
         // Linked people
         if (
           r.rel_path.startsWith('people/') ||
+          r.rel_path.startsWith('entities/people/') ||
           r.rel_path.startsWith('research/people/') ||
           r.rel_path.startsWith('research/') ||
           r.rel_path.startsWith('entities/')
@@ -379,7 +384,7 @@ export function getProjectDetails(projectPath) {
     }
   } catch {}
 
-  // 3. Scan meetings/ and captures/ folders on disk if DB had nothing
+  // 3. Scan meetings/ and captures/ folders on disk
   const scanFolders = ['meetings', 'captures'];
   for (const f of scanFolders) {
     try {
@@ -391,17 +396,79 @@ export function getProjectDetails(projectPath) {
           if (e.name.toLowerCase().includes(slug.toLowerCase())) {
             const relPath = `${f}/${e.name}`;
             if (!meetingMap.has(relPath)) {
+              let attendees = [];
+              let title = e.name.replace(/\.md$/, '');
+              try {
+                const content = readFileSync(join(d, e.name), 'utf-8');
+                const parsed = parseFrontmatter(content);
+                if (parsed.fm.title) title = parsed.fm.title;
+                if (Array.isArray(parsed.fm.attendees)) attendees = parsed.fm.attendees;
+              } catch {}
+
               meetingMap.set(relPath, {
                 relPath,
-                title: e.name.replace(/\.md$/, ''),
+                title,
                 date: new Date().toISOString(),
-                attendees: [],
+                attendees,
               });
             }
           }
         }
       }
     } catch {}
+  }
+
+  // 4. Scan entities/people/ folder on disk for people linked via projects or meetings
+  try {
+    const peopleDir = join(VAULT_ROOT, 'entities', 'people');
+    if (existsSync(peopleDir)) {
+      const list = readdirSync(peopleDir, { withFileTypes: true });
+      for (const e of list) {
+        if (e.isDirectory() || !e.name.endsWith('.md') || e.name === 'PEOPLE.md') continue;
+        try {
+          const content = readFileSync(join(peopleDir, e.name), 'utf-8');
+          const parsed = parseFrontmatter(content);
+          const projects = Array.isArray(parsed.fm.projects) ? parsed.fm.projects : [parsed.fm.project].filter(Boolean);
+          const isMatch =
+            projects.some((p) => p === projectPath || p === slug || p?.endsWith(`/${slug}`)) ||
+            content.toLowerCase().includes(slug.toLowerCase());
+
+          if (isMatch) {
+            const relPath = `entities/people/${e.name}`;
+            peopleMap.set(relPath, {
+              relPath,
+              name: parsed.fm.title || parsed.fm.name || e.name.replace(/\.md$/, '').split('-').map((s) => s[0].toUpperCase() + s.slice(1)).join(' '),
+              role: parsed.fm.role || '',
+              org: parsed.fm.org || parsed.fm.company || '',
+            });
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+
+  // 5. Extract attendees from meetings as linked people if not yet discovered
+  for (const m of meetingMap.values()) {
+    if (Array.isArray(m.attendees)) {
+      for (const att of m.attendees) {
+        let name = att;
+        if (att.includes('@')) {
+          const localPart = att.split('@')[0];
+          name = localPart.replace(/[._+]/g, ' ').split(' ').map((s) => s ? s[0].toUpperCase() + s.slice(1) : '').join(' ');
+        }
+        if (name && name !== 'Shrinath V' && !name.toLowerCase().includes('dori')) {
+          const key = `attendee:${name.toLowerCase()}`;
+          if (!peopleMap.has(key)) {
+            peopleMap.set(key, {
+              relPath: m.relPath,
+              name,
+              role: 'Meeting Participant',
+              org: '',
+            });
+          }
+        }
+      }
+    }
   }
 
   const files = Array.from(fileMap.values()).sort((a, b) => b.date.localeCompare(a.date));

@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-08-31] — Filter Internal Files, Extract Linked People from Transcripts, and Add Sticky d-source Tab
+
+**Branch**: `main`
+
+### What changed
+- Cleaned Project Files: excluded internal dotfiles (`.setup.md`, `.DS_Store`) and config artifacts (`mempalace.yaml`, `entities.json`, `config.yaml`) so only real user documents and markdown files (`README.md`, `STATUS.md`, notes, PDFs, data) appear in the Files list.
+- Linked People Extraction:
+  - Scanned `entities/people/` on disk for project associations.
+  - Automatically extracted external attendees from linked meeting transcripts (e.g. `kashyapnitin@gmail.com` -> `Nitin Kashyap`) and surfaced them under Linked People.
+- Added Sticky `d-source` Tab above Composer:
+  - Added `.chat-context-shelf` and `.chat-context-segment` in `tokens.css` and `ProjectView.jsx` directly above the docked composer capsule showing `[Folder Icon] d-source: projects/<projectPath>` matching Dori Portal.
+
+### Why
+Eliminate internal scaffolding noise from project views, accurately link attendees as project contacts, and anchor the composer with Dori's signature sticky `d-source` context tab.
+
+### Files touched
+- `query-vault.mjs` — Filtered internal files and added meeting attendee people extraction.
+- `electron-app/src/tokens.css` — Added `.chat-context-shelf` styles.
+- `electron-app/src/components/ProjectView.jsx` — Connected sticky `d-source` tab above docked composer.
+
 ## [2026-08-31] — Enable Dual Filesystem and Index Resolution for Project Details
 
 **Branch**: `main`

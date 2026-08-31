@@ -982,6 +982,32 @@ body.is-resizing-sidebar {
   color: var(--foreground);
 }
 
+.chat-context-shelf {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 1.25rem -1px;
+  padding: 0.35rem 0.75rem 0.5rem;
+  border: 1px solid var(--hairline-strong);
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+  background: var(--surface-field);
+  color: var(--foreground-secondary);
+  width: fit-content;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  position: relative;
+  z-index: 5;
+  box-shadow: 0 -2px 6px rgba(18, 20, 32, 0.02);
+}
+
+.chat-context-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .chat-dock-composer {
   position: relative;
   display: flex;
