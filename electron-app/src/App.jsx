@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, Inbox as InboxIcon, Search, X } from 'lucide-react';
+import { Inbox as InboxIcon, Search, X } from 'lucide-react';
 import { InboxView } from './components/InboxItem.jsx';
 import { DecisionCard } from './components/DecisionCard.jsx';
 import { Badge } from './components/ui/badge.jsx';
+import { Button } from './components/ui/button.jsx';
 import { EmptyState } from './components/ui/empty-state.jsx';
 import { FilterChip } from './components/ui/filter-chip.jsx';
 import { Input } from './components/ui/input.jsx';
@@ -41,9 +42,9 @@ function InboxScreen() {
   useEffect(refresh, [refresh]);
 
   const decide = useCallback(
-    (actionId, clarificationId) => {
+    (actionId, clarificationId, choiceId) => {
       window.dori
-        .call(actionId, { clarificationId })
+        .call(actionId, { clarificationId, choiceId })
         .then(refresh)
         .catch((e) => setError(e.message));
     },
@@ -119,14 +120,21 @@ function InboxScreen() {
               createdAt={formatDate(item.createdAt)}
               actions={
                 item.clarificationId && (
-                  <>
-                    <IconButton label="Approve" onClick={() => decide('approve_inbox_item', item.clarificationId)}>
-                      <Check size={14} />
-                    </IconButton>
-                    <IconButton label="Ignore" onClick={() => decide('ignore_inbox_item', item.clarificationId)}>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {item.candidates?.map((c) => (
+                      <Button
+                        key={c.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => decide('approve_inbox_item', item.clarificationId, c.id)}
+                      >
+                        {c.label}
+                      </Button>
+                    ))}
+                    <IconButton label="Skip" onClick={() => decide('ignore_inbox_item', item.clarificationId)}>
                       <X size={14} />
                     </IconButton>
-                  </>
+                  </div>
                 )
               }
             />
