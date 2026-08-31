@@ -88,7 +88,7 @@ export function ChatView({ projectContext = null, className = '' }) {
       <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-border bg-card px-5 py-3">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--surface-tint)]">
-            <img src="./assets/icon.png" alt="" className="h-4 w-4 rounded-sm" />
+            <img src="./assets/icon.png" alt="" className="h-4 w-4 rounded-full" />
           </div>
           <div>
             <h1 className="text-sm font-semibold text-foreground">
@@ -137,7 +137,7 @@ export function ChatView({ projectContext = null, className = '' }) {
         {messages.length === 0 && isConfigured && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <img src="./assets/icon.png" alt="" className="h-7 w-7 rounded-md" />
+              <img src="./assets/icon.png" alt="" className="h-7 w-7 rounded-full" />
             </div>
             <h3 className="text-base font-semibold text-foreground mb-1">
               {projectContext ? `Ask anything about ${projectContext}` : 'How can Dori help today?'}
