@@ -18,7 +18,7 @@ import { EmptyState } from './ui/empty-state.jsx';
 import { EditProfileModal } from './EditProfileModal.jsx';
 import { AddToProfileModal } from './AddToProfileModal.jsx';
 
-function LinkedinIcon({ size = 14, className }) {
+function LinkedinIcon({ size = 15, className }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
@@ -28,7 +28,7 @@ function LinkedinIcon({ size = 14, className }) {
   );
 }
 
-function TwitterIcon({ size = 14, className }) {
+function TwitterIcon({ size = 15, className }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -68,7 +68,6 @@ export function ProfileView({ onProfileChanged, onSelectDocument }) {
     window.dori
       ?.call('list_documents', {})
       .then((list) => {
-        // Filter profile docs or show recent outputs
         const profileDocs = list.filter((d) => d.rel_path?.startsWith('profile/'));
         setDocs(profileDocs.length > 0 ? profileDocs : list.slice(0, 8));
       })
@@ -104,22 +103,22 @@ export function ProfileView({ onProfileChanged, onSelectDocument }) {
             'What Dori knows about you — used when personalizing notes and chat.'
           }
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditOpen(true)}
-                className="text-xs bg-card border-border-soft gap-1.5"
+                className="text-sm font-medium bg-card border-border-soft gap-1.5"
               >
-                <Pencil size={13} />
+                <Pencil size={14} />
                 <span>Edit</span>
               </Button>
               <Button
                 size="sm"
                 onClick={() => setIsAddOpen(true)}
-                className="text-xs gap-1.5"
+                className="text-sm font-medium gap-1.5"
               >
-                <Plus size={14} />
+                <Plus size={15} />
                 <span>Add</span>
               </Button>
             </div>
@@ -145,27 +144,27 @@ export function ProfileView({ onProfileChanged, onSelectDocument }) {
               </div>
               <div className="min-w-0 flex-1 space-y-3 pt-0.5">
                 <div>
-                  <h2 className="font-display text-lg font-semibold text-foreground">{name}</h2>
-                  {role && <p className="text-xs text-muted-foreground font-medium mt-0.5">{role}</p>}
+                  <h2 className="font-display text-xl font-bold text-foreground">{name}</h2>
+                  {role && <p className="text-sm text-muted-foreground font-medium mt-0.5">{role}</p>}
                 </div>
 
                 {bio && (
-                  <p className="text-xs text-foreground-secondary leading-relaxed max-w-2xl">
+                  <p className="text-sm text-foreground-secondary leading-relaxed max-w-2xl">
                     {bio}
                   </p>
                 )}
 
                 {hasContact && (
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-sm text-muted-foreground">
                     {email && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Mail size={13} className="shrink-0" />
+                      <span className="inline-flex items-center gap-1.5 font-medium">
+                        <Mail size={14} className="shrink-0" />
                         <span>{email}</span>
                       </span>
                     )}
                     {location && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <MapPin size={13} className="shrink-0" />
+                      <span className="inline-flex items-center gap-1.5 font-medium">
+                        <MapPin size={14} className="shrink-0" />
                         <span>{location}</span>
                       </span>
                     )}
@@ -177,10 +176,10 @@ export function ProfileView({ onProfileChanged, onSelectDocument }) {
                           href={withProtocol(link.url)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
+                          className="hover:text-foreground inline-flex items-center gap-1.5 transition-colors font-medium"
                           title={link.label}
                         >
-                          <Icon size={13} className="shrink-0" />
+                          <Icon size={14} className="shrink-0" />
                           <span className="capitalize">{link.label}</span>
                         </a>
                       );
@@ -193,18 +192,18 @@ export function ProfileView({ onProfileChanged, onSelectDocument }) {
             {/* Company / Organization Card */}
             {org && (
               <div className="universal-card p-5 space-y-2">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Organization / Venture
                 </p>
-                <div className="flex items-start gap-3 pt-1">
-                  <div className="rounded-lg bg-muted p-2 text-foreground-secondary">
-                    <Building2 size={16} />
+                <div className="flex items-start gap-3.5 pt-1">
+                  <div className="rounded-lg bg-muted p-2.5 text-foreground-secondary">
+                    <Building2 size={18} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-display text-sm font-semibold text-foreground">{org}</h3>
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="font-display text-base font-semibold text-foreground">{org}</h3>
                       {industry && (
-                        <Badge variant="muted" size="compact" className="text-[10px]">
+                        <Badge variant="muted" size="compact" className="text-xs">
                           {industry}
                         </Badge>
                       )}
@@ -218,14 +217,14 @@ export function ProfileView({ onProfileChanged, onSelectDocument }) {
             <section className="space-y-4 pt-2">
               <div className="flex items-baseline justify-between">
                 <div>
-                  <h2 className="font-display text-sm font-semibold text-foreground">
+                  <h2 className="font-display text-base font-semibold text-foreground">
                     Documents &amp; References
                   </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-sm text-muted-foreground mt-0.5">
                     Personal writings, bios, and references stored in your vault.
                   </p>
                 </div>
-                <span className="text-micro text-muted-foreground font-mono">
+                <span className="text-xs text-muted-foreground font-mono">
                   {docs.length} {docs.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
@@ -244,20 +243,20 @@ export function ProfileView({ onProfileChanged, onSelectDocument }) {
                       <button
                         key={doc.rel_path}
                         onClick={() => onSelectDocument?.(doc.rel_path)}
-                        className="universal-card group flex flex-col p-4 text-left"
+                        className="universal-card group flex flex-col p-5 text-left"
                       >
-                        <div className="mb-2 flex items-center justify-between">
+                        <div className="mb-2.5 flex items-center justify-between">
                           <div className="rounded-md bg-muted p-1.5 text-foreground-secondary group-hover:bg-[var(--surface-tint)] group-hover:text-primary transition-colors">
-                            <Icon size={14} />
+                            <Icon size={16} />
                           </div>
-                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                             {doc.type || 'note'}
                           </span>
                         </div>
-                        <h3 className="line-clamp-1 font-display text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                        <h3 className="line-clamp-1 font-display text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                           {doc.title}
                         </h3>
-                        <p className="mt-1 line-clamp-2 text-micro text-muted-foreground leading-relaxed">
+                        <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
                           {doc.rel_path}
                         </p>
                       </button>

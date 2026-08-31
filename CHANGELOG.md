@@ -1,5 +1,30 @@
 # Changelog
 
+## [2026-08-31] — Elevate Typography Scale Across All Views to 1:1 Dori Standards
+
+**Branch**: `main`
+
+### What changed
+- Replaced cramped `text-xs` (12px) and `text-micro` (10px) throughout the UI with Dori's standard typography hierarchy:
+  - Sidebar: upgraded nav links and project rows to `text-sm font-medium` (14px) and search to `text-sm`.
+  - Chat & Home: upgraded hero headline to `text-3xl sm:text-4xl`, greeting to `text-sm`, and chat message bubbles to `text-sm leading-relaxed` (15px).
+  - Decision Cards (Inbox): upgraded titles to `text-base font-semibold` (16px) and descriptions to `text-sm`.
+  - Library: upgraded card titles to `text-base font-semibold` (16px) and paths/snippets to `text-sm`.
+  - Tasks: upgraded task titles to `text-sm font-medium` (14px) and filter chips to `text-sm`.
+  - Profile: upgraded name to `text-2xl font-bold`, role to `text-sm font-semibold`, and bio to `text-sm`.
+- Updated `.chat-runtime-trigger` from `0.72rem` (11.5px) to standard `0.8125rem` / `text-xs font-semibold`.
+
+### Why
+Eliminate diminutive typography and bring Dori Go to the exact same visual weight, readability, and editorial clarity as Dori Portal.
+
+### Files touched
+- `electron-app/src/components/Sidebar.jsx` — Elevated navigation, search, and profile footer typography.
+- `electron-app/src/components/ChatView.jsx` — Elevated chat bubble, kicker, and hero headline sizes.
+- `electron-app/src/components/DecisionCard.jsx` — Elevated card title, description, and action button sizes.
+- `electron-app/src/components/LibraryView.jsx` — Elevated card title and snippet sizes.
+- `electron-app/src/components/TasksView.jsx` — Elevated task row and filter chip sizes.
+- `electron-app/src/components/ProfileView.jsx` — Elevated identity header, bio, and company typography.
+
 ## [2026-08-31] — Fix Figtree Font Loading, Typography Scale, and SettingsModal 1:1 Parity
 
 **Branch**: `main`

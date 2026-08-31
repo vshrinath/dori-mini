@@ -46,7 +46,7 @@ export function LibraryView({ onSelectDocument }) {
           description="Recent documents, drafts, and notes stored in your vault."
           meta={
             docs ? (
-              <Badge variant="muted" size="compact">
+              <Badge variant="muted" size="compact" className="text-xs">
                 {docs.length} {docs.length === 1 ? 'item' : 'items'}
               </Badge>
             ) : null
@@ -57,7 +57,7 @@ export function LibraryView({ onSelectDocument }) {
         <div className="flex flex-wrap items-center gap-3">
           {types.length > 0 && (
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger size="sm" className="w-36 bg-card border-border-soft">
+              <SelectTrigger size="sm" className="w-40 bg-card border-border-soft text-sm font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -71,24 +71,24 @@ export function LibraryView({ onSelectDocument }) {
             </Select>
           )}
 
-          <div className="relative max-w-xs flex-1 min-w-[200px]">
-            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <div className="relative max-w-xs flex-1 min-w-[220px]">
+            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Filter library…"
-              className="h-8 pl-8 text-xs bg-card border-border-soft rounded-control"
+              className="h-9 pl-9 text-sm bg-card border-border-soft rounded-control"
             />
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
 
         {!error && !docs && (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-36 w-full rounded-panel" />
-            <Skeleton className="h-36 w-full rounded-panel" />
-            <Skeleton className="h-36 w-full rounded-panel" />
+            <Skeleton className="h-40 w-full rounded-panel" />
+            <Skeleton className="h-40 w-full rounded-panel" />
+            <Skeleton className="h-40 w-full rounded-panel" />
           </div>
         )}
 
@@ -114,26 +114,26 @@ export function LibraryView({ onSelectDocument }) {
                   onClick={() => onSelectDocument?.(doc.rel_path)}
                   className="universal-card group flex flex-col p-5 text-left transition-all hover:border-[var(--hairline-strong)] hover:shadow-md"
                 >
-                  <div className="mb-3 flex items-center justify-between">
+                  <div className="mb-3.5 flex items-center justify-between">
                     <div className="rounded-lg bg-muted p-2 text-foreground-secondary transition-colors group-hover:bg-[var(--surface-tint)] group-hover:text-primary">
-                      <Icon size={16} strokeWidth={1.75} />
+                      <Icon size={18} strokeWidth={1.75} />
                     </div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       {doc.type || 'note'}
                     </span>
                   </div>
 
-                  <h3 className="line-clamp-2 font-display text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+                  <h3 className="line-clamp-2 font-display text-base font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
                     {doc.title}
                   </h3>
 
-                  <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground leading-relaxed">
                     {doc.rel_path}
                   </p>
 
-                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-[var(--border-soft)] text-micro text-muted-foreground">
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-[var(--border-soft)] text-xs text-muted-foreground">
                     <span>{doc.date ? formatDate(doc.date) : 'Document'}</span>
-                    <span className="font-mono text-[10px] opacity-70 group-hover:opacity-100 transition-opacity">
+                    <span className="font-mono text-xs opacity-70 group-hover:opacity-100 transition-opacity">
                       Open ↗
                     </span>
                   </div>

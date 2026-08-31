@@ -79,7 +79,7 @@ export function TasksView() {
           description="Action items and follow-ups extracted from meetings or added manually."
           meta={
             tasks ? (
-              <Badge variant="muted" size="compact">
+              <Badge variant="muted" size="compact" className="text-xs">
                 {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
               </Badge>
             ) : null
@@ -93,20 +93,21 @@ export function TasksView() {
               key={s.id}
               selected={status === s.id}
               onClick={() => setStatus(s.id)}
+              className="text-sm font-medium px-3 py-1.5"
             >
               {s.label}
             </FilterChip>
           ))}
           <div className="relative ml-auto max-w-xs flex-1">
             <Search
-              size={13}
-              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+              size={14}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search tasks…"
-              className="h-8 pl-7 text-xs bg-card border-border-soft rounded-control"
+              className="h-9 pl-9 text-sm bg-card border-border-soft rounded-control"
             />
           </div>
         </div>
@@ -141,34 +142,34 @@ export function TasksView() {
               return (
                 <div
                   key={task.id}
-                  className="flex items-start gap-3.5 p-4 transition-colors hover:bg-muted/30"
+                  className="flex items-start gap-4 p-4.5 transition-colors hover:bg-muted/30"
                 >
                   <TaskCompleteButton
                     done={isDone}
                     onClick={() => markDone(task.id)}
                   />
 
-                  <div className="min-w-0 flex-1 space-y-1">
+                  <div className="min-w-0 flex-1 space-y-1.5">
                     <span
                       className={cn(
-                        'block text-xs font-medium leading-relaxed',
+                        'block text-sm font-medium leading-relaxed',
                         isDone ? 'line-through text-muted-foreground' : 'text-foreground'
                       )}
                     >
                       {task.title}
                     </span>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-micro text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       {task.context?.scope && (
-                        <span className="inline-flex items-center gap-1 font-medium">
-                          <Tag size={11} className="shrink-0" />
+                        <span className="inline-flex items-center gap-1.5 font-medium">
+                          <Tag size={13} className="shrink-0" />
                           <span>{task.context.scope}</span>
                         </span>
                       )}
 
                       {(task.dueDate || task.due) && (
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar size={11} className="shrink-0" />
+                        <span className="inline-flex items-center gap-1.5">
+                          <Calendar size={13} className="shrink-0" />
                           <span>{task.dueDate || task.due}</span>
                         </span>
                       )}
@@ -176,7 +177,7 @@ export function TasksView() {
                   </div>
 
                   {isHigh && !isDone && (
-                    <Badge variant="destructive" size="compact" className="text-[10px]">
+                    <Badge variant="destructive" size="compact" className="text-xs">
                       High Priority
                     </Badge>
                   )}
