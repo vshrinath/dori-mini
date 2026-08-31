@@ -245,32 +245,75 @@ export function listDocs({ limit } = {}) {
   }
 }
 
-// Single doc's raw content + frontmatter — same lookup showDoc's CLI path
-// uses (exact rel_path, then LIKE, then case-insensitive title), just
-// returned as data instead of printed.
+// Single doc's raw content + frontmatter — checks filesystem directly
+// under VAULT_ROOT, falling back to SQLite query.
 export function getDocument(needle) {
-  const db = openDb();
-  try {
-    const rows = db.prepare(`
-      SELECT rel_path FROM vault_documents
-      WHERE rel_path = ? OR rel_path LIKE ? OR lower(title) = lower(?)
-      ORDER BY length(rel_path) ASC
-      LIMIT 1
-    `).all(needle, `%${needle}%`, needle);
-    if (!rows.length) return null;
-    const row = loadContent(db, rows[0].rel_path);
-    const fm = parseFm(row.frontmatter_json);
-    return {
-      relPath: row.rel_path,
-      title: row.title,
-      type: fm.type || null,
-      date: rowDate(row.rel_path, fm, row.updated_at),
-      frontmatter: fm,
-      content: row.content,
-    };
-  } finally {
-    db.close();
+  // 1. Direct filesystem check
+  const candidates = [needle, `${needle}.md`];
+  for (const c of candidates) {
+    const full = join(VAULT_ROOT, c);
+    try {
+      if (existsSync(full) && !statSync(full).isDirectory()) {
+        const raw = readFileSync(full, 'utf-8');
+        const st = statSync(full);
+        const { fm, body } = parseFrontmatter(raw);
+        const title =
+          fm.title ||
+          fm.name ||
+          c
+            .split('/')
+            .pop()
+            .replace(/\.md$/, '')
+            .split('-')
+            .map((s) => (s ? s[0].toUpperCase() + s.slice(1) : ''))
+            .join(' ');
+        let type = fm.type || null;
+        if (!type) {
+          if (c.startsWith('entities/people') || c.startsWith('people/')) type = 'person';
+          else if (c.startsWith('meetings/') || c.startsWith('captures/')) type = 'meeting';
+          else if (c.startsWith('projects/')) type = 'project';
+          else type = 'document';
+        }
+        return {
+          relPath: c,
+          title,
+          type,
+          date: fm.date || st.mtime.toISOString(),
+          frontmatter: fm,
+          content: raw,
+        };
+      }
+    } catch {}
   }
+
+  // 2. Query SQLite DB
+  try {
+    const db = openDb();
+    try {
+      const rows = db.prepare(`
+        SELECT rel_path FROM vault_documents
+        WHERE rel_path = ? OR rel_path LIKE ? OR lower(title) = lower(?)
+        ORDER BY length(rel_path) ASC
+        LIMIT 1
+      `).all(needle, `%${needle}%`, needle);
+      if (rows.length) {
+        const row = loadContent(db, rows[0].rel_path);
+        const fm = parseFm(row.frontmatter_json);
+        return {
+          relPath: row.rel_path,
+          title: row.title,
+          type: fm.type || null,
+          date: rowDate(row.rel_path, fm, row.updated_at),
+          frontmatter: fm,
+          content: row.content,
+        };
+      }
+    } finally {
+      db.close();
+    }
+  } catch {}
+
+  return null;
 }
 
 // Full project details: files in projects/<path>, linked meetings in meetings/,

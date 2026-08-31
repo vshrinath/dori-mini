@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-08-31] — Enable Direct Filesystem Document Resolution for Slideover and Viewer
+
+**Branch**: `main`
+
+### What changed
+- Enhanced `getDocument` in `query-vault.mjs`:
+  - Added direct filesystem resolution for `needle` and `${needle}.md` under `$VAULT_ROOT`.
+  - Parses frontmatter and returns full document content and metadata even for files in `entities/people/`, `research/`, `projects/`, or newly saved markdown files that have not yet been indexed into SQLite `portal.db`.
+
+### Why
+Fix "Document could not be loaded" error when opening entity files (like `entities/people/durgaprasad-shanmugam.md` or `entities/people/preethi-gopinath.md`) in the slideover viewer.
+
+### Files touched
+- `query-vault.mjs` — Implemented filesystem check in `getDocument`.
+
 ## [2026-08-31] — Fix Breadcrumb Home Icon Alignment and Entity Frontmatter Parsing
 
 **Branch**: `main`
