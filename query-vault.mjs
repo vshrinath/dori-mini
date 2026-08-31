@@ -244,6 +244,34 @@ export function listDocs({ limit } = {}) {
   }
 }
 
+// Single doc's raw content + frontmatter — same lookup showDoc's CLI path
+// uses (exact rel_path, then LIKE, then case-insensitive title), just
+// returned as data instead of printed.
+export function getDocument(needle) {
+  const db = openDb();
+  try {
+    const rows = db.prepare(`
+      SELECT rel_path FROM vault_documents
+      WHERE rel_path = ? OR rel_path LIKE ? OR lower(title) = lower(?)
+      ORDER BY length(rel_path) ASC
+      LIMIT 1
+    `).all(needle, `%${needle}%`, needle);
+    if (!rows.length) return null;
+    const row = loadContent(db, rows[0].rel_path);
+    const fm = parseFm(row.frontmatter_json);
+    return {
+      relPath: row.rel_path,
+      title: row.title,
+      type: fm.type || null,
+      date: rowDate(row.rel_path, fm, row.updated_at),
+      frontmatter: fm,
+      content: row.content,
+    };
+  } finally {
+    db.close();
+  }
+}
+
 function openDb() {
   if (!existsSync(DB_PATH)) {
     throw new Error(`Vault index not found: ${DB_PATH}`);

@@ -5,12 +5,13 @@
 // next/navigation, vaul Drawer, and half a dozen hooks this single-window
 // app doesn't have. Same look, none of that machinery.
 import { useEffect, useState } from 'react';
-import { Inbox, Check, Folder, ChevronRight } from 'lucide-react';
+import { Inbox, Check, Folder, ChevronRight, Library } from 'lucide-react';
 import { cn } from '../lib/utils.js';
 
 const NAV = [
   { id: 'inbox', label: 'Inbox', icon: Inbox },
-  { id: 'tasks', label: 'Tasks', icon: Check }
+  { id: 'tasks', label: 'Tasks', icon: Check },
+  { id: 'library', label: 'Library', icon: Library }
 ];
 
 const navLinkClass = (active) =>
@@ -69,7 +70,7 @@ function ProjectRow({ node, depth, selected, onSelect }) {
   );
 }
 
-function ProfileFooter({ onSelect }) {
+function ProfileFooter({ onSelect, profileVersion }) {
   const [profile, setProfile] = useState(undefined);
 
   useEffect(() => {
@@ -77,7 +78,7 @@ function ProfileFooter({ onSelect }) {
       .call('get_profile', {})
       .then(setProfile)
       .catch(() => setProfile(null));
-  }, []);
+  }, [profileVersion]);
 
   const name = profile?.name || 'Profile';
   const initials = profile
@@ -111,7 +112,7 @@ function ProfileFooter({ onSelect }) {
   );
 }
 
-export function Sidebar({ active, onSelect }) {
+export function Sidebar({ active, onSelect, profileVersion }) {
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
@@ -158,7 +159,7 @@ export function Sidebar({ active, onSelect }) {
         </div>
       )}
 
-      <ProfileFooter onSelect={onSelect} />
+      <ProfileFooter onSelect={onSelect} profileVersion={profileVersion} />
     </nav>
   );
 }

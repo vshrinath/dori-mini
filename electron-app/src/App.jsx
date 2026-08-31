@@ -7,6 +7,7 @@ import { Sidebar } from './components/Sidebar.jsx';
 import { TasksView } from './components/TasksView.jsx';
 import { ProjectView } from './components/ProjectView.jsx';
 import { ProfileView } from './components/ProfileView.jsx';
+import { LibraryView } from './components/LibraryView.jsx';
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -83,14 +84,18 @@ function InboxScreen() {
 
 export function App() {
   const [active, setActive] = useState('inbox');
+  const [profileVersion, setProfileVersion] = useState(0);
 
   return (
     <div className="flex h-screen">
-      <Sidebar active={active} onSelect={setActive} />
+      <Sidebar active={active} onSelect={setActive} profileVersion={profileVersion} />
       <div className="flex min-w-0 flex-1 flex-col">
         {active === 'inbox' && <InboxScreen />}
         {active === 'tasks' && <TasksView />}
-        {active === 'profile' && <ProfileView />}
+        {active === 'library' && <LibraryView />}
+        {active === 'profile' && (
+          <ProfileView onProfileChanged={() => setProfileVersion((v) => v + 1)} />
+        )}
         {active.startsWith('project:') && <ProjectView projectPath={active.slice(8)} />}
       </div>
     </div>

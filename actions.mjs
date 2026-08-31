@@ -19,11 +19,12 @@ import { z } from 'zod';
 import { listTasks } from './list-tasks.mjs';
 import { buildInbox } from './list-inbox.mjs';
 import { resolve as resolveClarification, dismiss as dismissClarification } from './clarification-store.mjs';
-import { search as searchVault } from './query-vault.mjs';
+import { search as searchVault, listDocs, getDocument } from './query-vault.mjs';
+import { renderMarkdownToHtml } from './render-html.mjs';
 import { canonicalOutputPath } from './route-destination.mjs';
 import { buildTimeline } from './timeline.mjs';
 import { listProjects } from './list-projects.mjs';
-import { getSelf } from './self-store.mjs';
+import { getSelf, setSelf } from './self-store.mjs';
 import { setTaskStatus } from './task-store.mjs';
 
 /** @typedef {{ id: string, description: string, inputSchema: import('zod').ZodType, scope: 'read'|'write', exposeToMcp?: boolean, handler: (input: any) => Promise<any> | any }} ActionDefinition */
@@ -132,6 +133,41 @@ export const actions = [
     exposeToMcp: true,
     handler: () => getSelf(),
   },
+  {
+    id: 'set_profile',
+    description: 'Set the user\'s own profile (creates/updates the person entity marked is_self: true)',
+    inputSchema: z.object({
+      name: z.string().min(1),
+      role: z.string().optional(),
+      org: z.string().optional(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ name, role, org }) => setSelf({ name, role, org }),
+  },
+  {
+    id: 'list_documents',
+    description: 'List every indexed vault document (rel_path, title, type, date) for browsing by type',
+    inputSchema: z.object({
+      limit: z.number().int().min(1).max(500).optional(),
+    }),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: ({ limit }) => listDocs({ limit }),
+  },
+  {
+    id: 'get_document',
+    description: 'Get one document\'s raw content + frontmatter + pre-rendered HTML by rel_path (or title)',
+    inputSchema: z.object({
+      path: z.string().min(1),
+    }),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: ({ path }) => {
+      const doc = getDocument(path);
+      return doc && { ...doc, html: renderMarkdownToHtml(doc.content) };
+    },
+  },
 ];
 
 export function getAction(id) {
@@ -142,7 +178,7 @@ export function getAction(id) {
 
 if (import.meta.main) {
   const { strict: assert } = await import('node:assert');
-  assert.equal(actions.filter((a) => a.exposeToMcp).length, 10, 'all ten sketch actions should be MCP-exposed');
+  assert.equal(actions.filter((a) => a.exposeToMcp).length, 13, 'all thirteen sketch actions should be MCP-exposed');
   assert.throws(() => getAction('nope'));
   console.log('ok —', actions.map((a) => a.id).join(', '));
 }

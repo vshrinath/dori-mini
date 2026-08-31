@@ -1,14 +1,66 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Input } from './ui/input.jsx';
+import { Label } from './ui/label.jsx';
+import { Button } from './ui/button.jsx';
 
-export function ProfileView() {
+function ProfileForm({ initial, onSaved }) {
+  const [name, setName] = useState(initial?.name || '');
+  const [role, setRole] = useState(initial?.role || '');
+  const [org, setOrg] = useState(initial?.org || '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const submit = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (!name.trim()) return;
+      setSaving(true);
+      window.dori
+        .call('set_profile', { name: name.trim(), role: role.trim() || undefined, org: org.trim() || undefined })
+        .then(onSaved)
+        .catch((err) => setError(err.message))
+        .finally(() => setSaving(false));
+    },
+    [name, role, org, onSaved]
+  );
+
+  return (
+    <form onSubmit={submit} className="flex max-w-sm flex-col gap-3">
+      {error && <p className="text-sm text-red-500">{error}</p>}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="profile-name">Name</Label>
+        <Input id="profile-name" value={name} onChange={(e) => setName(e.target.value)} required />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="profile-role">Role</Label>
+        <Input id="profile-role" value={role} onChange={(e) => setRole(e.target.value)} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="profile-org">Org</Label>
+        <Input id="profile-org" value={org} onChange={(e) => setOrg(e.target.value)} />
+      </div>
+      <Button type="submit" size="sm" disabled={saving} className="self-start">
+        {saving ? 'Saving…' : 'Save'}
+      </Button>
+    </form>
+  );
+}
+
+export function ProfileView({ onProfileChanged }) {
   const [profile, setProfile] = useState(undefined);
+  const [editing, setEditing] = useState(false);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     window.dori
       .call('get_profile', {})
-      .then(setProfile)
+      .then((p) => {
+        setProfile(p);
+        setEditing(!p);
+      })
       .catch(() => setProfile(null));
   }, []);
+
+  useEffect(refresh, [refresh]);
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
@@ -19,34 +71,44 @@ export function ProfileView() {
         {profile === undefined && (
           <p className="text-sm text-muted-foreground">Loading…</p>
         )}
-        {profile === null && (
-          <p className="text-sm text-muted-foreground">
-            No profile set yet — mark a person entity <code>is_self: true</code> in the vault.
-          </p>
+        {profile !== undefined && editing && (
+          <ProfileForm
+            initial={profile}
+            onSaved={() => {
+              refresh();
+              setEditing(false);
+              onProfileChanged?.();
+            }}
+          />
         )}
-        {profile && (
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Name</dt>
-            <dd>{profile.name}</dd>
-            {profile.role && (
-              <>
-                <dt className="text-muted-foreground">Role</dt>
-                <dd>{profile.role}</dd>
-              </>
-            )}
-            {profile.org && (
-              <>
-                <dt className="text-muted-foreground">Org</dt>
-                <dd>{profile.org}</dd>
-              </>
-            )}
-            {profile.projects?.length > 0 && (
-              <>
-                <dt className="text-muted-foreground">Projects</dt>
-                <dd>{profile.projects.join(', ')}</dd>
-              </>
-            )}
-          </dl>
+        {profile && !editing && (
+          <div className="flex flex-col gap-4">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+              <dt className="text-muted-foreground">Name</dt>
+              <dd>{profile.name}</dd>
+              {profile.role && (
+                <>
+                  <dt className="text-muted-foreground">Role</dt>
+                  <dd>{profile.role}</dd>
+                </>
+              )}
+              {profile.org && (
+                <>
+                  <dt className="text-muted-foreground">Org</dt>
+                  <dd>{profile.org}</dd>
+                </>
+              )}
+              {profile.projects?.length > 0 && (
+                <>
+                  <dt className="text-muted-foreground">Projects</dt>
+                  <dd>{profile.projects.join(', ')}</dd>
+                </>
+              )}
+            </dl>
+            <Button variant="outline" size="sm" className="self-start" onClick={() => setEditing(true)}>
+              Edit
+            </Button>
+          </div>
         )}
       </div>
     </section>
