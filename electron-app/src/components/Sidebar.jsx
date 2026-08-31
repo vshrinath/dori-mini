@@ -13,6 +13,7 @@ import {
   Settings,
   FileText,
   User,
+  FolderKanban,
 } from 'lucide-react';
 import { cn } from '../lib/utils.js';
 
@@ -25,6 +26,7 @@ const NAV = [
   { id: 'chat', label: 'New chat', icon: SquarePen },
   { id: 'inbox', label: 'Inbox', icon: Inbox },
   { id: 'tasks', label: 'Tasks', icon: Check },
+  { id: 'projects', label: 'Projects', icon: FolderKanban },
   { id: 'library', label: 'Library', icon: Library },
 ];
 

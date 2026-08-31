@@ -12,6 +12,7 @@ import { Skeleton } from './components/ui/skeleton.jsx';
 import { TooltipProvider } from './components/ui/tooltip.jsx';
 import { Sidebar } from './components/Sidebar.jsx';
 import { TasksView } from './components/TasksView.jsx';
+import { ProjectsIndexView } from './components/ProjectsIndexView.jsx';
 import { ProjectView } from './components/ProjectView.jsx';
 import { ProfileView } from './components/ProfileView.jsx';
 import { LibraryView } from './components/LibraryView.jsx';
@@ -239,10 +240,19 @@ export function App() {
               onSelectDocument={(path) => setActiveDocument(path)}
             />
           )}
+          {active === 'projects' && (
+            <ProjectsIndexView
+              onSelectProject={(path) => setActive(`project:${path}`)}
+              onSelectDocument={(path) => setActiveDocument(path)}
+            />
+          )}
           {active.startsWith('project:') && (
             <ProjectView
               projectPath={active.slice(8)}
               onSelectProject={(path) => setActive(`project:${path}`)}
+              onSelectDocument={(path) => setActiveDocument(path)}
+              onNavigateHome={() => setActive('chat')}
+              onNavigateProjects={() => setActive('projects')}
             />
           )}
         </main>

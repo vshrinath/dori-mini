@@ -1,5 +1,37 @@
 # Changelog
 
+## [2026-08-31] — Complete Project Detail Parity with Shadcn Attachments, Tabs, Files, and Projects Index
+
+**Branch**: `main`
+
+### What changed
+- Added Shadcn Primitives:
+  - `Attachment.jsx`: 1:1 ported Shadcn Attachment primitive matching Dori Portal (`Attachment`, `AttachmentGroup`, `AttachmentMedia`, `AttachmentContent`, `AttachmentTitle`, `AttachmentDescription`, `AttachmentActions`) supporting file type icons (Markdown, PDF, Image, Spreadsheet, etc.).
+  - `Tabs.jsx`: accessible multi-tab switcher (`Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`).
+  - `Breadcrumbs.jsx`: accessible hierarchy breadcrumb navigation (`Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`, `BreadcrumbSeparator`).
+- Rebuilt Project Detail Page (`ProjectView.jsx`):
+  - Added interactive breadcrumbs trail (`Home > Projects > [Parent] > [Project Title]`).
+  - Added multi-tab workspace (`Overview`, `Files`, `Tasks`, `Context Chat`):
+    - **Overview Tab**: Project context preview card (`.setup.md`, `context.md`, `project.md`, `README.md`) with slideover open CTA, recent files attachment grid, open loops / action items with checkboxes, and subprojects.
+    - **Files Tab**: All documents and attachments under `projects/<projectPath>/` with extension icons, relative dates, and slideover preview on click.
+    - **Tasks Tab**: All project-specific tasks with toggleable completion states and priority badges.
+    - **Chat Tab**: Full-height contextual AI conversation workspace.
+- Added Projects Index Workspace (`ProjectsIndexView.jsx`):
+  - Displays all initiatives in a responsive card grid with file counts, open loop counts, subproject counts, and search filter.
+  - Added `Projects` space to the main Sidebar navigation.
+
+### Why
+Bring full 1:1 feature and visual parity for Projects to Dori Go, using authentic Shadcn attachment cards, file listings, tasks, and tabs.
+
+### Files touched
+- `electron-app/src/components/ui/attachment.jsx` — Ported Shadcn Attachment primitives.
+- `electron-app/src/components/ui/tabs.jsx` — Ported Shadcn Tabs primitives.
+- `electron-app/src/components/ui/breadcrumbs.jsx` — Ported Shadcn Breadcrumb primitives.
+- `electron-app/src/components/ProjectsIndexView.jsx` — Projects index workspace with situation cards.
+- `electron-app/src/components/ProjectView.jsx` — Project detail page with tabs, files, tasks, and breadcrumbs.
+- `electron-app/src/components/Sidebar.jsx` — Added Projects to primary nav.
+- `electron-app/src/App.jsx` — Wired Projects index and project routes.
+
 ## [2026-08-31] — Enlarge Center Composer Bar, Hero Title, and Starter Prompt Chips
 
 **Branch**: `main`
