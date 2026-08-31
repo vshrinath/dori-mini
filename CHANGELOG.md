@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-08-31] — Complete Native macOS Binary Rebranding to "Dori.app"
+
+**Branch**: `main`
+
+### What changed
+- Rebranded unpackaged Electron dev binary bundle on macOS: renamed `Electron.app` to `Dori.app`, renamed internal executable `Contents/MacOS/Electron` to `Contents/MacOS/Dori`, and updated `node_modules/electron/path.txt` to point to `Dori.app/Contents/MacOS/Dori`.
+- Patched `Info.plist` with `CFBundleExecutable: Dori`, `CFBundleName: Dori`, `CFBundleDisplayName: Dori`, and `CFBundleIdentifier: app.mydori.mini`.
+- Registered `Dori.app` with macOS LaunchServices via `lsregister -f`.
+
+### Why
+macOS WindowServer and Dock identify processes by the physical `.app` directory and Mach-O executable name rather than JS runtime properties alone. Renaming the bundle and executable ensures the OS displays "Dori" in the Menu Bar, Dock, App Switcher (Cmd+Tab), and Activity Monitor.
+
+### Files touched
+- `electron-app/scripts/patch-electron-name.mjs` — Bundle rename, executable rename, path.txt rewrite, and Info.plist patching.
+
 ## [2026-08-31] — Fix Application Name to "Dori" Across macOS Command Bar, Dock, and Menu
 
 **Branch**: `main`
