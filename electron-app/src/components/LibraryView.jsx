@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, FileCode2, FileText, Search, Plus } from 'lucide-react';
+import { BookOpen, FileCode2, FileText, Search } from 'lucide-react';
 import { RouteHeader } from './ui/RouteHeader.jsx';
 import { Badge } from './ui/badge.jsx';
 import { EmptyState } from './ui/empty-state.jsx';
@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Skeleton } from './ui/skeleton.jsx';
 
 function formatDate(iso) {
-  return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function LibraryView({ onSelectDocument }) {
@@ -34,26 +35,26 @@ export function LibraryView({ onSelectDocument }) {
     const q = query.trim().toLowerCase();
     return docs
       .filter((d) => typeFilter === 'all' || (d.type || 'note') === typeFilter)
-      .filter((d) => !q || d.title.toLowerCase().includes(q));
+      .filter((d) => !q || d.title.toLowerCase().includes(q) || (d.rel_path && d.rel_path.toLowerCase().includes(q)));
   }, [docs, typeFilter, query]);
 
   return (
     <div className="flex-1 overflow-y-auto bg-[var(--surface-canvas)]">
-      <div className="page-frame">
+      <div className="page-frame max-w-5xl space-y-6">
         <RouteHeader
           title="Library"
           description="Recent documents, drafts, and notes stored in your vault."
           meta={
             docs ? (
               <Badge variant="muted" size="compact">
-                {docs.length}
+                {docs.length} {docs.length === 1 ? 'item' : 'items'}
               </Badge>
             ) : null
           }
         />
 
         {/* Filter and Search Bar */}
-        <div className="mb-6 flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {types.length > 0 && (
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger size="sm" className="w-36 bg-card border-border-soft">
@@ -70,24 +71,24 @@ export function LibraryView({ onSelectDocument }) {
             </Select>
           )}
 
-          <div className="relative max-w-xs flex-1">
+          <div className="relative max-w-xs flex-1 min-w-[200px]">
             <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search library…"
+              placeholder="Filter library…"
               className="h-8 pl-8 text-xs bg-card border-border-soft rounded-control"
             />
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
 
         {!error && !docs && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-32 w-full rounded-panel" />
-            <Skeleton className="h-32 w-full rounded-panel" />
-            <Skeleton className="h-32 w-full rounded-panel" />
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-36 w-full rounded-panel" />
+            <Skeleton className="h-36 w-full rounded-panel" />
+            <Skeleton className="h-36 w-full rounded-panel" />
           </div>
         )}
 
@@ -104,32 +105,37 @@ export function LibraryView({ onSelectDocument }) {
         )}
 
         {filtered?.length > 0 && (
-          <div className="anim-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="anim-stagger grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((doc) => {
               const Icon = doc.type === 'note' || !doc.type ? FileText : FileCode2;
               return (
                 <button
                   key={doc.rel_path}
                   onClick={() => onSelectDocument?.(doc.rel_path)}
-                  className="universal-card group flex flex-col p-4 text-left"
+                  className="universal-card group flex flex-col p-5 text-left transition-all hover:border-[var(--hairline-strong)] hover:shadow-md"
                 >
-                  <div className="mb-3 flex items-center gap-2.5">
-                    <div className="rounded-lg bg-muted p-2 text-foreground-secondary transition-colors group-hover:bg-[var(--surface-tint)] group-hover:text-[var(--brand-accent-text)]">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="rounded-lg bg-muted p-2 text-foreground-secondary transition-colors group-hover:bg-[var(--surface-tint)] group-hover:text-primary">
                       <Icon size={16} strokeWidth={1.75} />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <span className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
-                        {doc.type || 'note'}
-                      </span>
-                    </div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {doc.type || 'note'}
+                    </span>
                   </div>
 
-                  <h3 className="line-clamp-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
+                  <h3 className="line-clamp-2 font-display text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
                     {doc.title}
                   </h3>
 
-                  <div className="mt-auto flex items-center justify-between pt-4 text-micro text-muted-foreground">
+                  <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+                    {doc.rel_path}
+                  </p>
+
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-[var(--border-soft)] text-micro text-muted-foreground">
                     <span>{doc.date ? formatDate(doc.date) : 'Document'}</span>
+                    <span className="font-mono text-[10px] opacity-70 group-hover:opacity-100 transition-opacity">
+                      Open ↗
+                    </span>
                   </div>
                 </button>
               );

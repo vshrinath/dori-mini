@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, CheckCheck, Search } from 'lucide-react';
+import { Check, CheckCheck, Search, Calendar, Tag } from 'lucide-react';
 import { RouteHeader } from './ui/RouteHeader.jsx';
 import { Badge } from './ui/badge.jsx';
 import { EmptyState } from './ui/empty-state.jsx';
@@ -22,19 +22,15 @@ function TaskCompleteButton({ done, onClick }) {
       disabled={done}
       aria-label={done ? 'Completed' : 'Mark done'}
       className={cn(
-        'flex h-5 w-5 items-center justify-center rounded-full border transition-colors',
+        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all',
         done
           ? 'border-transparent bg-primary text-primary-foreground'
-          : 'border-border-soft text-transparent hover:border-primary hover:text-primary/40'
+          : 'border-border-soft text-transparent hover:border-primary hover:text-primary/40 hover:scale-105'
       )}
     >
       <Check size={12} strokeWidth={3} />
     </button>
   );
-}
-
-function priorityClass(priority) {
-  return priority === 'high' || priority === 'HIGH' ? 'text-red-500' : 'text-muted-foreground';
 }
 
 export function TasksView() {
@@ -66,26 +62,32 @@ export function TasksView() {
   const filtered = useMemo(() => {
     if (!tasks) return tasks;
     const q = query.trim().toLowerCase();
-    return q ? tasks.filter((t) => t.title.toLowerCase().includes(q)) : tasks;
+    return q
+      ? tasks.filter(
+          (t) =>
+            t.title.toLowerCase().includes(q) ||
+            (t.context?.scope && t.context.scope.toLowerCase().includes(q))
+        )
+      : tasks;
   }, [tasks, query]);
 
   return (
     <div className="flex-1 overflow-y-auto bg-[var(--surface-canvas)]">
-      <div className="page-frame">
+      <div className="page-frame max-w-5xl space-y-6">
         <RouteHeader
           title="Tasks"
           description="Action items and follow-ups extracted from meetings or added manually."
           meta={
             tasks ? (
               <Badge variant="muted" size="compact">
-                {tasks.length}
+                {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
               </Badge>
             ) : null
           }
         />
 
         {/* Filter and Search Bar */}
-        <div className="mb-5 flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5">
           {STATUSES.map((s) => (
             <FilterChip
               key={s.id}
@@ -112,10 +114,10 @@ export function TasksView() {
         {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
 
         {!error && !tasks && (
-          <div className="rounded-panel border border-border-soft bg-card p-4 space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+          <div className="rounded-panel border border-border-soft bg-card p-4 space-y-3">
+            <Skeleton className="h-12 w-full rounded-control" />
+            <Skeleton className="h-12 w-full rounded-control" />
+            <Skeleton className="h-12 w-full rounded-control" />
           </div>
         )}
 
@@ -132,54 +134,55 @@ export function TasksView() {
         )}
 
         {filtered?.length > 0 && (
-          <div className="rounded-panel border border-border-soft bg-card overflow-hidden shadow-xs">
-            <table className="w-full border-collapse">
-              <tbody>
-                {filtered.map((task) => (
-                  <tr
-                    key={task.id}
-                    className="hover:bg-muted/40 transition-colors border-b border-border-soft last:border-b-0"
-                  >
-                    <td className="w-12 px-4 py-3 align-top">
-                      <TaskCompleteButton
-                        done={task.status === 'done'}
-                        onClick={() => markDone(task.id)}
-                      />
-                    </td>
-                    <td className="px-2 py-3 align-top">
-                      <div className="flex flex-col gap-0.5">
-                        <span
-                          className={cn(
-                            'text-sm font-medium',
-                            task.status === 'done'
-                              ? 'line-through text-muted-foreground'
-                              : 'text-foreground'
-                          )}
-                        >
-                          {task.title}
-                        </span>
-                        {task.context?.scope && (
-                          <span className="text-muted-foreground text-xs">
-                            From {task.context.scope}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 align-top text-xs text-muted-foreground whitespace-nowrap">
-                      {task.dueDate || task.due || '—'}
-                    </td>
-                    <td
+          <div className="rounded-panel border border-border-soft bg-card overflow-hidden shadow-xs divide-y divide-border-soft">
+            {filtered.map((task) => {
+              const isHigh = task.priority === 'high' || task.priority === 'HIGH';
+              const isDone = task.status === 'done';
+              return (
+                <div
+                  key={task.id}
+                  className="flex items-start gap-3.5 p-4 transition-colors hover:bg-muted/30"
+                >
+                  <TaskCompleteButton
+                    done={isDone}
+                    onClick={() => markDone(task.id)}
+                  />
+
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <span
                       className={cn(
-                        'px-4 py-3 text-right align-top text-xs font-semibold whitespace-nowrap',
-                        priorityClass(task.priority)
+                        'block text-xs font-medium leading-relaxed',
+                        isDone ? 'line-through text-muted-foreground' : 'text-foreground'
                       )}
                     >
-                      {task.priority || ''}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      {task.title}
+                    </span>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-micro text-muted-foreground">
+                      {task.context?.scope && (
+                        <span className="inline-flex items-center gap-1 font-medium">
+                          <Tag size={11} className="shrink-0" />
+                          <span>{task.context.scope}</span>
+                        </span>
+                      )}
+
+                      {(task.dueDate || task.due) && (
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar size={11} className="shrink-0" />
+                          <span>{task.dueDate || task.due}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {isHigh && !isDone && (
+                    <Badge variant="destructive" size="compact" className="text-[10px]">
+                      High Priority
+                    </Badge>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

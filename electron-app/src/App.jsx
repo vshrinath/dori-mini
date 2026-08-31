@@ -223,7 +223,10 @@ export function App() {
           className="anim-rise flex min-h-0 flex-1 flex-col overflow-hidden"
         >
           {active === 'chat' && (
-            <ChatView onOpenSettings={() => setIsSettingsOpen(true)} />
+            <ChatView
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              onOpenSearch={() => setIsSearchOpen(true)}
+            />
           )}
           {active === 'inbox' && <InboxScreen />}
           {active === 'tasks' && <TasksView />}
@@ -233,6 +236,7 @@ export function App() {
           {active === 'profile' && (
             <ProfileView
               onProfileChanged={() => setProfileVersion((v) => v + 1)}
+              onSelectDocument={(path) => setActiveDocument(path)}
             />
           )}
           {active.startsWith('project:') && (

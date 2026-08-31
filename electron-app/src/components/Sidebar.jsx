@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Inbox,
   Check,
@@ -10,6 +10,8 @@ import {
   SquarePen,
   Plus,
   Settings,
+  FileText,
+  User,
 } from 'lucide-react';
 import { cn } from '../lib/utils.js';
 
@@ -134,6 +136,8 @@ export function Sidebar({
 }) {
   const [projects, setProjects] = useState([]);
   const [projectsOpen, setProjectsOpen] = useState(true);
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+  const addMenuRef = useRef(null);
 
   useEffect(() => {
     window.dori
@@ -142,21 +146,73 @@ export function Sidebar({
       .catch(() => setProjects([]));
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (addMenuRef.current && !addMenuRef.current.contains(e.target)) {
+        setIsAddMenuOpen(false);
+      }
+    };
+    if (isAddMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isAddMenuOpen]);
+
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-[var(--space-sidebar-border)] bg-[var(--surface-canvas)]">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-[var(--space-sidebar-border)] px-4 py-3">
+      <div className="relative flex shrink-0 items-center justify-between border-b border-[var(--space-sidebar-border)] px-4 py-3">
         <span className="font-display text-base font-semibold tracking-[-0.03em] text-foreground">
           Dori
         </span>
-        <button
-          onClick={onNewNote}
-          className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--space-sidebar-field)] text-foreground-secondary transition-colors hover:bg-[var(--space-nav-hover)] hover:text-foreground"
-          title="New Note"
-          aria-label="New Note"
-        >
-          <Plus size={14} />
-        </button>
+        <div ref={addMenuRef} className="relative">
+          <button
+            onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+            className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--space-sidebar-field)] text-foreground-secondary transition-colors hover:bg-[var(--space-nav-hover)] hover:text-foreground"
+            title="Create or Capture"
+            aria-label="Create"
+          >
+            <Plus size={14} />
+          </button>
+
+          {isAddMenuOpen && (
+            <div className="absolute right-0 top-full mt-1.5 w-44 rounded-panel border border-border bg-card p-1 shadow-lg z-30 anim-rise">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddMenuOpen(false);
+                  onNewNote?.();
+                }}
+                className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-1.5 text-left text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <FileText size={14} className="text-muted-foreground" />
+                <span>New Note</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddMenuOpen(false);
+                  onSelect('chat');
+                }}
+                className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-1.5 text-left text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <SquarePen size={14} className="text-muted-foreground" />
+                <span>New Chat</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddMenuOpen(false);
+                  onSelect('profile');
+                }}
+                className="flex w-full items-center gap-2 rounded-[8px] px-2.5 py-1.5 text-left text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <User size={14} className="text-muted-foreground" />
+                <span>Profile Space</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Navigation Scroll Region */}

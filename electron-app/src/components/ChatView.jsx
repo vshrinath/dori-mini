@@ -3,12 +3,14 @@ import {
   Send,
   AlertCircle,
   RefreshCw,
-  Folder,
   Plus,
-  ChevronDown,
+  FileUp,
+  Link,
+  Search,
+  Sparkles,
+  Check,
 } from 'lucide-react';
 import { Button } from './ui/button.jsx';
-import { Badge } from './ui/badge.jsx';
 import { EnginePicker } from './EnginePicker.jsx';
 import { cn } from '../lib/utils.js';
 
@@ -26,14 +28,18 @@ const STARTER_PROMPTS = [
   'What are my open high priority tasks?',
 ];
 
-export function ChatView({ projectContext = null, className = '', onOpenSettings }) {
+export function ChatView({ projectContext = null, className = '', onOpenSearch }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [engine, setEngine] = useState('none');
   const [errorMessage, setErrorMessage] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const menuRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -50,6 +56,19 @@ export function ChatView({ projectContext = null, className = '', onOpenSettings
       })
       .catch(() => {});
   }, []);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMenuOpen]);
 
   const handleSendText = async (textToSend) => {
     const text = (textToSend || input).trim();
@@ -96,6 +115,34 @@ export function ChatView({ projectContext = null, className = '', onOpenSettings
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsMenuOpen(false);
+    try {
+      const sourcePath = window.dori.getFilePath(file);
+      await window.dori.call('capture_file', { sourcePath });
+      setUploadStatus(`Attached ${file.name}`);
+      setInput((prev) => (prev ? `${prev}\n[Referencing file: ${file.name}]` : `[Referencing file: ${file.name}] `));
+      setTimeout(() => setUploadStatus(null), 3000);
+    } catch (err) {
+      console.error('Failed to attach file:', err);
+    }
+  };
+
+  const handleCaptureUrlPrompt = async () => {
+    setIsMenuOpen(false);
+    const url = window.prompt('Enter link or YouTube URL to capture into vault:');
+    if (!url?.trim()) return;
+    try {
+      await window.dori.call('capture_url', { url: url.trim() });
+      setUploadStatus('Link captured to vault');
+      setTimeout(() => setUploadStatus(null), 3000);
+    } catch (err) {
+      console.error('Failed to capture URL:', err);
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -114,6 +161,14 @@ export function ChatView({ projectContext = null, className = '', onOpenSettings
 
   return (
     <div className={cn('home-focus flex flex-col', isChatting && 'is-chatting', className)}>
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFileUpload}
+      />
+
       {/* Header bar (only when chatting or project scoped) */}
       {isChatting && (
         <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--surface-canvas)]/90 backdrop-blur-md px-6 py-3">
@@ -217,12 +272,58 @@ export function ChatView({ projectContext = null, className = '', onOpenSettings
               </div>
             )}
 
+            {uploadStatus && (
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-600 flex items-center gap-2">
+                <Check size={14} className="shrink-0" />
+                <span>{uploadStatus}</span>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
         )}
 
         {/* Signature 20px Dori Composer Capsule */}
-        <div className="w-full">
+        <div className="w-full relative">
+          {/* Action Popover Menu for + button */}
+          {isMenuOpen && (
+            <div
+              ref={menuRef}
+              className="absolute bottom-full left-0 mb-2 w-52 rounded-panel border border-border bg-card p-1.5 shadow-lg z-30 anim-rise"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  fileInputRef.current?.click();
+                }}
+                className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <FileUp size={15} className="text-muted-foreground" />
+                <span>Attach document / file</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleCaptureUrlPrompt}
+                className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <Link size={15} className="text-muted-foreground" />
+                <span>Capture link / YouTube</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onOpenSearch?.();
+                }}
+                className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                <Search size={15} className="text-muted-foreground" />
+                <span>Search vault notes</span>
+              </button>
+            </div>
+          )}
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -232,8 +333,9 @@ export function ChatView({ projectContext = null, className = '', onOpenSettings
           >
             <button
               type="button"
-              className="quick-capture-icon-button"
-              title="Add context"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={cn('quick-capture-icon-button', isMenuOpen && 'text-primary bg-[var(--surface-tint)]')}
+              title="Add attachment or action"
               aria-label="Add"
             >
               <Plus size={18} />
@@ -262,11 +364,11 @@ export function ChatView({ projectContext = null, className = '', onOpenSettings
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="quick-capture-send-button"
+                className="quick-capture-send-button flex items-center justify-center"
                 title="Send (Enter)"
                 aria-label="Send"
               >
-                <Send size={13} className="ml-0.5" />
+                <Send size={13} />
               </button>
             </div>
           </form>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Search, FileText, FileCode2, ArrowRight, CornerDownLeft, X } from 'lucide-react';
+import { Search, FileText, FileCode2, CornerDownLeft, X, Sparkles } from 'lucide-react';
 import { Badge } from './ui/badge.jsx';
 import { TRANSITION } from '../lib/motion.js';
 
@@ -10,7 +10,6 @@ export function SearchModal({ isOpen, onClose, onSelectDocument }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
 
-  // Focus input on open
   useEffect(() => {
     if (isOpen) {
       setQuery('');
@@ -20,7 +19,6 @@ export function SearchModal({ isOpen, onClose, onSelectDocument }) {
     }
   }, [isOpen]);
 
-  // Query search_vault on query change
   useEffect(() => {
     const trimmed = query.trim();
     if (!trimmed) {
@@ -47,7 +45,6 @@ export function SearchModal({ isOpen, onClose, onSelectDocument }) {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Keyboard navigation
   const handleKeyDown = useCallback(
     (e) => {
       if (e.key === 'Escape') {
@@ -79,55 +76,57 @@ export function SearchModal({ isOpen, onClose, onSelectDocument }) {
       <div
         onClick={onClose}
         style={{ transition: TRANSITION.backdrop }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-[2px] transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
       />
 
       {/* Modal Card */}
       <div
         onKeyDown={handleKeyDown}
         style={{ transition: TRANSITION.modal }}
-        className="relative z-10 flex w-full max-w-xl flex-col rounded-panel bg-card shadow-2xl border border-border overflow-hidden"
+        className="relative z-10 flex w-full max-w-xl flex-col rounded-panel bg-card shadow-2xl border border-border overflow-hidden anim-rise"
       >
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 border-b border-border px-4 py-3 bg-card">
+        <div className="flex items-center gap-3 border-b border-border px-4 py-3.5 bg-card">
           <Search size={16} className="text-muted-foreground shrink-0" />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search vault documents…"
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            placeholder="Search notes, meetings, and documents across your vault…"
+            className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="text-muted-foreground hover:text-foreground p-1 rounded"
+              className="text-muted-foreground hover:text-foreground p-1 rounded transition-colors"
             >
               <X size={14} />
             </button>
           )}
           <Badge variant="muted" size="compact" className="text-micro">
-            ESC to close
+            ESC
           </Badge>
         </div>
 
         {/* Results List */}
         <div className="max-h-96 min-h-[120px] overflow-y-auto p-2">
           {loading && (
-            <div className="p-4 text-center text-xs text-muted-foreground">
-              Searching…
+            <div className="p-6 text-center text-xs text-muted-foreground">
+              Searching vault…
             </div>
           )}
 
           {!loading && query.trim() && results.length === 0 && (
             <div className="p-8 text-center text-xs text-muted-foreground">
-              No matching documents found.
+              No matching documents found in vault.
             </div>
           )}
 
           {!loading && !query.trim() && (
-            <div className="p-8 text-center text-xs text-muted-foreground">
-              Type keywords to search across all notes, meetings, and decisions.
+            <div className="p-8 text-center text-xs text-muted-foreground space-y-1">
+              <Sparkles size={18} className="mx-auto text-muted-foreground/60 mb-2" />
+              <p className="font-medium text-foreground">Quick Vault Search</p>
+              <p>Type keywords to search across all notes, summaries, and documents.</p>
             </div>
           )}
 
@@ -145,23 +144,23 @@ export function SearchModal({ isOpen, onClose, onSelectDocument }) {
                       onSelectDocument(hit.rel_path);
                     }}
                     onMouseEnter={() => setSelectedIndex(idx)}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+                    className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-left transition-colors ${
                       isSelected
-                        ? 'bg-[var(--space-sidebar-field)] text-foreground'
+                        ? 'bg-[var(--space-sidebar-field)] text-foreground shadow-xs'
                         : 'text-foreground-secondary hover:bg-[var(--space-nav-hover)]'
                     }`}
                   >
-                    <div className="p-1.5 rounded bg-muted text-muted-foreground shrink-0">
-                      <Icon size={16} />
+                    <div className="p-1.5 rounded-lg bg-muted text-foreground-secondary shrink-0">
+                      <Icon size={15} />
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="truncate text-xs font-medium text-foreground">
+                        <span className="truncate text-xs font-semibold text-foreground">
                           {hit.title || hit.rel_path}
                         </span>
                         {hit.type && (
-                          <span className="text-[10px] text-muted-foreground uppercase font-semibold">
+                          <span className="text-[9px] text-muted-foreground uppercase font-semibold">
                             {hit.type}
                           </span>
                         )}
@@ -174,9 +173,9 @@ export function SearchModal({ isOpen, onClose, onSelectDocument }) {
                     </div>
 
                     {isSelected && (
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0 font-mono">
                         <span>Open</span>
-                        <CornerDownLeft size={12} />
+                        <CornerDownLeft size={11} />
                       </div>
                     )}
                   </button>

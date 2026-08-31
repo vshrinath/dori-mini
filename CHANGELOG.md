@@ -1,5 +1,35 @@
 # Changelog
 
+## [2026-08-31] — Complete UX Overhaul: Profile, "My Work", Mini Bar, and Composer Polish
+
+**Branch**: `main`
+
+### What changed
+- Composer Capsule Polish: centered the send button paper plane icon vertically and horizontally; built contextual action menu on the `+` button (`Attach File / Document`, `Capture Link / YouTube`, `Search Vault Notes`).
+- Sidebar Header Polish: added quick create dropdown menu to the `+` button (`New Note`, `New Chat`, `Profile Space`).
+- Upgraded Profile to Executive Canvas: built 64px avatar initials badge, role headline, bio tagline, email, location, and interactive SVG social link badges (`LinkedIn`, `X`, `Website`).
+- Added Company / Venture Panel: elevated organization card with `Building2` icon and industry pill badge.
+- Added "My Work & References" Grid: displays personal documents and references stored in `profile/` or recent outputs, opening in `FileSlideover` on click.
+- Built `EditProfileModal.jsx`: non-destructive dialog for editing personal and company details.
+- Built `AddToProfileModal.jsx`: tabbed dialog (`Note`, `Link`, `File`) for adding content straight into the vault.
+- Frosted Acrylic Mini Quick Capture (`mini.html`): applied `backdrop-filter: blur(28px) saturate(1.8)`, specular highlight borders, centered send button, and keyboard hints.
+- Card & Surface Rhythm: improved `LibraryView.jsx` grid spacing and previews, added tag and priority badges to `TasksView.jsx`, and enhanced `SearchModal.jsx` results display.
+
+### Why
+Bring Dori Go to world-class UX polish, ensuring complete alignment with Dori Portal's executive workspace feel, non-destructive modal editing, and flawless button alignments.
+
+### Files touched
+- `electron-app/src/components/ChatView.jsx` — Centered send icon and functional `+` popover menu.
+- `electron-app/src/components/Sidebar.jsx` — Header `+` dropdown menu.
+- `electron-app/src/components/ProfileView.jsx` — Executive identity header, company panel, and "My Work" card grid.
+- `electron-app/src/components/EditProfileModal.jsx` — Profile editing dialog modal.
+- `electron-app/src/components/AddToProfileModal.jsx` — Tabbed profile add dialog.
+- `electron-app/src/components/LibraryView.jsx` — Responsive grid and card lift.
+- `electron-app/src/components/TasksView.jsx` — Task rows, project tags, and priority badges.
+- `electron-app/src/components/SearchModal.jsx` — Search results and command palette polish.
+- `electron-app/mini.html` — Frosted glass acrylic styling and centered send button.
+- `electron-app/src/App.jsx` — Wired `ProfileView` document selection and search openers.
+
 ## [2026-08-31] — Complete Native macOS Binary Rebranding to "Dori.app"
 
 **Branch**: `main`
