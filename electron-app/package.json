@@ -8,7 +8,8 @@
     "build": "vite build",
     "start": "electron .",
     "dev": "pnpm build && pnpm start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "postinstall": "node scripts/patch-electron-name.mjs"
   },
   "keywords": [],
   "author": "",

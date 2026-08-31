@@ -5,7 +5,6 @@ import {
   RefreshCw,
   Folder,
   Plus,
-  Sparkles,
   ChevronDown,
 } from 'lucide-react';
 import { Button } from './ui/button.jsx';
