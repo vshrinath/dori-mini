@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { CircleHelp } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Check, CircleHelp, X } from 'lucide-react';
 import { InboxItem, InboxView } from './components/InboxItem.jsx';
 import { Badge } from './components/ui/badge.jsx';
+import { Button } from './components/ui/button.jsx';
 import { Sidebar } from './components/Sidebar.jsx';
 import { TasksView } from './components/TasksView.jsx';
 
@@ -13,12 +14,24 @@ function InboxScreen() {
   const [inbox, setInbox] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     window.dori
       .call('list_inbox', {})
       .then(setInbox)
       .catch((e) => setError(e.message));
   }, []);
+
+  useEffect(refresh, [refresh]);
+
+  const decide = useCallback(
+    (actionId, clarificationId) => {
+      window.dori
+        .call(actionId, { clarificationId })
+        .then(refresh)
+        .catch((e) => setError(e.message));
+    },
+    [refresh]
+  );
 
   return (
     <InboxView header={<h1 className="text-sm font-semibold">Inbox</h1>}>
@@ -38,6 +51,28 @@ function InboxScreen() {
           }
           meta={formatDate(item.createdAt)}
           statusIcon={<CircleHelp size={16} />}
+          actions={
+            item.clarificationId && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Approve"
+                  onClick={() => decide('approve_inbox_item', item.clarificationId)}
+                >
+                  <Check size={14} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Ignore"
+                  onClick={() => decide('ignore_inbox_item', item.clarificationId)}
+                >
+                  <X size={14} />
+                </Button>
+              </>
+            )
+          }
         />
       ))}
     </InboxView>

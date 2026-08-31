@@ -18,6 +18,7 @@
 import { z } from 'zod';
 import { listTasks } from './list-tasks.mjs';
 import { buildInbox } from './list-inbox.mjs';
+import { resolve as resolveClarification, dismiss as dismissClarification } from './clarification-store.mjs';
 import { search as searchVault } from './query-vault.mjs';
 import { canonicalOutputPath } from './route-destination.mjs';
 import { buildTimeline } from './timeline.mjs';
@@ -45,6 +46,27 @@ export const actions = [
     scope: 'read',
     exposeToMcp: true,
     handler: ({ status }) => buildInbox({ includeFailures: false }).filter((i) => !status || i.status === status),
+  },
+  {
+    id: 'approve_inbox_item',
+    description: 'Approve a pending inbox clarification (resolves it, optionally picking a candidate)',
+    inputSchema: z.object({
+      clarificationId: z.string(),
+      choiceId: z.string().optional(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ clarificationId, choiceId }) => resolveClarification(clarificationId, { choiceId }),
+  },
+  {
+    id: 'ignore_inbox_item',
+    description: 'Ignore a pending inbox clarification (dismisses it)',
+    inputSchema: z.object({
+      clarificationId: z.string(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ clarificationId }) => dismissClarification(clarificationId),
   },
   {
     id: 'search_vault',
@@ -91,7 +113,7 @@ export function getAction(id) {
 
 if (import.meta.main) {
   const { strict: assert } = await import('node:assert');
-  assert.equal(actions.filter((a) => a.exposeToMcp).length, 5, 'all five sketch actions should be MCP-exposed');
+  assert.equal(actions.filter((a) => a.exposeToMcp).length, 7, 'all seven sketch actions should be MCP-exposed');
   assert.throws(() => getAction('nope'));
   console.log('ok —', actions.map((a) => a.id).join(', '));
 }
