@@ -339,7 +339,7 @@
   --z-toast: 1000;
   --z-max: 2147483647;
 
-  --app-sidebar-width: 16.5rem;
+  --app-sidebar-width: 18rem;
   --shadow-xs:
     0 1px 3px rgba(14, 22, 38, 0.06), 0 1px 2px rgba(14, 22, 38, 0.035);
   --shadow-sm:

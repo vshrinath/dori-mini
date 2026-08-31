@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-08-31] — Widen Sidebar and Polish Navigation Item Sizing
+
+**Branch**: `main`
+
+### What changed
+- Widened Sidebar: increased desktop sidebar width from `w-64` (16rem / 256px) to `w-72` (18rem / 288px) with `min-w-[18rem]` and updated `--app-sidebar-width: 18rem;` in `tokens.css`.
+- Expanded Interactive Hierarchy:
+  - Header: increased padding to `px-5 py-4` with `text-lg font-bold` brand title and `h-8 w-8` create button.
+  - Search: increased height to `min-h-[2.6rem]`, padding to `px-3.5`, with larger `size={18}` search icon.
+  - Navigation Links: increased interactive target height to `min-h-[2.75rem]` (44px), padding to `px-4 py-2.5`, with `size={20}` icons.
+  - Project Tree: increased row height to `min-h-[2.5rem]` with `size={18}` icons.
+  - Profile Footer: upgraded avatar to 40px initials badge (`h-10 w-10`), `size={18}` settings gear, and expanded `p-3` container.
+
+### Why
+Provide generous desktop breathing room and touch-friendly 44px interactive targets matching Dori Portal's responsive desktop layout.
+
+### Files touched
+- `electron-app/src/components/Sidebar.jsx` — Widened sidebar container to `w-72`, enlarged navigation targets, and expanded profile footer.
+- `electron-app/src/tokens.css` — Updated `--app-sidebar-width` to `18rem`.
+
 ## [2026-08-31] — Elevate Typography Scale Across All Views to 1:1 Dori Standards
 
 **Branch**: `main`

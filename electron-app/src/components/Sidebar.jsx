@@ -24,7 +24,7 @@ const NAV = [
 
 const navLinkClass = (active) =>
   cn(
-    'flex min-h-[2.5rem] w-full items-center gap-3 rounded-[10px] px-3.5 py-2 text-left text-sm font-medium transition-colors',
+    'flex min-h-[2.75rem] w-full items-center gap-3.5 rounded-control px-4 py-2.5 text-left text-sm font-medium transition-colors',
     active
       ? 'bg-[var(--space-sidebar-field)] text-foreground font-semibold shadow-xs'
       : 'text-foreground-secondary hover:bg-[var(--space-nav-hover)] hover:text-foreground'
@@ -55,17 +55,17 @@ function ProjectRow({ node, selected, onSelect, depth = 0 }) {
       <button
         onClick={() => onSelect(node.projectPath)}
         className={cn(
-          'flex min-h-[2.25rem] w-full items-center gap-2.5 rounded-[10px] px-2.5 text-left text-sm font-medium transition-colors',
+          'flex min-h-[2.5rem] w-full items-center gap-3 rounded-control px-3.5 py-2 text-left text-sm font-medium transition-colors',
           isSelected
             ? 'bg-[var(--space-nav-hover)] text-foreground font-semibold'
             : 'text-foreground-secondary hover:bg-[var(--space-nav-hover)] hover:text-foreground'
         )}
       >
-        <Folder size={16} className="shrink-0 text-muted-foreground" />
+        <Folder size={18} className="shrink-0 text-muted-foreground" />
         <span className="min-w-0 flex-1 truncate">{node.title}</span>
       </button>
       {node.children.length > 0 && (
-        <div className="mt-0.5 flex flex-col gap-0.5 pl-3.5 border-l border-[var(--space-sidebar-border)] ml-3">
+        <div className="mt-1 flex flex-col gap-0.5 pl-4 border-l border-[var(--space-sidebar-border)] ml-4">
           {node.children.map((child) => (
             <ProjectRow
               key={child.projectPath}
@@ -103,13 +103,13 @@ function ProfileFooter({ onOpenSettings, profileVersion }) {
     : 'D';
 
   return (
-    <div className="mt-auto border-t border-[var(--space-sidebar-border)] p-2">
+    <div className="mt-auto border-t border-[var(--space-sidebar-border)] p-3">
       <button
         onClick={onOpenSettings}
-        className="flex w-full items-center gap-3 rounded-[10px] p-2.5 text-left transition-colors hover:bg-[var(--space-nav-hover)]"
+        className="flex w-full items-center gap-3.5 rounded-control p-3 text-left transition-colors hover:bg-[var(--space-nav-hover)]"
         title="Settings (Cmd+,)"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-xs font-semibold text-[var(--color-cta-text)] shadow-xs">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-sm font-bold text-[var(--color-cta-text)] shadow-xs">
           {initials}
         </span>
         <span className="min-w-0 flex-1">
@@ -120,7 +120,7 @@ function ProfileFooter({ onOpenSettings, profileVersion }) {
             {role}
           </span>
         </span>
-        <Settings size={16} className="text-muted-foreground shrink-0 opacity-70 hover:opacity-100" />
+        <Settings size={18} className="text-muted-foreground shrink-0 opacity-70 hover:opacity-100" />
       </button>
     </div>
   );
@@ -159,33 +159,33 @@ export function Sidebar({
   }, [isAddMenuOpen]);
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-[var(--space-sidebar-border)] bg-[var(--surface-canvas)]">
+    <aside className="flex h-full w-72 min-w-[18rem] max-w-[20rem] shrink-0 flex-col border-r border-[var(--space-sidebar-border)] bg-[var(--surface-canvas)]">
       {/* Header */}
-      <div className="relative flex shrink-0 items-center justify-between border-b border-[var(--space-sidebar-border)] px-4 py-3.5">
-        <span className="font-display text-base font-bold tracking-[-0.03em] text-foreground">
+      <div className="relative flex shrink-0 items-center justify-between border-b border-[var(--space-sidebar-border)] px-5 py-4">
+        <span className="font-display text-lg font-bold tracking-[-0.03em] text-foreground">
           Dori
         </span>
         <div ref={addMenuRef} className="relative">
           <button
             onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-            className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--space-sidebar-field)] text-foreground-secondary transition-colors hover:bg-[var(--space-nav-hover)] hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center rounded-control bg-[var(--space-sidebar-field)] text-foreground-secondary transition-colors hover:bg-[var(--space-nav-hover)] hover:text-foreground shadow-2xs"
             title="Create or Capture"
             aria-label="Create"
           >
-            <Plus size={16} />
+            <Plus size={18} />
           </button>
 
           {isAddMenuOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-48 rounded-panel border border-border bg-card p-1.5 shadow-lg z-30 anim-rise">
+            <div className="absolute right-0 top-full mt-2 w-52 rounded-panel border border-border bg-card p-1.5 shadow-xl z-30 anim-rise">
               <button
                 type="button"
                 onClick={() => {
                   setIsAddMenuOpen(false);
                   onNewNote?.();
                 }}
-                className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                className="flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <FileText size={15} className="text-muted-foreground" />
+                <FileText size={16} className="text-muted-foreground" />
                 <span>New Note</span>
               </button>
               <button
@@ -194,9 +194,9 @@ export function Sidebar({
                   setIsAddMenuOpen(false);
                   onSelect('chat');
                 }}
-                className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                className="flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <SquarePen size={15} className="text-muted-foreground" />
+                <SquarePen size={16} className="text-muted-foreground" />
                 <span>New Chat</span>
               </button>
               <button
@@ -205,9 +205,9 @@ export function Sidebar({
                   setIsAddMenuOpen(false);
                   onSelect('profile');
                 }}
-                className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                className="flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <User size={15} className="text-muted-foreground" />
+                <User size={16} className="text-muted-foreground" />
                 <span>Profile Space</span>
               </button>
             </div>
@@ -216,15 +216,15 @@ export function Sidebar({
       </div>
 
       {/* Navigation Scroll Region */}
-      <div className="flex-1 overflow-y-auto p-2.5 space-y-3.5">
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
         {/* Search Bar */}
         <button
           onClick={onOpenSearch}
-          className="flex min-h-[2.35rem] w-full items-center gap-2.5 rounded-lg border border-[var(--space-sidebar-border)] bg-card px-3 py-2 text-left text-sm font-medium text-foreground-secondary transition-all hover:border-[var(--hairline-strong)] hover:bg-[var(--space-nav-hover)] shadow-2xs"
+          className="flex min-h-[2.6rem] w-full items-center gap-3 rounded-control border border-[var(--space-sidebar-border)] bg-card px-3.5 py-2 text-left text-sm font-medium text-foreground-secondary transition-all hover:border-[var(--hairline-strong)] hover:bg-[var(--space-nav-hover)] shadow-2xs"
         >
-          <Search size={16} className="shrink-0 text-muted-foreground" />
+          <Search size={18} className="shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 truncate">Search</span>
-          <kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono text-muted-foreground">
+          <kbd className="rounded bg-muted px-2 py-0.5 text-xs font-mono font-medium text-muted-foreground">
             /
           </kbd>
         </button>
@@ -237,7 +237,7 @@ export function Sidebar({
               onClick={() => onSelect(id)}
               className={navLinkClass(active === id)}
             >
-              <Icon size={18} className="shrink-0" strokeWidth={1.75} />
+              <Icon size={20} className="shrink-0" strokeWidth={1.75} />
               <span className="min-w-0 flex-1 truncate">{label}</span>
             </button>
           ))}
@@ -245,23 +245,23 @@ export function Sidebar({
 
         {/* Projects Accordion */}
         {projects.length > 0 && (
-          <div className="pt-2.5 border-t border-[var(--space-sidebar-border)]">
+          <div className="pt-3 border-t border-[var(--space-sidebar-border)]">
             <button
               type="button"
               onClick={() => setProjectsOpen(!projectsOpen)}
-              className="flex w-full items-center justify-between px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+              className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
             >
-              <div className="flex items-center gap-1.5">
-                {projectsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              <div className="flex items-center gap-2">
+                {projectsOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
                 <span>Projects</span>
               </div>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-mono font-medium">
+              <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-mono font-medium">
                 {projects.length}
               </span>
             </button>
 
             {projectsOpen && (
-              <div className="mt-1 flex flex-col gap-0.5 pl-1">
+              <div className="mt-1.5 flex flex-col gap-0.5 pl-1">
                 {projects.map((node) => (
                   <ProjectRow
                     key={node.projectPath}
