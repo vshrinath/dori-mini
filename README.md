@@ -140,8 +140,14 @@ Requires Node.js 24+ (uses the built-in `node:sqlite` module).
 curl -fsSL https://mini.mydori.app/install.sh | sh
 ```
 
-On Windows, run this inside [WSL](https://learn.microsoft.com/windows/wsl/install) or Git Bash —
-it won't work in PowerShell or cmd.
+On Windows (PowerShell, no WSL needed):
+
+```powershell
+irm https://mini.mydori.app/install.ps1 | iex
+```
+
+Works in Windows PowerShell 5.1, the default on Windows 10/11. WSL or Git Bash still work
+too, via the curl command above.
 
 ...or clone it directly if you'd rather inspect it first:
 

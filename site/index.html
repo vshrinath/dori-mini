@@ -163,7 +163,7 @@
   <div class="term">
     <div class="term-bar">
       <i></i><i></i><i></i>
-      <button class="term-copy" type="button" onclick="copyInstallCmd(this)" aria-label="Copy install command">
+      <button class="term-copy" type="button" onclick="copyInstallCmd(this, 'curl -fsSL https://mini.mydori.app/install.sh | sh')" aria-label="Copy install command">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span>Copy</span>
       </button>
@@ -171,7 +171,18 @@
     <pre id="install-cmd"><span class="dim">$</span> curl -fsSL https://mini.mydori.app/install.sh | sh</pre>
   </div>
   <p class="copy-hint">Reads before it runs anything — clones the repo, then hands off to its own <code>setup.sh</code> for the rest.</p>
-  <p class="copy-hint">On Windows, run this inside <a class="underline" href="https://learn.microsoft.com/windows/wsl/install" target="_blank" rel="noopener">WSL</a> or Git Bash — it won't work in PowerShell or cmd.</p>
+  <p class="copy-hint">On Windows (PowerShell, no WSL needed):</p>
+  <div class="term">
+    <div class="term-bar">
+      <i></i><i></i><i></i>
+      <button class="term-copy" type="button" onclick="copyInstallCmd(this, 'irm https://mini.mydori.app/install.ps1 | iex')" aria-label="Copy Windows install command">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+    <pre><span class="dim">PS&gt;</span> irm https://mini.mydori.app/install.ps1 | iex</pre>
+  </div>
+  <p class="copy-hint">Works in Windows PowerShell 5.1 (the default on Windows 10/11) — WSL or Git Bash still work too, via the curl command above.</p>
 
   <h2>What it actually does</h2>
   <p class="h2-sub">Not a guess at what Dori does — every script mirrors specific real source.</p>
@@ -229,8 +240,7 @@
 <footer>dori mini — github.com/vshrinath/dori-mini</footer>
 
 <script>
-  function copyInstallCmd(btn) {
-    const cmd = 'curl -fsSL https://mini.mydori.app/install.sh | sh'
+  function copyInstallCmd(btn, cmd) {
     navigator.clipboard.writeText(cmd).then(() => {
       const label = btn.querySelector('span')
       const prev = label.textContent

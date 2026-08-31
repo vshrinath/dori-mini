@@ -1,0 +1,154 @@
+feature_id: windows-native-support
+feature: Native Windows support for install and background jobs
+status: build-ready
+source:
+  derived_from:
+    - install.sh, setup.sh (bash originals this constraint governs the port of)
+    - site/vercel.json (static hosting, confirms site/*.sh URL mapping)
+constraints:
+  - id: constraint.windows.powershell-5.1-compatible
+    type: workflow
+    rule: >
+      install.ps1 and setup.ps1 MUST run correctly under Windows PowerShell
+      5.1 (the version that ships by default on Windows 10/11), not only
+      under PowerShell 7+ (pwsh). MUST NOT use PS7-only syntax: the ternary
+      operator (?:), the null-coalescing operator (??) or its assignment
+      form (??=), or the pipeline chain operators (&&, ||). Use
+      if/else and standard cmdlets instead.
+    verified: >
+      The user's own screenshot (this session) shows a "Windows PowerShell"
+      prompt (Windows PowerShell 5.1's banner, not PowerShell 7's), which
+      is what raised the original install failure -- confirms 5.1 is the
+      real target, not an assumption. A script that only runs under pwsh
+      would still leave the reported failure unfixed for that exact user.
+    rationale: >
+      PowerShell 7+ is an opt-in separate install on Windows 10/11; requiring
+      it first would reintroduce the same "install a prerequisite before you
+      can even try this" friction that WSL already causes today (see
+      requirements.yaml's derived_from -- this is the friction being fixed).
+    applies_to:
+      requirement_ids:
+        - windows.install.native-setup
+  - id: constraint.windows.no-symlinks-for-global-wiring
+    type: workflow
+    rule: >
+      setup.ps1's wiring of global agent config files (equivalent to
+      setup.sh's wire_global, setup.sh:121-133) MUST NOT create filesystem
+      symlinks. It MUST always use the append-with-markers path (setup.sh's
+      own <!-- dori:start -->/<!-- dori:end --> block, setup.sh:127-129),
+      copying AGENTS.md's content into the target file, even when the
+      target file does not exist yet (create it fresh with the marker
+      block, rather than symlinking to it).
+    verified: >
+      Windows requires either Developer Mode enabled or an elevated
+      (Administrator) process to create a symlink via mklink/New-Item
+      -ItemType SymbolicLink -- neither is a safe default to require from
+      a setup script a first-time user runs. install.sh/setup.sh's own
+      wire_global already has a non-symlink fallback branch (the
+      grep-then-append path at setup.sh:127-129) for the case where the
+      target already exists and isn't already wired -- this constraint
+      makes that branch the only path on Windows, not a fallback.
+    rationale: >
+      A setup script that fails or silently prompts for elevation on a
+      fresh Windows machine reproduces the exact "too difficult" outcome
+      this feature exists to fix.
+    applies_to:
+      requirement_ids:
+        - windows.install.native-setup
+  - id: constraint.windows.env-vars-via-user-scope-not-dotfile
+    type: workflow
+    rule: >
+      VAULT_ROOT and DORI_SELF_NAME MUST be persisted with
+      [Environment]::SetEnvironmentVariable('VAULT_ROOT', $value, 'User')
+      (and the same for DORI_SELF_NAME), not by writing a dot-sourced
+      config file the user must manually source (setup.sh's $HOME/.dori-env
+      + "add this to your shell profile" instruction, setup.sh:109-114,
+      314-318). Optional API keys (FATHOM_API_KEY, TAVILY_API_KEY) still
+      go in a repo-root .env file, unchanged from setup.sh's behavior --
+      only the two always-set values move to User-scope environment
+      variables.
+    verified: >
+      Windows has no equivalent to a shell rc file that every new terminal
+      sources automatically -- PowerShell profiles ($PROFILE) are
+      per-host and per-shell (Windows PowerShell vs. pwsh vs. VS Code's
+      terminal each have their own), so a dot-sourced file would need the
+      user to know which profile(s) to edit. User-scope environment
+      variables set via SetEnvironmentVariable are picked up by every new
+      process (any shell, cmd.exe, or an agent's own subprocess) without
+      that ambiguity -- confirmed as the standard .NET/PowerShell
+      mechanism for persistent per-user environment state.
+    rationale: >
+      Removes a manual "add this line to your profile, then re-source it"
+      step that has no single right file to name on Windows -- exactly the
+      kind of extra manual step likely to be where a non-technical user
+      gets stuck, per the "too difficult" report this feature responds to.
+    applies_to:
+      requirement_ids:
+        - windows.install.native-setup
+  - id: constraint.windows.tool-install-fallback-order
+    type: workflow
+    rule: >
+      Node.js: try winget (`winget install OpenJS.NodeJS`) first -- it
+      ships built into Windows 10 1709+ and Windows 11, no separate
+      install required. If winget is absent or the installed version is
+      still under 24 after trying, print manual-install instructions
+      (https://nodejs.org) and exit, mirroring install_tool's own final
+      else branch (setup.sh:61-65) -- do not attempt Chocolatey, Scoop,
+      or any package manager not already present by default.
+      yt-dlp: winget package `yt-dlp.yt-dlp`.
+      markitdown: no winget package exists for it -- go straight to
+      `pip3 install --user markitdown`, mirroring install_tool's existing
+      pacman-branch precedent of skipping straight to pip3 for a tool with
+      no native package (setup.sh:69-71, its own comment explains why).
+      If pip3 is absent, skip with the same "install manually" message
+      pattern install_tool already uses (setup.sh:62).
+    verified: >
+      winget ships by default on Windows 10 version 1709+ and all Windows
+      11 -- confirmed as a documented Microsoft-shipped default, not a
+      third-party addition, so it satisfies the reuse-and-simplicity
+      gate's "platform-native capability" rung the same way brew/pacman
+      already do on their platforms in install_tool (setup.sh:48-66).
+      yt-dlp.yt-dlp and OpenJS.NodeJS are published, actively maintained
+      winget package IDs.
+    rationale: >
+      Matches setup.sh's own existing pattern (try the platform-native
+      package manager, fall back to pip3, else print manual instructions)
+      instead of inventing a different fallback order for Windows.
+    applies_to:
+      requirement_ids:
+        - windows.install.native-setup
+  - id: constraint.windows.script-location-and-scope
+    type: workflow
+    rule: >
+      install.ps1 lives at site/install.ps1 (mirrors install.sh's location
+      exactly, so https://mini.mydori.app/install.ps1 resolves the same
+      static-hosting way as the existing .sh URL). setup.ps1 lives at the
+      repo root next to setup.sh. setup.ps1 covers only the same steps as
+      windows.install.native-setup's scope: Node check, npm install,
+      yt-dlp/markitdown install, vault path prompt, self-name prompt,
+      optional API key prompt, and global agent-config wiring. It MUST NOT
+      attempt the WhatsApp pairing, watched-inbox, digest schedule, Fathom
+      poll, or update-check sections -- those are separate requirement ids
+      (windows.background.whatsapp-listener,
+      windows.background.watch-inbox, windows.schedule.digest,
+      windows.schedule.fathom-poll, windows.schedule.update-check) not yet
+      in build. For each of those, setup.ps1 MUST print the same kind of
+      "(needs schtasks/Task Scheduler support -- not yet on this platform)"
+      message setup.sh already prints for non-Darwin platforms (setup.sh's
+      own else branches at lines 171-174, 202-205, 244-246, 307-309),
+      rather than silently doing nothing or attempting a partial port.
+    verified: >
+      site/vercel.json confirms clean static-file hosting with no rewrite
+      rules (checked by reading the file) -- site/install.sh already
+      resolves at https://mini.mydori.app/install.sh this way, so
+      site/install.ps1 resolves at .../install.ps1 the same way with no
+      extra routing config needed.
+    rationale: >
+      Keeps this requirement's build scope from silently expanding into
+      the five requirements still marked not_done in verification-record
+      .yaml, and keeps the user informed (not silently skipped) about what
+      Windows still can't do yet, matching setup.sh's own existing
+      non-Darwin messaging pattern instead of inventing a new one.
+    applies_to:
+      requirement_ids:
+        - windows.install.native-setup

@@ -1,0 +1,138 @@
+feature_id: windows-native-support
+feature: Native Windows support for install and background jobs
+status: draft
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - docs/features/windows-native-support/requirements.yaml
+review_goal: >
+  Proof plan for native Windows install and background-job support.
+  windows.install.native-setup is implemented and manually reviewed; the
+  other six criteria are not_done -- this is the build plan, not a health
+  report.
+outcome: >
+  0 done, 6 not_done, 1 blocked.
+criteria:
+  - id: verify.windows.install.native-setup
+    requirement_id: windows.install.native-setup
+    status: blocked
+    outcome: implemented-unverified
+    version: v1
+    priority: high
+    criterion: >
+      A fresh Windows machine with only PowerShell (no WSL, no Git Bash) can
+      run the install command, land on a working dori-mini checkout, and have
+      global agent config files (e.g. $HOME/.claude/CLAUDE.md) wired the same
+      way setup.sh wires them on macOS/Linux.
+    note: >
+      site/install.ps1 and setup.ps1 are written, covering the same scope as
+      setup.sh's Node check, dependency install, vault path prompt, and
+      global-agent wiring, per tech-constraints.yaml's five constraints for
+      this requirement. Manually reviewed line by line for Windows
+      PowerShell 5.1 syntax compatibility -- one real bug was caught and
+      fixed during that review (Get-NodeMajor would have thrown a
+      terminating CommandNotFoundException on a machine with no Node
+      installed at all, since $ErrorActionPreference = 'Stop' turns an
+      unrecognized-command error terminating; fixed by checking
+      Get-Command node first). $LASTEXITCODE is checked after each native
+      git/npm call so a failed clone or install doesn't silently continue.
+      status: blocked, not not_done or done -- no Windows machine, pwsh
+      binary, or working container runtime (OrbStack/Docker was not running
+      and did not come up when started) was available in this session to
+      actually execute either script end to end. This is a missing-
+      environment blocker per docs/test-design.md's status vocabulary, not
+      a design gap: closing it needs either a real Windows machine/VM, a
+      pwsh install in this environment, or a working container runtime,
+      whichever is available first.
+  - id: verify.windows.notify.native-toast
+    requirement_id: windows.notify.native-toast
+    status: not_done
+    outcome: not_started
+    version: v1
+    priority: medium
+    criterion: >
+      Running node notify-desktop.mjs "message" on native Windows (process
+      .platform === 'win32', not WSL) shows a toast notification.
+    note: >
+      notify-desktop.mjs's notifyDesktop() only branches on 'darwin' and
+      'linux' today (notify-desktop.mjs:73-82); win32 falls through to the
+      "doesn't support platform" error. notifyWindowsToast() itself
+      (notify-desktop.mjs:56-69) already works and needs no changes -- only
+      a new `if (process.platform === 'win32') return notifyWindowsToast(...)`
+      branch is missing.
+  - id: verify.windows.schedule.digest
+    requirement_id: windows.schedule.digest
+    status: not_done
+    outcome: not_started
+    version: v1
+    priority: medium
+    criterion: >
+      Opting into automatic digests during Windows setup creates a scheduled
+      task that runs digest.mjs at the chosen morning/evening times.
+    note: >
+      No Windows equivalent to setup.sh's install_digest_job (setup.sh:221-
+      239) exists yet. Maps directly to `schtasks /Create /SC DAILY /ST
+      HH:MM /TR "..."` -- no blocking unknown, just unwritten.
+  - id: verify.windows.schedule.update-check
+    requirement_id: windows.schedule.update-check
+    status: not_done
+    outcome: not_started
+    version: v1
+    priority: low
+    criterion: >
+      Opting into automatic update checks during Windows setup creates a
+      daily scheduled task that runs the update check at the chosen time.
+    note: >
+      No Windows equivalent to setup.sh's update-schedule block (setup.sh:
+      281-309) exists yet. Same schtasks DAILY pattern as the digest
+      criterion above.
+  - id: verify.windows.schedule.fathom-poll
+    requirement_id: windows.schedule.fathom-poll
+    status: not_done
+    outcome: not_started
+    version: v1
+    priority: low
+    criterion: >
+      With a Fathom key configured and polling accepted during Windows
+      setup, fathom-poll.mjs runs roughly every two hours between 9am and
+      7pm.
+    note: >
+      No Windows equivalent to setup.sh's fathom-poll-schedule block
+      (setup.sh:248-278) exists yet. Needs either 6 schtasks triggers (9,
+      11, 13, 15, 17, 19) or a wrapper script checking the current hour --
+      schtasks has no single-trigger equivalent to launchd's
+      StartCalendarInterval array. Design choice between those two open
+      until this criterion enters build.
+  - id: verify.windows.background.watch-inbox
+    requirement_id: windows.background.watch-inbox
+    status: not_done
+    outcome: not_started
+    version: v1
+    priority: medium
+    criterion: >
+      Opting into the watched inbox during Windows setup runs watch-inbox
+      .mjs in the background, and it restarts automatically after a crash
+      (within Task Scheduler's configured retry count).
+    note: >
+      watch-inbox.mjs's chokidar watcher itself is already cross-platform
+      (watch-inbox.mjs:11-19) and needs no changes. Only the background-
+      daemon wrapper is missing: no Windows equivalent to setup.sh's
+      watch-inbox launchd block (setup.sh:177-205) or watch-inbox.plist
+      .template exists yet. Task Scheduler's RestartOnFailure is capped-
+      retry, not launchd's indefinite KeepAlive -- an accepted behavioral
+      gap per requirements.yaml, not a blocker.
+  - id: verify.windows.background.whatsapp-listener
+    requirement_id: windows.background.whatsapp-listener
+    status: not_done
+    outcome: not_started
+    version: v1
+    priority: low
+    criterion: >
+      Completing WhatsApp pairing during Windows setup runs listen-whatsapp
+      .mjs in the background, surviving both a crash (within the retry
+      count) and a reboot.
+    note: >
+      No Windows equivalent to setup.sh's WhatsApp launchd block (setup.sh:
+      143-174) or whatsapp-listener.plist.template exists yet. Same
+      Task Scheduler restart-on-failure approach as
+      verify.windows.background.watch-inbox above.

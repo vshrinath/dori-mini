@@ -1,0 +1,196 @@
+feature_id: windows-native-support
+feature: Native Windows support for install and background jobs
+status: build-ready
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - "User report, 2026-08-31: first Windows user found install too difficult;
+      curl -fsSL https://mini.mydori.app/install.sh | sh fails in PowerShell
+      (curl there is Invoke-WebRequest, no -fsSL support, and no POSIX shell
+      to pipe into)."
+    - setup.sh, install.sh (current macOS/Linux install and background-job setup)
+    - notify-desktop.mjs (existing WSL-to-Windows toast bridge, notifyWindowsToast)
+    - watch-inbox.mjs (chokidar watcher, already cross-platform)
+    - credentials-lib.mjs (macOS Keychain / Linux-WSL secret-tool only; excluded
+      from this feature per user decision)
+    - digest-schedule.plist.template, fathom-poll-schedule.plist.template,
+      update-schedule.plist.template, watch-inbox.plist.template,
+      whatsapp-listener.plist.template (launchd job definitions this feature's
+      scheduled-task items must mirror on Windows)
+  derivation:
+    - New capability. No prior Windows support existed; setup.sh gates every
+      scheduled job on `uname = Darwin` and skips them elsewhere, and
+      install.sh/setup.sh are POSIX sh with no Windows equivalent.
+review_goal: >
+  Requirement catalogue for running dori-mini natively on Windows (outside
+  WSL), so a Windows user's install path stops depending on WSL/Git Bash.
+  Credentials storage is explicitly out of scope -- it stays macOS/Linux-WSL
+  only, per user decision, since Windows has no equivalent to Keychain/
+  secret-tool wired up yet.
+outcome: >
+  Nothing built yet.
+scope:
+  includes:
+    - windows.install.native-setup
+    - windows.notify.native-toast
+    - windows.schedule.digest
+    - windows.schedule.update-check
+    - windows.schedule.fathom-poll
+    - windows.background.watch-inbox
+    - windows.background.whatsapp-listener
+  excludes:
+    - Credentials store (credentials-lib.mjs, credentials-store.mjs,
+      import-credentials.mjs) -- stays macOS (Keychain) / Linux-WSL
+      (secret-tool) only. A native-Windows user sees the existing
+      "needs macOS or Linux/WSL" error and stores credentials another way.
+    - Clipboard copy/paste in credentials-store.mjs (pbcopy/pbpaste) -- same
+      exclusion, follows from the credentials-store exclusion above.
+    - Packaging dori-mini itself as a compiled .exe -- out of scope by design;
+      dori-mini stays plain Node scripts an agent reads and calls directly.
+      A packaged native experience is Dori Go's job, not dori-mini's.
+    - WSL/Git Bash install path -- already works today (site/index.html,
+      README.md carry that guidance); this feature is about the native
+      (non-WSL) path only.
+requirements:
+  - id: windows.install.native-setup
+    title: A Windows user can install and configure dori-mini without WSL
+    status: ACCEPTED
+    version: v1
+    priority: high
+    situation: >
+      A Windows user runs the install command in PowerShell, not WSL or Git
+      Bash.
+    expected: >
+      THE SYSTEM SHALL provide a PowerShell install script that clones the
+      repository and hands off to a PowerShell setup script, mirroring
+      install.sh/setup.sh's steps (Node version check, dependency install,
+      vault path prompt, wiring global agent config files under
+      $HOME/.claude, $HOME/.codex, and similar directories) without requiring
+      WSL, Git Bash, or any POSIX shell.
+    failure: >
+      The Windows install command errors out, silently skips a step
+      setup.sh performs on macOS/Linux, or requires the user to already have
+      WSL or Git Bash installed.
+    variants: >
+      Fresh machine with no Node installed, Node already installed but wrong
+      version, existing vault path supplied, no vault path supplied (fresh
+      vault).
+  - id: windows.notify.native-toast
+    title: Desktop notifications work on native Windows, not only via WSL
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      notify-desktop.mjs runs under native Windows Node (process.platform ===
+      'win32'), not inside WSL.
+    expected: >
+      WHEN notify-desktop.mjs runs on native Windows, THE SYSTEM SHALL show a
+      toast notification using the same powershell.exe NotifyIcon mechanism
+      already used for the WSL-to-Windows bridge path, without requiring WSL
+      detection first.
+    failure: >
+      notify-desktop.mjs throws "doesn't support platform: win32" on native
+      Windows, or the notification never appears.
+    variants: >
+      Called directly, called from digest.mjs's scheduled run.
+  - id: windows.schedule.digest
+    title: Morning/evening digests can run automatically on Windows
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      A Windows user opts into automatic digests during setup, the same
+      choice setup.sh offers on macOS via launchd.
+    expected: >
+      WHEN a Windows user opts into automatic digests, THE SYSTEM SHALL
+      register a scheduled task (via schtasks) that runs digest.mjs at the
+      chosen morning and evening times, mirroring setup.sh's
+      install_digest_job behavior (default 07:00/18:00, user-editable times).
+    failure: >
+      The scheduled task is not created, runs at the wrong time, or fails to
+      run digest.mjs with the correct working directory/Node path.
+    variants: >
+      Default times accepted, custom times entered, re-running setup updates
+      an existing scheduled task rather than duplicating it.
+  - id: windows.schedule.update-check
+    title: Daily update checks can run automatically on Windows
+    status: ACCEPTED
+    version: v1
+    priority: low
+    situation: >
+      A Windows user opts into automatic daily update checks during setup.
+    expected: >
+      WHEN a Windows user opts into automatic update checks, THE SYSTEM SHALL
+      register a daily scheduled task (via schtasks) that runs update.sh's
+      equivalent check at the chosen time, notifying only when something
+      changed or the check is blocked.
+    failure: >
+      The scheduled task is not created, runs at the wrong time, or a
+      no-op check still produces a notification.
+    variants: >
+      Default time accepted, custom time entered.
+  - id: windows.schedule.fathom-poll
+    title: Fathom meeting polling can run automatically on Windows
+    status: ACCEPTED
+    version: v1
+    priority: low
+    situation: >
+      A Windows user with a configured Fathom key opts into automatic
+      polling during setup, matching setup.sh's every-2-hours,
+      9am-7pm behavior.
+    expected: >
+      WHEN a Windows user with a Fathom key opts into automatic polling, THE
+      SYSTEM SHALL run fathom-poll.mjs roughly every two hours between 9am
+      and 7pm, using either multiple schtasks triggers or a wrapper script
+      that checks the current hour, since schtasks has no single trigger
+      equivalent to launchd's StartCalendarInterval array.
+    failure: >
+      Polling never runs, runs outside the 9am-7pm window, or runs so
+      frequently it exceeds Fathom's rate limits.
+    variants: >
+      Fathom key present and polling accepted, Fathom key present but
+      polling declined (manual-only).
+  - id: windows.background.watch-inbox
+    title: The watched-inbox folder can run as a background process on Windows
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      A Windows user opts into watching a dropbox folder during setup, the
+      same choice setup.sh offers on macOS via a launchd KeepAlive agent.
+    expected: >
+      WHEN a Windows user opts into the watched inbox, THE SYSTEM SHALL run
+      watch-inbox.mjs's existing cross-platform chokidar watcher in the
+      background, restarting it automatically if it stops, using Windows
+      Task Scheduler's own restart-on-failure setting as the nearest
+      available equivalent to launchd's indefinite KeepAlive (a capped
+      number of retries, not unlimited, is an accepted difference -- see
+      tech-constraints.yaml once this feature enters build).
+    failure: >
+      The watcher does not start automatically, does not restart after a
+      crash within the configured retry count, or requires the user to keep
+      a terminal window open.
+    variants: >
+      Default watch folder accepted, custom folder entered, watcher crashes
+      and is restarted within the retry limit.
+  - id: windows.background.whatsapp-listener
+    title: The WhatsApp channel listener can run as a background process on Windows
+    status: ACCEPTED
+    version: v1
+    priority: low
+    situation: >
+      A Windows user pairs the WhatsApp channel during setup, the same
+      choice setup.sh offers on macOS via a launchd KeepAlive agent.
+    expected: >
+      WHEN a Windows user completes WhatsApp pairing, THE SYSTEM SHALL run
+      listen-whatsapp.mjs in the background using the same Windows
+      Task Scheduler restart-on-failure mechanism as
+      windows.background.watch-inbox, so the listener keeps running after
+      the setup session ends and across reboots.
+    failure: >
+      The listener stops when the terminal window closes, does not restart
+      after a crash within the configured retry count, or does not survive
+      a reboot.
+    variants: >
+      Pairing succeeds and background job starts, pairing is skipped (no
+      background job created).
