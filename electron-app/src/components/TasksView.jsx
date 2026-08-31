@@ -136,8 +136,8 @@ export function TasksView() {
                     <td className="border-border border-b px-2 py-3 align-top last:border-b-0">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-sm font-medium">{task.title}</span>
-                        {task.context && (
-                          <span className="text-muted-foreground text-xs">{task.context}</span>
+                        {task.context?.scope && (
+                          <span className="text-muted-foreground text-xs">From {task.context.scope}</span>
                         )}
                       </div>
                     </td>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Inbox as InboxIcon, Search, X } from 'lucide-react';
+import { Inbox as InboxIcon, Search } from 'lucide-react';
 import { InboxView } from './components/InboxItem.jsx';
 import { DecisionCard } from './components/DecisionCard.jsx';
 import { Badge } from './components/ui/badge.jsx';
@@ -7,9 +7,9 @@ import { Button } from './components/ui/button.jsx';
 import { EmptyState } from './components/ui/empty-state.jsx';
 import { FilterChip } from './components/ui/filter-chip.jsx';
 import { Input } from './components/ui/input.jsx';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select.jsx';
 import { Skeleton } from './components/ui/skeleton.jsx';
 import { TooltipProvider } from './components/ui/tooltip.jsx';
-import { IconButton } from './components/IconButton.jsx';
 import { Sidebar } from './components/Sidebar.jsx';
 import { TasksView } from './components/TasksView.jsx';
 import { ProjectView } from './components/ProjectView.jsx';
@@ -120,21 +120,36 @@ function InboxScreen() {
               createdAt={formatDate(item.createdAt)}
               actions={
                 item.clarificationId && (
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {item.candidates?.map((c) => (
-                      <Button
-                        key={c.id}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => decide('approve_inbox_item', item.clarificationId, c.id)}
-                      >
-                        {c.label}
-                      </Button>
-                    ))}
-                    <IconButton label="Skip" onClick={() => decide('ignore_inbox_item', item.clarificationId)}>
-                      <X size={14} />
-                    </IconButton>
-                  </div>
+                  // dori-portal's real clarification actions stack full-width
+                  // ghost buttons (app/inbox/page.tsx) — fine for its usual
+                  // 2-3 person-disambiguation candidates, but our clarification
+                  // candidates are "which project" and can list every project
+                  // in the vault, which would overrun the card. Dropdown instead.
+                  <>
+                    <Select
+                      onValueChange={(choiceId) => decide('approve_inbox_item', item.clarificationId, choiceId)}
+                    >
+                      <SelectTrigger size="sm" className="w-56">
+                        <SelectValue placeholder="Choose destination…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {item.candidates?.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.label}
+                            {c.detail ? ` — ${c.detail}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+                      onClick={() => decide('ignore_inbox_item', item.clarificationId)}
+                    >
+                      Dismiss
+                    </Button>
+                  </>
                 )
               }
             />

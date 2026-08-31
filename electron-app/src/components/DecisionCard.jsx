@@ -38,7 +38,7 @@ export function DecisionCard({ type, title, domain, createdAt, actions }) {
       </div>
 
       {actions && (
-        <div className="mt-4 flex w-full shrink-0 items-center gap-2 sm:mt-0 sm:w-auto">{actions}</div>
+        <div className="mt-4 flex w-full shrink-0 flex-wrap items-center gap-2 sm:mt-0 sm:w-auto">{actions}</div>
       )}
     </div>
   );
