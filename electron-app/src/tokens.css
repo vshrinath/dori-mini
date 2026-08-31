@@ -820,6 +820,45 @@ body {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * SIDEBAR RESIZE HANDLE
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 40;
+  touch-action: none;
+}
+
+.sidebar-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 2px;
+  height: 2.75rem;
+  transform: translateY(-50%);
+  border-radius: 9999px;
+  background: var(--border);
+  opacity: 0;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+
+.sidebar-resize-handle:hover::after,
+body.is-resizing-sidebar .sidebar-resize-handle::after {
+  opacity: 1;
+  background: var(--brand-primary);
+}
+
+body.is-resizing-sidebar {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * PAGE FRAME & ROUTE HEADERS
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .page-frame {

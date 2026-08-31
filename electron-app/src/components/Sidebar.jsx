@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Inbox,
   Check,
@@ -15,6 +15,11 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '../lib/utils.js';
+
+const SIDEBAR_MIN_WIDTH = 240;
+const SIDEBAR_DEFAULT_WIDTH = 320;
+const SIDEBAR_MAX_WIDTH = 500;
+const SIDEBAR_STORAGE_KEY = 'dori.sidebar.width';
 
 const NAV = [
   { id: 'chat', label: 'New chat', icon: SquarePen },
@@ -51,17 +56,17 @@ function ProjectRow({ node, selected, onSelect, depth = 0 }) {
       <button
         onClick={() => onSelect(node.projectPath)}
         className={cn(
-          'flex min-h-[2.5rem] w-full items-center gap-3 rounded-control px-3.5 py-2 text-left text-[14.5px] font-medium transition-all',
+          'flex min-h-[2.65rem] w-full items-center gap-3 rounded-control px-3.5 py-2 text-left text-[15.5px] font-medium transition-all',
           isSelected
             ? 'bg-[var(--space-sidebar-field)] text-foreground font-semibold shadow-2xs'
             : 'text-foreground hover:bg-[var(--space-nav-hover)] hover:text-foreground'
         )}
       >
         <Icon
-          size={18}
+          size={20}
           className={cn(
             'shrink-0 transition-colors',
-            isSelected ? 'text-[var(--brand-primary)]' : 'text-[var(--brand-accent)] opacity-85'
+            isSelected ? 'text-[var(--brand-primary)]' : 'text-[var(--brand-accent)]'
           )}
           strokeWidth={1.8}
         />
@@ -107,24 +112,24 @@ function ProfileFooter({ onOpenSettings, profileVersion }) {
     : 'SV';
 
   return (
-    <div className="mt-auto border-t border-[var(--space-sidebar-border)] p-3">
+    <div className="mt-auto border-t border-[var(--space-sidebar-border)] p-3.5">
       <button
         onClick={onOpenSettings}
-        className="flex w-full items-center gap-3.5 rounded-panel border border-[var(--space-sidebar-border)] bg-card p-3 text-left shadow-2xs transition-all hover:border-[var(--hairline-strong)] hover:bg-[var(--space-nav-hover)]"
+        className="flex w-full items-center gap-3.5 rounded-panel border border-[var(--space-sidebar-border)] bg-card p-3.5 text-left shadow-2xs transition-all hover:border-[var(--hairline-strong)] hover:bg-[var(--space-nav-hover)]"
         title="Settings (Cmd+,)"
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-sm font-bold text-white shadow-xs">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-[15px] font-bold text-white shadow-xs">
           {initials}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[15px] font-semibold text-foreground">
+          <span className="block truncate text-[16px] font-semibold text-foreground">
             {name}
           </span>
           <span className="block truncate text-xs text-muted-foreground mt-0.5">
             {role}
           </span>
         </span>
-        <Settings size={18} className="text-muted-foreground shrink-0 opacity-70 hover:opacity-100 hover:text-foreground transition-all" />
+        <Settings size={19} className="text-muted-foreground shrink-0 opacity-70 hover:opacity-100 hover:text-foreground transition-all" />
       </button>
     </div>
   );
@@ -141,6 +146,12 @@ export function Sidebar({
   const [projects, setProjects] = useState([]);
   const [projectsOpen, setProjectsOpen] = useState(true);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = Number(localStorage.getItem(SIDEBAR_STORAGE_KEY));
+    return Number.isFinite(saved) && saved >= SIDEBAR_MIN_WIDTH && saved <= SIDEBAR_MAX_WIDTH
+      ? saved
+      : SIDEBAR_DEFAULT_WIDTH;
+  });
   const addMenuRef = useRef(null);
 
   useEffect(() => {
@@ -162,11 +173,45 @@ export function Sidebar({
     }
   }, [isAddMenuOpen]);
 
+  // Sidebar drag-resize handler
+  const handleResizeStart = useCallback(
+    (e) => {
+      e.preventDefault();
+      const startX = e.clientX;
+      const startWidth = sidebarWidth;
+      document.body.classList.add('is-resizing-sidebar');
+
+      const handleMove = (moveEvent) => {
+        const nextWidth = Math.min(
+          SIDEBAR_MAX_WIDTH,
+          Math.max(SIDEBAR_MIN_WIDTH, startWidth + moveEvent.clientX - startX)
+        );
+        setSidebarWidth(nextWidth);
+        localStorage.setItem(SIDEBAR_STORAGE_KEY, String(nextWidth));
+      };
+
+      const handleEnd = () => {
+        document.body.classList.remove('is-resizing-sidebar');
+        window.removeEventListener('pointermove', handleMove);
+        window.removeEventListener('pointerup', handleEnd);
+        window.removeEventListener('pointercancel', handleEnd);
+      };
+
+      window.addEventListener('pointermove', handleMove);
+      window.addEventListener('pointerup', handleEnd);
+      window.addEventListener('pointercancel', handleEnd);
+    },
+    [sidebarWidth]
+  );
+
   return (
-    <aside className="flex h-full w-72 min-w-[18rem] max-w-[20rem] shrink-0 flex-col border-r border-[var(--space-sidebar-border)] bg-[var(--surface-canvas)]">
+    <aside
+      style={{ width: `${sidebarWidth}px`, minWidth: `${SIDEBAR_MIN_WIDTH}px`, maxWidth: `${SIDEBAR_MAX_WIDTH}px` }}
+      className="relative flex h-full shrink-0 flex-col border-r border-[var(--space-sidebar-border)] bg-[var(--surface-canvas)] select-none"
+    >
       {/* Brand Header */}
       <div className="relative flex shrink-0 items-center justify-between border-b border-[var(--space-sidebar-border)] px-5 py-4">
-        <span className="font-display text-[20px] font-bold tracking-[-0.03em] text-foreground">
+        <span className="font-display text-[21px] font-bold tracking-[-0.03em] text-foreground">
           Dori
         </span>
         <div ref={addMenuRef} className="relative">
@@ -187,9 +232,9 @@ export function Sidebar({
                   setIsAddMenuOpen(false);
                   onNewNote?.();
                 }}
-                className="flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                className="flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-[15px] font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <FileText size={16} className="text-muted-foreground" />
+                <FileText size={17} className="text-muted-foreground" />
                 <span>New Note</span>
               </button>
               <button
@@ -198,9 +243,9 @@ export function Sidebar({
                   setIsAddMenuOpen(false);
                   onSelect('chat');
                 }}
-                className="flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                className="flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-[15px] font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <SquarePen size={16} className="text-muted-foreground" />
+                <SquarePen size={17} className="text-muted-foreground" />
                 <span>New Chat</span>
               </button>
               <button
@@ -209,9 +254,9 @@ export function Sidebar({
                   setIsAddMenuOpen(false);
                   onSelect('profile');
                 }}
-                className="flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                className="flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-[15px] font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <User size={16} className="text-muted-foreground" />
+                <User size={17} className="text-muted-foreground" />
                 <span>Profile Space</span>
               </button>
             </div>
@@ -224,9 +269,9 @@ export function Sidebar({
         {/* Search Bar */}
         <button
           onClick={onOpenSearch}
-          className="flex min-h-[2.6rem] w-full items-center gap-3 rounded-control border border-[var(--space-sidebar-border)] bg-card px-3.5 py-2 text-left text-[14.5px] font-medium text-foreground transition-all hover:border-[var(--hairline-strong)] hover:bg-[var(--space-nav-hover)] shadow-2xs"
+          className="flex min-h-[2.75rem] w-full items-center gap-3 rounded-control border border-[var(--space-sidebar-border)] bg-card px-3.5 py-2 text-left text-[15px] font-medium text-foreground transition-all hover:border-[var(--hairline-strong)] hover:bg-[var(--space-nav-hover)] shadow-2xs"
         >
-          <Search size={18} className="shrink-0 text-muted-foreground" />
+          <Search size={19} className="shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 truncate text-foreground-secondary">Search</span>
           <kbd className="rounded bg-muted px-2 py-0.5 text-xs font-mono font-medium text-muted-foreground">
             /
@@ -234,7 +279,7 @@ export function Sidebar({
         </button>
 
         {/* Spaces Nav */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           {NAV.map(({ id, label, icon: Icon }) => {
             const isActive = active === id;
             return (
@@ -242,14 +287,14 @@ export function Sidebar({
                 key={id}
                 onClick={() => onSelect(id)}
                 className={cn(
-                  'flex min-h-[2.75rem] w-full items-center gap-3.5 rounded-control px-4 py-2.5 text-left text-[15px] transition-all',
+                  'flex min-h-[2.85rem] w-full items-center gap-3.5 rounded-control px-4 py-2.5 text-left text-[16px] transition-all',
                   isActive
                     ? 'bg-[var(--space-sidebar-field)] text-foreground font-bold shadow-2xs'
                     : 'text-foreground font-medium hover:bg-[var(--space-nav-hover)]'
                 )}
               >
                 <Icon
-                  size={20}
+                  size={21}
                   className={cn(
                     'shrink-0 transition-colors',
                     isActive ? 'text-[var(--brand-primary)]' : 'text-muted-foreground'
@@ -268,7 +313,7 @@ export function Sidebar({
             <button
               type="button"
               onClick={() => setProjectsOpen(!projectsOpen)}
-              className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+              className="flex w-full items-center justify-between px-3 py-2 text-left text-[12px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
             >
               <div className="flex items-center gap-2">
                 {projectsOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
@@ -299,6 +344,17 @@ export function Sidebar({
       <ProfileFooter
         onOpenSettings={onOpenSettings}
         profileVersion={profileVersion}
+      />
+
+      {/* Draggable Resize Boundary Handle */}
+      <div
+        className="sidebar-resize-handle"
+        title="Drag to resize sidebar (double-click to reset)"
+        onPointerDown={handleResizeStart}
+        onDoubleClick={() => {
+          setSidebarWidth(SIDEBAR_DEFAULT_WIDTH);
+          localStorage.setItem(SIDEBAR_STORAGE_KEY, String(SIDEBAR_DEFAULT_WIDTH));
+        }}
       />
     </aside>
   );

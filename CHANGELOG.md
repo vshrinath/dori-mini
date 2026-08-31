@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-08-31] — Interactive Draggable Sidebar Boundary and Enlarged Navigation Scale
+
+**Branch**: `main`
+
+### What changed
+- Added Draggable Sidebar Resizing: built interactive right boundary drag handle (`.sidebar-resize-handle`) allowing smooth real-time resizing between 240px and 500px, persisting chosen width in `localStorage` (`dori.sidebar.width`), and double-click to reset to default 320px.
+- Enlarged Spaces Navigation:
+  - Upgraded nav links to `16px font-semibold text-foreground` (`text-[16px]`), `size={21}` icons, and `min-h-[2.85rem]` (46px).
+- Enlarged Projects Tree:
+  - Upgraded project rows to `15.5px font-medium text-foreground` (`text-[15.5px]`), `size={20}` amber gold folder icons, and `min-h-[2.65rem]`.
+- Enlarged Profile Card:
+  - Upgraded initials avatar to 44px badge (`h-11 w-11`), `16px font-semibold` user name, and `13px` role.
+
+### Why
+Allow full user customization of sidebar width via drag-and-drop while providing generous readability and touch-friendly desktop targets.
+
+### Files touched
+- `electron-app/src/components/Sidebar.jsx` — Implemented pointer drag resizing, localStorage persistence, and enlarged 16px navigation hierarchy.
+- `electron-app/src/tokens.css` — Added `.sidebar-resize-handle` styling and active resize cursor rules.
+
 ## [2026-08-31] — Enrich Sidebar Typography, Contrast, and Brand Personality
 
 **Branch**: `main`
