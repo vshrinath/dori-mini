@@ -272,6 +272,14 @@
   --surface-panel-solid: #ffffff;
   --surface-panel-soft: rgba(250, 250, 249, 0.72);
   --surface-raised: rgba(250, 250, 249, 0.92);
+
+  /* Sidebar tokens — copied verbatim from dori-portal/app/space-shell.css */
+  --space-sidebar-bg: var(--surface-canvas);
+  --space-sidebar-field: rgba(26, 31, 78, 0.07);
+  --space-sidebar-border: rgba(26, 31, 78, 0.08);
+  --space-sidebar-muted: var(--muted-foreground);
+  --space-nav-hover: rgba(26, 31, 78, 0.045);
+  --space-nav-active: rgba(26, 31, 78, 0.075);
   --surface-field: #f3f4f6;
   --surface-field-hover: #f7f7f9;
   --surface-tint: rgba(26, 31, 78, 0.075);
@@ -537,6 +545,13 @@
   --surface-raised: rgba(32, 33, 38, 0.92);
   --surface-field: #202126;
   --surface-field-hover: #292b32;
+
+  --space-sidebar-bg: var(--surface-canvas);
+  --space-sidebar-field: rgba(255, 255, 255, 0.09);
+  --space-sidebar-border: rgba(255, 255, 255, 0.09);
+  --space-sidebar-muted: var(--muted-foreground);
+  --space-nav-hover: rgba(255, 255, 255, 0.06);
+  --space-nav-active: rgba(255, 255, 255, 0.1);
   --surface-tint: rgba(66, 85, 166, 0.16);
   --hairline: rgba(232, 235, 245, 0.06);
   --hairline-strong: rgba(232, 235, 245, 0.1);

@@ -22,6 +22,8 @@ import { resolve as resolveClarification, dismiss as dismissClarification } from
 import { search as searchVault } from './query-vault.mjs';
 import { canonicalOutputPath } from './route-destination.mjs';
 import { buildTimeline } from './timeline.mjs';
+import { listProjects } from './list-projects.mjs';
+import { getSelf } from './self-store.mjs';
 
 /** @typedef {{ id: string, description: string, inputSchema: import('zod').ZodType, scope: 'read'|'write', exposeToMcp?: boolean, handler: (input: any) => Promise<any> | any }} ActionDefinition */
 
@@ -103,6 +105,22 @@ export const actions = [
     exposeToMcp: true,
     handler: ({ limit, since }) => buildTimeline({ limit, since }),
   },
+  {
+    id: 'list_projects',
+    description: 'List projects and sub-projects (project_path is slash-separated, e.g. "aligna/platform")',
+    inputSchema: z.object({}),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: () => listProjects(),
+  },
+  {
+    id: 'get_profile',
+    description: 'Get the user\'s own profile (the person entity marked is_self: true)',
+    inputSchema: z.object({}),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: () => getSelf(),
+  },
 ];
 
 export function getAction(id) {
@@ -113,7 +131,7 @@ export function getAction(id) {
 
 if (import.meta.main) {
   const { strict: assert } = await import('node:assert');
-  assert.equal(actions.filter((a) => a.exposeToMcp).length, 7, 'all seven sketch actions should be MCP-exposed');
+  assert.equal(actions.filter((a) => a.exposeToMcp).length, 9, 'all nine sketch actions should be MCP-exposed');
   assert.throws(() => getAction('nope'));
   console.log('ok —', actions.map((a) => a.id).join(', '));
 }

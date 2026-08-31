@@ -5,6 +5,8 @@ import { Badge } from './components/ui/badge.jsx';
 import { Button } from './components/ui/button.jsx';
 import { Sidebar } from './components/Sidebar.jsx';
 import { TasksView } from './components/TasksView.jsx';
+import { ProjectView } from './components/ProjectView.jsx';
+import { ProfileView } from './components/ProfileView.jsx';
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -88,6 +90,8 @@ export function App() {
       <div className="flex min-w-0 flex-1 flex-col">
         {active === 'inbox' && <InboxScreen />}
         {active === 'tasks' && <TasksView />}
+        {active === 'profile' && <ProfileView />}
+        {active.startsWith('project:') && <ProjectView projectPath={active.slice(8)} />}
       </div>
     </div>
   );
