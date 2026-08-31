@@ -1,7 +1,8 @@
 {
-  "name": "dori-mini-electron",
+  "name": "dori",
+  "productName": "Dori",
   "version": "1.0.0",
-  "description": "Experiment: Electron frontend for dori-mini",
+  "description": "Dori",
   "private": true,
   "main": "main.js",
   "scripts": {

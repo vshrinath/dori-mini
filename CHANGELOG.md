@@ -1,5 +1,26 @@
 # Changelog
 
+## [2026-08-31] — Fix Application Name to "Dori" Across macOS Command Bar, Dock, and Menu
+
+**Branch**: `main`
+
+### What changed
+- Configured macOS Application Menu in `main.js`: built native menu bar with `Dori` app menu (`About Dori`, `Settings... (Cmd+,)`, `Services`, `Hide Dori`, `Quit Dori`), `Edit`, `View`, and `Window` menus.
+- Set `app.setName('Dori')` and `app.name = 'Dori'` before `app.whenReady()`.
+- Updated `electron-app/package.json` to `"name": "dori"` and `"productName": "Dori"`.
+- Updated `patch-electron-name.mjs` to patch Electron's `Info.plist` with `CFBundleName: Dori`, `CFBundleDisplayName: Dori`, and `CFBundleIdentifier: app.mydori.mini`, registering with macOS `lsregister`.
+- Added `open-settings` IPC channel from macOS Application Menu into React `App.jsx` to open the Settings modal.
+
+### Why
+Ensure the application consistently displays "Dori" across the macOS Menu Bar, Dock tile, Command Bar, app switcher, and system dialogs during local development.
+
+### Files touched
+- `electron-app/main.js` — App name `Dori` and native macOS application menu template.
+- `electron-app/package.json` — `name` and `productName` set to `dori` / `Dori`.
+- `electron-app/preload.cjs` — Added `onOpenSettings` bridge listener.
+- `electron-app/scripts/patch-electron-name.mjs` — Patched `Info.plist` and registered `Dori` with LaunchServices.
+- `electron-app/src/App.jsx` — Connected native menu bar `Settings...` to open `SettingsModal`.
+
 ## [2026-08-31] — Polish Inbox Screen Layout and DecisionCard Styling
 
 **Branch**: `dori-go-visual-overhaul`

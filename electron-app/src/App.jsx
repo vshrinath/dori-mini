@@ -200,7 +200,11 @@ export function App() {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const unbindSettings = window.dori?.onOpenSettings?.(() => setIsSettingsOpen(true));
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      unbindSettings?.();
+    };
   }, []);
 
   return (

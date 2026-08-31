@@ -12,4 +12,9 @@ contextBridge.exposeInMainWorld('dori', {
   // still fine to expose since it only resolves a path for a File object
   // the renderer already legitimately holds (e.g. from a drop event).
   getFilePath: (file) => webUtils.getPathForFile(file),
+  onOpenSettings: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('open-settings', handler);
+    return () => ipcRenderer.removeListener('open-settings', handler);
+  },
 });

@@ -7,7 +7,7 @@
 // The IPC channel is generic (action id + input, same shape actions.mjs
 // already validates for MCP) rather than one channel per action, so adding
 // a screen later means adding an action, not touching this file.
-import { app, BrowserWindow, globalShortcut, ipcMain, screen } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, Menu, screen } from 'electron';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -15,12 +15,85 @@ import { getAction } from '../actions.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Must be called before app.whenReady() to take effect on macOS. Without
-// it, an unpackaged `electron .` dev run shows "Electron" as the Dock
-// label and menu bar app name (the raw Electron binary's own bundle name)
-// instead of the product name -- a packaged build gets this from
-// package.json's build config instead, but dev mode needs it set explicitly.
-app.setName('Dori Go');
+// Must be called before app.whenReady() to take effect on macOS.
+app.setName('Dori');
+app.name = 'Dori';
+
+function setupApplicationMenu() {
+  const isMac = process.platform === 'darwin';
+  const template = [
+    ...(isMac
+      ? [
+          {
+            label: 'Dori',
+            submenu: [
+              { role: 'about' },
+              { type: 'separator' },
+              {
+                label: 'Settings...',
+                accelerator: 'CmdOrCtrl+,',
+                click: (_item, focusedWindow) => {
+                  focusedWindow?.webContents?.send('open-settings');
+                },
+              },
+              { type: 'separator' },
+              { role: 'services' },
+              { type: 'separator' },
+              { role: 'hide' },
+              { role: 'hideOthers' },
+              { role: 'unhide' },
+              { type: 'separator' },
+              { role: 'quit' },
+            ],
+          },
+        ]
+      : []),
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+      ],
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+      ],
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        ...(isMac
+          ? [
+              { type: 'separator' },
+              { role: 'front' },
+              { type: 'separator' },
+              { role: 'window' },
+            ]
+          : [{ role: 'close' }]),
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
 
 function getAppIconPath() {
   const distIcon = join(__dirname, 'dist/assets/icon.png');
@@ -161,6 +234,7 @@ function toggleMiniWindow() {
 ipcMain.on('mini:close', () => miniWin?.hide());
 
 app.whenReady().then(() => {
+  setupApplicationMenu();
   // BrowserWindow's icon option is a no-op for the Dock on macOS (it only
   // affects the Windows taskbar / Linux window manager) -- app.dock.setIcon()
   // is the actual mechanism macOS uses.
