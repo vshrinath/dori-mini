@@ -28,6 +28,16 @@ then run this skill's `reindex-vault.mjs` with `VAULT_ROOT` set to that vault an
 and any failures. Do not print or request the stored Canvas token. With neither variable
 set, a bare `Dori` has no special meaning — treat it as an ordinary message.
 
+**Canvas Google Docs:** when a Canvas item contains a `docs.google.com/document` URL,
+include it as an openable Google Docs link in the response. If the user asks to see the
+document, open that link in the authenticated school Google account, read it without editing,
+and retain the tab as a deliverable.
+
+**Canvas answer sources:** every answer based on the Canvas vault must name its supporting
+source (assignment, announcement, module item, file, or external link) and include an
+openable link to it when Canvas or the source provides one. Do not invent a link when the
+vault has no source URL.
+
 ## 1. YouTube link (`youtube.com/...` or `youtu.be/...`)
 
 Transcript only (default, fastest) — `--write-info-json` also lands the uploader's own chapters and description alongside the captions, in the same call:

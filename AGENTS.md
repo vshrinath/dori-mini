@@ -23,8 +23,13 @@ reasoning the routing/search from scratch.
   section in `SKILL.md` before reasoning it from scratch. If these files aren't present,
   this is a clone of the public repo and the feature is simply unavailable — see README.
 
-These are plain Node.js scripts (Node 24+, no Claude-specific dependencies) — safe to
-invoke from any agent with shell access to this filesystem.
+These are plain Node.js scripts (Node 24+) — safe to invoke from any agent with shell
+access to this filesystem. "No Claude-specific dependencies" means not tied to Claude
+Code's own APIs — it does NOT mean avoid npm packages. Prefer a real, well-solved
+library (e.g. chokidar for file watching, a real YAML parser) over hand-rolling the same
+problem, especially when real Dori (`dori-engine`/`dori-portal`) already solved it with
+one — borrow that choice rather than reinventing it. A one-time `npm install` is a fine
+cost; a fragile hand-rolled reimplementation is not the goal here.
 
 ## When to act without being asked, and when to wait for "Dori"
 

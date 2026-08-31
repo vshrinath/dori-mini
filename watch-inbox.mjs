@@ -8,12 +8,15 @@
 //   straight to ingestion, anything else — the default — defers to a review
 //   queue). This mirror only ever defers to review: nothing here should
 //   silently auto-file an unreviewed drop into the vault.
-// - Stability check: chokidar's own `awaitWriteFinish` is real Dori's actual
-//   debounce (a `stableMs`-long window with no size/mtime change). This mirror
-//   has no chokidar dependency (plain-Node-only is the whole pitch), so it
-//   polls the directory every POLL_MS and applies the identical rule by hand:
-//   `now - lastChangedAt >= STABLE_MS` before a file counts as stable.
-//   STABLE_MS=3000 matches real Dori's DEFAULT_STABLE_MS exactly.
+// - Stability check: uses chokidar's own `awaitWriteFinish` directly — same
+//   library real Dori uses for this, same debounce (a `stableMs`-long window
+//   with no size/mtime change) — instead of hand-rolling it. chokidar also
+//   normalizes FSEvents/inotify/ReadDirectoryChangesW differences across
+//   macOS/Linux/WSL2/Windows, so no OS-specific scheduler or fallback-poll
+//   safety net is needed. STABLE_MS=3000 matches real Dori's DEFAULT_STABLE_MS
+//   exactly, and scanTick() below still re-derives stability by hand from
+//   size/mtimeMs (kept for `once` mode, which has no persistent watcher to
+//   drive it) — the two are independent, deliberately-redundant checks.
 // - Move vs. delete: real Dori's `findRelocatableOrphan` is an identity-proxy
 //   match (filename + size + mtimeMs against a path verified gone), NOT a
 //   content hash — content hashing there is only for a separate dedup ledger
@@ -37,7 +40,7 @@
 // a watcher inside the vault would see its own writes and self-trigger).
 //
 // Usage:
-//   node watch-inbox.mjs watch              # long-lived poll loop (run via launchd)
+//   node watch-inbox.mjs watch              # long-lived, event-driven via chokidar (run via launchd/systemd/pm2/whatever)
 //   node watch-inbox.mjs once                # two ticks, STABLE_MS apart, then exit
 //   node watch-inbox.mjs list [--status detected|approved|ignored]
 //   node watch-inbox.mjs approve <id>
@@ -46,6 +49,7 @@ import { readdirSync, statSync, readFileSync, writeFileSync, mkdirSync, existsSy
 import { join, resolve, basename, sep } from 'node:path';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import { watch as chokidarWatch } from 'chokidar';
 
 const VAULT_ROOT = resolve(process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault'));
 const WATCH_DIR = resolve(process.env.DORI_WATCH_DIR || join(homedir(), 'Dori Inbox'));
@@ -55,7 +59,6 @@ const PENDING_FILE = join(STATE_DIR, 'watch-inbox-pending.json');
 
 export const STABLE_MS = 3000;
 export const MISSING_GRACE_MS = 120_000;
-const POLL_MS = 1000;
 
 // Mirrors assertNoVaultOverlap — a watched path inside/equal to/an ancestor
 // of the vault would see its own writes and never stop triggering itself.
@@ -195,11 +198,28 @@ function sleep(ms) {
 }
 
 async function watchLoop() {
-  console.log(`Watching ${WATCH_DIR} (poll every ${POLL_MS}ms, stability window ${STABLE_MS}ms)...`);
-  for (;;) {
-    runTick();
-    await sleep(POLL_MS);
-  }
+  mkdirSync(WATCH_DIR, { recursive: true });
+  console.log(`Watching ${WATCH_DIR} (chokidar, stability window ${STABLE_MS}ms)...`);
+
+  const watcher = chokidarWatch(WATCH_DIR, {
+    depth: 0,
+    ignoreInitial: false,
+    awaitWriteFinish: { stabilityThreshold: STABLE_MS, pollInterval: 200 },
+  });
+
+  let scanQueued = false;
+  const scheduleScan = () => {
+    if (scanQueued) return;
+    scanQueued = true;
+    setImmediate(() => { scanQueued = false; runTick(); });
+  };
+
+  watcher.on('add', scheduleScan);
+  watcher.on('change', scheduleScan);
+  watcher.on('unlink', scheduleScan);
+  watcher.on('error', (err) => console.error(`chokidar error: ${err.message}`));
+
+  await new Promise(() => {}); // run until killed
 }
 
 async function once() {

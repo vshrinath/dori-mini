@@ -6,40 +6,17 @@
 // "[a, b]" and crashed the portal's publishing pipeline on tags.forEach — the
 // nine other copies would each have had to be fixed separately.
 //
-// Deliberately not a real YAML parser: the vault's frontmatter is flat
-// scalars, flow sequences, and block lists, and a dependency for that is more
-// than the job needs. Nested maps and multi-line scalars are not supported, and
-// a flow sequence of JSON objects (`suggested_actions: [{"type": "x"}]`, three
-// files in the vault today) splits on the inner commas into fragments -- same as
-// before this parser was shared. Reach for a YAML dependency if that starts to
-// matter, rather than growing a splitter here.
+// Uses the real `yaml` package (same one real Dori's dori-engine depends on)
+// instead of a hand-rolled scalar/flow-sequence/block-list splitter -- that
+// splitter's known gap (a flow sequence of JSON objects splits on the inner
+// commas into fragments) is exactly what a real parser doesn't get wrong.
+import { parse as parseYaml } from 'yaml';
+
 export function parseFrontmatter(raw) {
   const m = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!m) return { fm: {}, body: raw };
   const [, fmBlock, body] = m;
-  const fm = {};
-  let currentKey = null;
-  for (const line of fmBlock.split('\n')) {
-    const listItem = line.match(/^\s*-\s+(.*)$/);
-    if (listItem && currentKey) {
-      (fm[currentKey] ??= []).push(unquote(listItem[1].trim()));
-      continue;
-    }
-    const kv = line.match(/^([a-zA-Z_]+):\s*(.*)$/);
-    if (kv) {
-      const [, key, val] = kv;
-      const v = val.trim();
-      if (v === '') { currentKey = key; continue; }
-      // Flow sequence -- `tags: [a, b]`. Checked BEFORE stripping quotes, so a
-      // quoted template placeholder like `title: '[Account Name]'` stays the
-      // string "[Account Name]" instead of becoming a one-item list.
-      const flow = v.match(/^\[(.*)\]$/);
-      fm[key] = flow
-        ? flow[1].split(',').map((s) => unquote(s.trim())).filter(Boolean)
-        : unquote(v);
-      currentKey = null;
-    }
-  }
+  const fm = parseYaml(fmBlock) ?? {};
   return { fm, body: body.trim() };
 }
 

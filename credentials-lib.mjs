@@ -1,5 +1,8 @@
 // Shared DB/crypto core for credentials-store.mjs and import-credentials.mjs.
-// AES-256-GCM (node:crypto), key in macOS Keychain, storage in plain node:sqlite.
+// AES-256-GCM (node:crypto), key in the OS secret store (macOS Keychain via
+// `security`, Linux/WSL via `secret-tool` — libsecret/gnome-keyring, matching
+// dori-engine's own choice of the OS-native Secret Service over a bundled dep
+// like keytar), storage in plain node:sqlite.
 import { DatabaseSync } from 'node:sqlite';
 import { randomBytes, createCipheriv, createDecipheriv } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -11,17 +14,7 @@ export const DB_PATH = join(homedir(), '.dori', 'credentials.sqlite');
 const KEYCHAIN_SERVICE = 'dori-credentials-store';
 const KEYCHAIN_ACCOUNT = 'encryption-key';
 
-// Keychain + pbcopy are macOS-only. Fail with a straight answer rather than an opaque
-// ENOENT from execFileSync, now that this ships to people who may not be on a Mac.
-function requireMacOS(what) {
-  if (process.platform !== 'darwin') {
-    console.error(`The credentials store needs macOS — it uses the system Keychain to hold the encryption key${what === 'clipboard' ? ' and pbcopy to hand you the value' : ''}. Detected platform: ${process.platform}.`);
-    process.exit(1);
-  }
-}
-
-export function getOrCreateKey() {
-  requireMacOS('keychain');
+function getOrCreateKeyMacOS() {
   try {
     const hex = execFileSync('security', ['find-generic-password', '-a', KEYCHAIN_ACCOUNT, '-s', KEYCHAIN_SERVICE, '-w'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
     return Buffer.from(hex, 'hex');
@@ -41,6 +34,34 @@ This is usually the keychain prompt being dismissed or denied; run the command a
     }
     return key;
   }
+}
+
+function getOrCreateKeyLinux() {
+  try {
+    const hex = execFileSync('secret-tool', ['lookup', 'service', KEYCHAIN_SERVICE, 'account', KEYCHAIN_ACCOUNT], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (!hex) throw new Error('not found');
+    return Buffer.from(hex, 'hex');
+  } catch {
+    // No key yet — mint one, same first-run shape as the macOS path above.
+    const key = randomBytes(32);
+    try {
+      execFileSync('secret-tool', ['store', '--label=Dori Mini credentials key', 'service', KEYCHAIN_SERVICE, 'account', KEYCHAIN_ACCOUNT], { input: key.toString('hex'), stdio: ['pipe', 'ignore', 'pipe'] });
+    } catch (err) {
+      const hint = err?.code === 'ENOENT'
+        ? 'secret-tool was not found. Install libsecret-tools (Debian/Ubuntu/WSL: `sudo apt install libsecret-tools`) and make sure a keyring daemon (gnome-keyring or equivalent) is running and unlocked.'
+        : (err?.stderr?.toString() || '').trim();
+      console.error(`Couldn't save the encryption key to your Secret Service keyring, so there's nowhere safe to keep your secrets — nothing was stored.\n\n${hint}`);
+      process.exit(1);
+    }
+    return key;
+  }
+}
+
+export function getOrCreateKey() {
+  if (process.platform === 'darwin') return getOrCreateKeyMacOS();
+  if (process.platform === 'linux') return getOrCreateKeyLinux();
+  console.error(`The credentials store needs macOS (Keychain) or Linux/WSL (libsecret/gnome-keyring via secret-tool) to hold the encryption key. Detected platform: ${process.platform}.`);
+  process.exit(1);
 }
 
 export function db() {
@@ -73,12 +94,22 @@ export function decrypt(key, ciphertext, nonce, tag) {
   return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
 }
 
+// Clipboard access stays macOS-only for now — the Linux side needs xclip/xsel/
+// wl-copy detection, a separate design decision from the keychain fallback above.
+function requireMacOS(what) {
+  if (process.platform !== 'darwin') {
+    console.error(`${what} needs macOS (uses pbcopy/pbpaste). Detected platform: ${process.platform}.`);
+    process.exit(1);
+  }
+}
+
 export function copyToClipboard(text) {
-  requireMacOS('clipboard');
+  requireMacOS('Copying to the clipboard');
   execFileSync('pbcopy', [], { input: text });
 }
 
 export function readFromClipboard() {
+  requireMacOS('Reading from the clipboard');
   return execFileSync('pbpaste', [], { encoding: 'utf8' });
 }
 
