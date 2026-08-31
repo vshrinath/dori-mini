@@ -1,0 +1,62 @@
+feature_id: dori-go-shell-polish
+feature: Dori Go shell polish
+status: build-ready
+source:
+  derived_from:
+    - electron-app/src/tokens.css (existing partial token port from
+      dori-portal/app/globals.css)
+constraints:
+  - id: constraint.shell.tokens-css-is-sole-design-token-source
+    type: experience
+    rule: >
+      New/changed spacing, typography, and color values MUST be expressed
+      as tokens.css custom properties (extending it where a needed token is
+      missing), not as new hardcoded hex/px values in component styles.
+    rationale: >
+      Directly enforces dori-go.shell.design-consistency -- hardcoded values
+      scattered across components is exactly the drift that makes an app
+      "read as a distinct reimplementation" instead of one design system.
+    applies_to:
+      requirement_ids:
+        - dori-go.shell.design-consistency
+  - id: constraint.shell.shared-motion-constants
+    type: experience
+    rule: >
+      Animated transitions (sidebar switch, slideover open/close, search
+      modal open/close) MUST use one shared set of duration/easing constants
+      defined in one place, not per-component magic numbers. Where a value
+      already exists as a tokens.css custom property (e.g. --ease-out-strong,
+      --ease-in-out-strong), the shared module MUST reference it via
+      var(--x), not duplicate the literal value as a second copy that can
+      drift out of sync.
+    rationale: >
+      Prevents the "animations are present but inconsistent" failure mode
+      named in dori-go.shell.native-motion's own failure clause -- a shared
+      constants module is the concrete mechanism that keeps them consistent.
+      The var(--x)-reference requirement was added 2026-08-31 after
+      motion.js's initial version hardcoded cubic-bezier literals that
+      happened to match tokens.css's values at the time, rather than
+      referencing them -- itself exactly the two-sources-of-truth problem
+      constraint.shell.tokens-css-is-sole-design-token-source exists to
+      prevent, just inside this constraint's own file instead of a
+      component.
+      as more surfaces gain motion over time.
+    applies_to:
+      requirement_ids:
+        - dori-go.shell.native-motion
+  - id: constraint.shell.icon-and-splash-asset-location
+    type: workflow
+    rule: >
+      The app icon and splash screen asset(s) MUST live under a single,
+      predictable location in electron-app/ (e.g. electron-app/assets/) and
+      be wired into the Electron build config from there -- not scattered
+      across ad hoc paths.
+    rationale: >
+      Keeps the app-icon and splash-screen requirements independently
+      verifiable (a test can assert the config points at a real file at a
+      known path) rather than needing to search the repo for where the
+      asset ended up.
+    applies_to:
+      requirement_ids:
+        - dori-go.shell.app-icon
+        - dori-go.shell.splash-screen

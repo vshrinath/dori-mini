@@ -12,50 +12,11 @@ import { EmptyState } from './ui/empty-state.jsx';
 import { Input } from './ui/input.jsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
-import { ArticleViewer } from './ArticleViewer.jsx';
-
-const LIST_LIMIT = 300;
-
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
-}
-
-function DocumentDetail({ relPath, onBack }) {
-  const [doc, setDoc] = useState(undefined);
-
-  useEffect(() => {
-    setDoc(undefined);
-    window.dori
-      .call('get_document', { path: relPath })
-      .then(setDoc)
-      .catch(() => setDoc(null));
-  }, [relPath]);
-
-  return (
-    <section className="flex min-h-0 flex-1 flex-col">
-      <div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-4 py-3">
-        <button
-          onClick={onBack}
-          aria-label="Back to Library"
-          className="rounded-md p-1 text-muted-foreground hover:bg-[var(--space-nav-hover)]"
-        >
-          <ArrowLeft size={16} />
-        </button>
-        <h1 className="truncate text-sm font-semibold">{doc?.title || relPath}</h1>
-      </div>
-      {doc === undefined && <p className="p-4 text-sm text-muted-foreground">Loading…</p>}
-      {doc === null && <p className="p-4 text-sm text-muted-foreground">Document not found.</p>}
-      {doc && <ArticleViewer content={doc.content} html={doc.html} />}
-    </section>
-  );
-}
-
-export function LibraryView() {
+export function LibraryView({ onSelectDocument }) {
   const [docs, setDocs] = useState(null);
   const [error, setError] = useState(null);
   const [typeFilter, setTypeFilter] = useState('all');
   const [query, setQuery] = useState('');
-  const [selectedPath, setSelectedPath] = useState(null);
 
   useEffect(() => {
     window.dori
@@ -148,7 +109,7 @@ export function LibraryView() {
               return (
                 <button
                   key={doc.rel_path}
-                  onClick={() => setSelectedPath(doc.rel_path)}
+                  onClick={() => onSelectDocument?.(doc.rel_path)}
                   className="group rounded-panel bg-card flex flex-col border border-[var(--border-soft)] p-4 text-left transition-all hover:-translate-y-0.5 hover:border-[var(--hairline-strong)] hover:shadow-sm"
                 >
                   <div className="mb-4 flex items-center gap-3">

@@ -8,6 +8,7 @@ import { ChevronRight, Folder, FolderX, Home } from 'lucide-react';
 import { Badge } from './ui/badge.jsx';
 import { EmptyState } from './ui/empty-state.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
+import { ChatView } from './ChatView.jsx';
 
 export function ProjectView({ projectPath, onSelectProject }) {
   const [project, setProject] = useState(undefined);
@@ -28,8 +29,8 @@ export function ProjectView({ projectPath, onSelectProject }) {
   const crumbs = projectPath?.split('/') || [];
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col">
-      <div className="bg-background sticky top-0 z-10 border-b px-4 py-3">
+    <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="bg-background sticky top-0 z-10 border-b px-5 py-3">
         {project === undefined && (
           <div className="flex items-start gap-3">
             <Skeleton className="h-9 w-9 rounded-lg" />
@@ -62,12 +63,15 @@ export function ProjectView({ projectPath, onSelectProject }) {
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto p-5 space-y-4">
         {project === null && (
           <EmptyState icon={FolderX} title="Project not found" description="It may have been renamed or removed from the vault." />
         )}
         {children.length > 0 && (
           <div className="border-border bg-card rounded-panel overflow-hidden border">
+            <div className="px-4 py-2 border-b border-border text-xs font-semibold text-muted-foreground">
+              Sub-projects
+            </div>
             {children.map((c) => (
               <button
                 key={c.projectPath}
@@ -79,6 +83,12 @@ export function ProjectView({ projectPath, onSelectProject }) {
                 <Badge size="compact" variant="muted">{c.status}</Badge>
               </button>
             ))}
+          </div>
+        )}
+
+        {project && (
+          <div className="rounded-panel border border-border overflow-hidden bg-card flex flex-col h-[500px]">
+            <ChatView projectContext={projectPath} />
           </div>
         )}
       </div>

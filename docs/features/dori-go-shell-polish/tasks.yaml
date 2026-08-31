@@ -1,0 +1,59 @@
+feature: dori-go-shell-polish
+source:
+  verification: docs/features/dori-go-shell-polish/verification-record.yaml
+tasks:
+  - id: task.shell.app-icon
+    seam: >
+      A purpose-made Dori Go icon asset, wired into the Electron build
+      config so it appears in the Dock, app switcher, and window chrome
+      instead of the default Electron icon.
+    owner_scope: electron-app-build-config
+    depends_on: []
+    verification_ids:
+      - verify.dori-go.shell.app-icon
+    evidence_expected:
+      - Screenshot of Dock, Cmd+Tab switcher, and window chrome all showing
+        the real icon.
+      - Changed files (asset path per constraint.shell.icon-and-splash-asset-location).
+  - id: task.shell.splash-screen
+    seam: >
+      A branded splash/loading screen shown during app initialization,
+      replacing the current blank/default window.
+    owner_scope: electron-app-main
+    depends_on: []
+    verification_ids:
+      - verify.dori-go.shell.splash-screen
+    evidence_expected:
+      - Screenshot or screen recording of launch showing the splash screen
+        before the main window is ready.
+      - Changed files and exact seam summary.
+  - id: task.shell.motion-constants
+    seam: >
+      One shared module of duration/easing constants, applied to sidebar
+      screen switches, slideover open/close, and search modal open/close.
+    owner_scope: electron-app-renderer
+    depends_on: []
+    verification_ids:
+      - verify.dori-go.shell.native-motion
+    ladder_rung: >
+      Define the constants module first even though the slideover and
+      search modal (separate features) may not exist yet -- apply it to
+      whatever transitions already exist (sidebar switch) now, and to the
+      others as they land, rather than blocking on those features.
+    evidence_expected:
+      - Screen recording of at least the sidebar transition using the
+        shared constants.
+      - Changed files and exact seam summary.
+  - id: task.shell.design-token-consistency
+    seam: >
+      A sweep of existing and new-v1 screens to use tokens.css consistently
+      (extending it where a needed token is missing), removing hardcoded
+      spacing/typography/color values found along the way.
+    owner_scope: electron-app-renderer
+    depends_on: []
+    verification_ids:
+      - verify.dori-go.shell.design-consistency
+    evidence_expected:
+      - Before/after screenshots of at least one screen that had hardcoded
+        values, plus a list of any new tokens added to tokens.css.
+      - Changed files and exact seam summary.

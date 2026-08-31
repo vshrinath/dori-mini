@@ -58,3 +58,10 @@ e.g. "Dori, ..." or "hey Dori ..."). Strip that prefix, then match the rest norm
 Rule of thumb: if the message could *only* be about capture (a link, a file, a
 transcript), act on it directly. If it's a sentence that could plausibly be about
 anything else going on in this session, wait for the "Dori" prefix.
+
+<!-- dori-build:start -->
+Build-system process (features, reverse-engineering, brainstorm-to-requirement) lives
+in the repo in `.dori-build.json` → `processRoot`. Product features live in
+`docs/features/` here. Run `node scripts/dori-build-check.mjs`. Do not put PHI
+in feature files. For as-built inventory see that repo's `docs/reverse-engineering.md`.
+<!-- dori-build:end -->

@@ -27,6 +27,10 @@ import { listProjects } from './list-projects.mjs';
 import { getSelf, setSelf } from './self-store.mjs';
 import { setTaskStatus } from './task-store.mjs';
 import { captureText } from './capture-text.mjs';
+import { captureFile } from './capture-file.mjs';
+import { saveDocument } from './save-document.mjs';
+import { getEngineConfig, setEngineConfig } from './engine-config.mjs';
+import { sendChatMessage } from './chat-runner.mjs';
 
 /** @typedef {{ id: string, description: string, inputSchema: import('zod').ZodType, scope: 'read'|'write', exposeToMcp?: boolean, handler: (input: any) => Promise<any> | any }} ActionDefinition */
 
@@ -179,6 +183,69 @@ export const actions = [
     exposeToMcp: true,
     handler: ({ text }) => captureText(text),
   },
+  {
+    id: 'capture_file',
+    description: 'Copy a dropped/attached file into the vault (does not convert or index it — a raw document, same as any other file already in the vault)',
+    inputSchema: z.object({
+      sourcePath: z.string().min(1),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ sourcePath }) => captureFile(sourcePath),
+  },
+  {
+    id: 'save_document',
+    description: 'Save edited markdown content to an existing vault document and trigger non-fatal reindexing (FTS + semantic)',
+    inputSchema: z.object({
+      path: z.string().min(1),
+      content: z.string(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ path, content }) => saveDocument(path, content),
+  },
+  {
+    id: 'get_engine_config',
+    description: 'Get the active local coding-agent AI engine config (claude | codex | none)',
+    inputSchema: z.object({}),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: () => getEngineConfig(),
+  },
+  {
+    id: 'set_engine_config',
+    description: 'Set the active local coding-agent AI engine config in ~/.dori/whatsapp-config.json',
+    inputSchema: z.object({
+      replyCli: z.enum(['claude', 'codex', 'none']),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ replyCli }) => setEngineConfig({ replyCli }),
+  },
+  {
+    id: 'chat_send',
+    description: 'Send a message to Dori conversational AI using the configured local CLI backend (claude or codex)',
+    inputSchema: z.object({
+      message: z.string().min(1),
+      history: z
+        .array(
+          z.object({
+            role: z.enum(['user', 'dori']),
+            text: z.string(),
+          })
+        )
+        .optional(),
+      projectContext: z.string().optional(),
+    }),
+    // 'write', not 'read': the model behind this can (once sandboxed
+    // correctly) invoke any of the write actions in this same registry via
+    // the CLI dispatcher below. Labeling it 'read' understated what it can
+    // actually do.
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ message, history, projectContext }) =>
+      sendChatMessage({ message, history, projectContext }),
+  },
 ];
 
 export function getAction(id) {
@@ -187,9 +254,38 @@ export function getAction(id) {
   return action;
 }
 
+// CLI dispatch: `node actions.mjs run <action_id> '<json_input>'`. This is
+// the one command chat-runner.mjs's --allowedTools/--sandbox restriction
+// allowlists for the headless model -- it must actually exist and actually
+// go through getAction()/inputSchema.parse(), not just be a string the
+// system prompt claims works (see docs/features/dori-go-composer-chat's
+// review notes, 2026-08-31: the prompt referenced this command before it
+// was implemented).
+async function runFromCli(actionId, jsonInput) {
+  if (!actionId) {
+    console.error("Usage: node actions.mjs run <action_id> '<json_input>'");
+    process.exit(1);
+  }
+  try {
+    const action = getAction(actionId);
+    const input = jsonInput ? JSON.parse(jsonInput) : {};
+    const parsed = action.inputSchema.parse(input);
+    const result = await action.handler(parsed);
+    console.log(JSON.stringify(result, null, 2));
+  } catch (err) {
+    console.error(JSON.stringify({ error: err.message }, null, 2));
+    process.exit(1);
+  }
+}
+
 if (import.meta.main) {
-  const { strict: assert } = await import('node:assert');
-  assert.equal(actions.filter((a) => a.exposeToMcp).length, 14, 'all fourteen sketch actions should be MCP-exposed');
-  assert.throws(() => getAction('nope'));
-  console.log('ok —', actions.map((a) => a.id).join(', '));
+  const [cmd, actionId, jsonInput] = process.argv.slice(2);
+  if (cmd === 'run') {
+    await runFromCli(actionId, jsonInput);
+  } else {
+    const { strict: assert } = await import('node:assert');
+    assert.equal(actions.filter((a) => a.exposeToMcp).length, 19, 'all nineteen sketch actions should be MCP-exposed');
+    assert.throws(() => getAction('nope'));
+    console.log('ok —', actions.map((a) => a.id).join(', '));
+  }
 }

@@ -15,6 +15,9 @@ import { TasksView } from './components/TasksView.jsx';
 import { ProjectView } from './components/ProjectView.jsx';
 import { ProfileView } from './components/ProfileView.jsx';
 import { LibraryView } from './components/LibraryView.jsx';
+import { FileSlideover } from './components/FileSlideover.jsx';
+import { SearchModal } from './components/SearchModal.jsx';
+import { ChatView } from './components/ChatView.jsx';
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -161,17 +164,46 @@ function InboxScreen() {
 }
 
 export function App() {
-  const [active, setActive] = useState('inbox');
+  const [active, setActive] = useState('chat');
   const [profileVersion, setProfileVersion] = useState(0);
+  const [activeDocument, setActiveDocument] = useState(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Global search shortcut (/ and Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      const isInput = tag === 'input' || tag === 'textarea' || document.activeElement?.isContentEditable;
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      } else if (e.key === '/' && !isInput) {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen">
-        <Sidebar active={active} onSelect={setActive} profileVersion={profileVersion} />
-        <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar
+          active={active}
+          onSelect={setActive}
+          onOpenSearch={() => setIsSearchOpen(true)}
+          profileVersion={profileVersion}
+        />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          {active === 'chat' && <ChatView />}
           {active === 'inbox' && <InboxScreen />}
           {active === 'tasks' && <TasksView />}
-          {active === 'library' && <LibraryView />}
+          {active === 'library' && (
+            <LibraryView onSelectDocument={(path) => setActiveDocument(path)} />
+          )}
           {active === 'profile' && (
             <ProfileView onProfileChanged={() => setProfileVersion((v) => v + 1)} />
           )}
@@ -182,6 +214,19 @@ export function App() {
             />
           )}
         </div>
+
+        {/* Global Search Modal */}
+        <SearchModal
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          onSelectDocument={(path) => setActiveDocument(path)}
+        />
+
+        {/* Global File Slideover Drawer */}
+        <FileSlideover
+          relPath={activeDocument}
+          onClose={() => setActiveDocument(null)}
+        />
       </div>
     </TooltipProvider>
   );

@@ -36,6 +36,7 @@
     user-select: none;
   }
   .capsule {
+    position: relative;
     width: 420px;
     display: flex;
     align-items: flex-end;
@@ -44,8 +45,37 @@
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
     border-radius: 20px;
-    padding: 10px 10px 10px 16px;
+    padding: 18px 10px 10px 16px;
+    /* Deliberately NOT a drag region — app-region:drag on an element can
+     * swallow HTML5 dragover/drop events on that same element, so window
+     * dragging and file dropping can't share the capsule. A dedicated
+     * handle (below) owns dragging instead. */
+    -webkit-app-region: no-drag;
+    transition: border-color 120ms, background 120ms;
+  }
+  .capsule.drag-over {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  }
+  .drag-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 14px;
     -webkit-app-region: drag;
+    cursor: grab;
+  }
+  .drag-handle::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 3px;
+    border-radius: 99px;
+    background: var(--border);
   }
   textarea {
     flex: 1;
@@ -87,11 +117,28 @@
     font-size: 11px;
     color: rgba(255, 255, 255, 0.7);
   }
+  .status {
+    position: absolute;
+    top: -22px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 120ms;
+    pointer-events: none;
+  }
+  .status.show { opacity: 1; }
+  .status.ok { color: #22c55e; }
+  .status.error { color: #ef4444; }
 </style>
 </head>
 <body>
-  <div class="capsule">
-    <textarea id="input" rows="1" placeholder="Capture a thought…" autofocus></textarea>
+  <div class="capsule" id="capsule">
+    <div class="drag-handle" title="Drag to move"></div>
+    <div class="status" id="status"></div>
+    <textarea id="input" rows="1" placeholder="Capture a thought, or drop a file…" autofocus></textarea>
     <button id="send" title="Send (Enter)" disabled>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 19V5M5 12l7-7 7 7"/>
@@ -99,8 +146,10 @@
     </button>
   </div>
   <script>
+    const capsule = document.getElementById('capsule');
     const input = document.getElementById('input');
     const sendBtn = document.getElementById('send');
+    const status = document.getElementById('status');
 
     function autoGrow() {
       input.style.height = 'auto';
@@ -108,6 +157,11 @@
       sendBtn.disabled = !input.value.trim();
     }
     input.addEventListener('input', autoGrow);
+
+    function showStatus(text, kind) {
+      status.textContent = text;
+      status.className = `status show ${kind}`;
+    }
 
     async function send() {
       const text = input.value.trim();
@@ -134,6 +188,35 @@
     });
     sendBtn.addEventListener('click', send);
     window.addEventListener('focus', () => input.focus());
+
+    // File drop — independent of the text box: dropping a file captures it
+    // immediately and closes, same as Enter does for text. Typed text and a
+    // dropped file are NOT combined into one capture (that'd need a composite
+    // capture record this scoped-down version doesn't have).
+    capsule.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      capsule.classList.add('drag-over');
+    });
+    capsule.addEventListener('dragleave', () => {
+      capsule.classList.remove('drag-over');
+    });
+    capsule.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      capsule.classList.remove('drag-over');
+      const files = Array.from(e.dataTransfer.files || []);
+      if (files.length === 0) return;
+      try {
+        for (const file of files) {
+          const sourcePath = window.dori.getFilePath(file);
+          await window.dori.call('capture_file', { sourcePath });
+        }
+        showStatus(files.length === 1 ? 'Saved ✓' : `Saved ${files.length} files ✓`, 'ok');
+        setTimeout(() => window.dori.closeMini(), 500);
+      } catch (err) {
+        console.error('file capture failed', err);
+        showStatus('Failed to save', 'error');
+      }
+    });
   </script>
 </body>
 </html>

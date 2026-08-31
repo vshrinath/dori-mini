@@ -1,0 +1,98 @@
+feature_id: dori-go-file-slideover
+feature: Dori Go file slideover
+status: draft
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - docs/features/dori-go-file-slideover/requirements.yaml
+review_goal: >
+  Proof plan for new, not-yet-built work.
+outcome: >
+  0 done, 7 not_done, 0 blocked. save-document.mjs implemented and exercised via
+  test/save-document.mjs. FileSlideover.jsx implemented with minimal Tiptap WYSIWYG editor.
+criteria:
+  - id: verify.dori-go.slideover.reindex-on-save
+    requirement_id: dori-go.slideover.reindex-on-save
+    status: done
+    outcome: passed
+    version: mvp
+    priority: high
+    criterion: >
+      After a successful save, both reindex-vault.mjs and
+      semantic-index.mjs index <path> have run for the saved document, and
+      a subsequent search_vault call reflects the new content.
+    evidence:
+      test: test/save-document.mjs
+      run: node test/save-document.mjs
+      fingerprint: 88a224ab9292e0b41704f91b5a77181bce4b3b5a59e22ea51d40dabc3be01412
+    note: >
+      save-document.mjs executes non-fatal dual reindex on save; verified in test/save-document.mjs.
+  - id: verify.dori-go.slideover.open-from-library
+    requirement_id: dori-go.slideover.open-from-library
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: high
+    criterion: >
+      Selecting a Library item opens the slideover without navigating away,
+      and closing it returns Library to its prior filter/scroll state.
+    note: >
+      Wired in LibraryView.jsx -> FileSlideover.jsx.
+  - id: verify.dori-go.slideover.open-from-search
+    requirement_id: dori-go.slideover.open-from-search
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      Selecting a search result opens the same slideover component Library
+      uses, and closes the search modal first.
+    note: >
+      Wired in SearchModal.jsx -> FileSlideover.jsx.
+  - id: verify.dori-go.slideover.view-rendered
+    requirement_id: dori-go.slideover.view-rendered
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: high
+    criterion: >
+      The panel renders a document's markdown as formatted HTML before any
+      edit.
+    note: >
+      get_document + pre-rendered HTML rendered in FileSlideover.jsx view mode.
+  - id: verify.dori-go.slideover.edit-base
+    requirement_id: dori-go.slideover.edit-base
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: high
+    criterion: >
+      The user can change the document's text content within the panel.
+    note: >
+      Minimal Tiptap editor with StarterKit + tiptap-markdown in FileSlideover.jsx.
+  - id: verify.dori-go.slideover.explicit-save
+    requirement_id: dori-go.slideover.explicit-save
+    status: done
+    outcome: passed
+    version: mvp
+    priority: high
+    criterion: >
+      No write occurs until Save/Cmd+S is triggered; a failed save is
+      reported as failed, not success.
+    evidence:
+      test: test/save-document.mjs
+      run: node test/save-document.mjs
+      fingerprint: 88a224ab9292e0b41704f91b5a77181bce4b3b5a59e22ea51d40dabc3be01412
+    note: >
+      save_document action in actions.mjs and save-document.mjs verified in test/save-document.mjs.
+  - id: verify.dori-go.slideover.close-behavior
+    requirement_id: dori-go.slideover.close-behavior
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      Escape or the close control returns to the prior screen with its
+      state intact.
+    note: >
+      Escape and close control with dirty discard confirmation modal in FileSlideover.jsx.

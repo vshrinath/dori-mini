@@ -22,10 +22,11 @@
 // fakery, not polish. The profile footer instead does the one real thing it
 // can: navigate to the Profile screen.
 import { useEffect, useState } from 'react';
-import { Inbox, Check, Folder, ChevronRight, Library } from 'lucide-react';
+import { Inbox, Check, Folder, ChevronRight, Library, Search, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils.js';
 
 const NAV = [
+  { id: 'chat', label: 'Chat', icon: Sparkles },
   { id: 'inbox', label: 'Inbox', icon: Inbox },
   { id: 'tasks', label: 'Tasks', icon: Check },
   { id: 'library', label: 'Library', icon: Library }
@@ -126,7 +127,7 @@ function ProfileFooter({ onSelect, profileVersion }) {
   );
 }
 
-export function Sidebar({ active, onSelect, profileVersion }) {
+export function Sidebar({ active, onSelect, onOpenSearch, profileVersion }) {
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
@@ -138,7 +139,7 @@ export function Sidebar({ active, onSelect, profileVersion }) {
 
   return (
     <nav className="flex h-full w-60 shrink-0 flex-col bg-[var(--space-sidebar-bg)]">
-      <div className="mb-1.5 flex shrink-0 items-center border-b border-[var(--space-sidebar-border)] px-2.5 pb-3 pt-[0.6rem]">
+      <div className="mb-1.5 flex shrink-0 items-center justify-between border-b border-[var(--space-sidebar-border)] px-2.5 pb-3 pt-[0.6rem]">
         <span className="font-display text-base font-medium tracking-[-0.02em] text-foreground-secondary">
           Dori
         </span>
@@ -146,6 +147,17 @@ export function Sidebar({ active, onSelect, profileVersion }) {
 
       <div className="flex-1 overflow-y-auto px-1.5">
         <div className="flex flex-col gap-0.5 pt-1.5">
+          <button
+            onClick={onOpenSearch}
+            className="flex min-h-[2.15rem] w-full items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-left text-[0.8125rem] font-medium text-foreground-secondary transition-colors hover:bg-[var(--space-nav-hover)]"
+          >
+            <Search size={16} className="shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1 truncate">Search</span>
+            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono">
+              /
+            </span>
+          </button>
+
           {NAV.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => onSelect(id)} className={navLinkClass(active === id)}>
               <Icon size={16} className="shrink-0" />

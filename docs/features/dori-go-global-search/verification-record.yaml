@@ -1,0 +1,56 @@
+feature_id: dori-go-global-search
+feature: Dori Go global search
+status: draft
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - docs/features/dori-go-global-search/requirements.yaml
+review_goal: >
+  Proof plan for new, not-yet-built work.
+outcome: >
+  0 done, 4 not_done, 0 blocked. SearchModal.jsx built, wired into Sidebar.jsx and App.jsx shortcuts.
+criteria:
+  - id: verify.dori-go.search.sidebar-entry
+    requirement_id: dori-go.search.sidebar-entry
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      A Search entry is present and clickable in both expanded and
+      collapsed sidebar states, and opens the modal.
+    note: >
+      Search button added to Sidebar.jsx nav list, triggering setIsSearchOpen(true).
+  - id: verify.dori-go.search.keyboard-shortcut
+    requirement_id: dori-go.search.keyboard-shortcut
+    status: not_done
+    outcome: partial
+    version: v1
+    priority: low
+    criterion: >
+      The chosen global shortcut opens the modal from any screen and does
+      not fire while a text field has focus.
+    note: >
+      App.jsx listens for Cmd+K and / (guarded when activeElement is input/textarea/contenteditable).
+  - id: verify.dori-go.search.document-results
+    requirement_id: dori-go.search.document-results
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: high
+    criterion: >
+      Modal results match search_vault's output for the typed query,
+      including the no-match case.
+    note: >
+      SearchModal.jsx queries actions.mjs's search_vault action in real time.
+  - id: verify.dori-go.search.select-result
+    requirement_id: dori-go.search.select-result
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      Selecting a result (click or keyboard) closes the modal and opens
+      that document in the file slideover.
+    note: >
+      SearchModal.jsx onSelectDocument closes modal and sets activeDocument to open FileSlideover.jsx.

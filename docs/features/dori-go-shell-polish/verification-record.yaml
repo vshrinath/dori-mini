@@ -1,0 +1,64 @@
+feature_id: dori-go-shell-polish
+feature: Dori Go shell polish
+status: draft
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - docs/features/dori-go-shell-polish/requirements.yaml
+review_goal: >
+  Proof plan for new, not-yet-built work. These criteria are inherently more
+  visual/qualitative than the other v1 features -- expect several to stay
+  "quality" verification (a screenshot + human judgment) rather than a
+  deterministic assertion, per this build-system's own guidance to prefer
+  quality verification over a forced deterministic check for semantic/visual
+  claims.
+outcome: >
+  0 done, 0 not_done, 4 blocked -- nothing exists to test yet.
+criteria:
+  - id: verify.dori-go.shell.app-icon
+    requirement_id: dori-go.shell.app-icon
+    status: blocked
+    outcome: partial
+    version: v1
+    priority: medium
+    criterion: >
+      A real Dori Go icon (not Electron's default) appears in the Dock,
+      Cmd+Tab switcher, and window chrome.
+    note: >
+      Not built yet. Deterministically checkable (icon file exists and is
+      wired into the Electron build config) once an icon asset exists.
+  - id: verify.dori-go.shell.splash-screen
+    requirement_id: dori-go.shell.splash-screen
+    status: blocked
+    outcome: partial
+    version: v1
+    priority: low
+    criterion: >
+      A branded splash screen shows during app initialization instead of a
+      blank/white window.
+    note: >
+      Not built yet.
+  - id: verify.dori-go.shell.native-motion
+    requirement_id: dori-go.shell.native-motion
+    status: blocked
+    outcome: partial
+    version: v1
+    priority: medium
+    criterion: >
+      Sidebar switches, slideover open/close, and search modal open/close
+      all animate with consistent duration/easing.
+    note: >
+      Not built yet. Likely quality verification (visual review) rather
+      than a deterministic assertion.
+  - id: verify.dori-go.shell.design-consistency
+    requirement_id: dori-go.shell.design-consistency
+    status: blocked
+    outcome: partial
+    version: v1
+    priority: medium
+    criterion: >
+      Existing and new-v1 screens read as one design system, matching
+      tokens.css and real Dori's spacing/type/color conventions.
+    note: >
+      Not built yet. Quality verification (side-by-side visual comparison
+      against real Dori), not a deterministic assertion.

@@ -1,0 +1,102 @@
+feature_id: dori-go-file-slideover
+feature: Dori Go file slideover
+status: build-ready
+source:
+  derived_from:
+    - actions.mjs (get_document; no existing write-a-document action)
+    - dori-go-desktop/tech-constraints.yaml (inherited actions-registry rule)
+constraints:
+  - id: constraint.slideover.reindex-matches-existing-convention
+    type: workflow
+    rule: >
+      A successful save MUST run both reindex-vault.mjs (FTS) and
+      semantic-index.mjs index <path> (embeddings) for the saved document,
+      matching capture-text.mjs's existing pattern exactly -- not just one
+      of the two. Indexing failure MUST be non-fatal: the save itself has
+      already succeeded and MUST NOT be reported as failed or rolled back
+      because reindexing failed.
+    rationale: >
+      Every existing vault-write action follows this two-index pattern
+      (see capture-text.mjs). A save action that only updates FTS (as
+      Antigravity's draft plan proposed) would leave semantic search stale
+      after every edit -- a real, silent staleness bug, not a stylistic
+      inconsistency.
+    applies_to:
+      requirement_ids:
+        - dori-go.slideover.reindex-on-save
+  - id: constraint.slideover.save-requires-new-registered-action
+    type: api
+    rule: >
+      Saving an edit MUST go through a new, registered actions.mjs entry
+      (e.g. save_document) with its own Zod inputSchema, scope: 'write', and
+      exposeToMcp decision -- the same pattern every existing write action
+      follows. The slideover MUST NOT write to the vault via a bespoke IPC
+      channel that bypasses actions.mjs.
+    rationale: >
+      No action in actions.mjs currently writes document content
+      (get_document is read-only). This is genuinely new capability, not a
+      UI wrapper over an existing action -- naming it explicitly here stops
+      an implementer from quietly wiring a raw fs.writeFile call from
+      main.js instead.
+    applies_to:
+      requirement_ids:
+        - dori-go.slideover.explicit-save
+  - id: constraint.slideover.write-path-is-server-derived
+    type: data
+    rule: >
+      The save action MUST write only to the vault-relative path the
+      document was opened with (the same relPath get_document returned). It
+      MUST NOT accept an arbitrary path from renderer input.
+    rationale: >
+      The renderer is untrusted relative to the vault's filesystem
+      boundary -- a save action that took a caller-supplied path would let a
+      compromised or buggy renderer write anywhere under (or via traversal,
+      outside) the vault.
+    applies_to:
+      requirement_ids:
+        - dori-go.slideover.explicit-save
+  - id: constraint.slideover.view-path-reuses-get-document
+    type: api
+    rule: >
+      Rendering the document's initial content MUST reuse the existing
+      get_document action and renderMarkdownToHtml -- the same calls the
+      retired ArticleViewer used -- not a second, parallel read path.
+    rationale: >
+      get_document + renderMarkdownToHtml is already exercised and correct
+      (manually verified this session); a second read implementation would
+      be pure duplication with no product benefit.
+    applies_to:
+      requirement_ids:
+        - dori-go.slideover.view-rendered
+  - id: constraint.slideover.no-embedded-chat
+    type: experience
+    rule: >
+      The slideover panel MUST NOT embed its own chat/composer instance,
+      unlike real Dori's edit-panel.tsx. Chat lives only on the surrounding
+      screens (dori-go-composer-chat).
+    rationale: >
+      Explicitly descoped during the Problem Statement interview
+      (2026-08-31) -- stated as a constraint, not just a requirements
+      exclusion, since edit-panel.tsx is the direct reference implementation
+      being ported from and an implementer copying it closely could
+      reintroduce this by default.
+    applies_to:
+      requirement_ids: []
+  - id: constraint.slideover.base-editor-is-minimal-tiptap
+    type: experience
+    rule: >
+      dori-go.slideover.edit-base's "base editor" MUST be implemented as a
+      minimal Tiptap instance (WYSIWYG, formatted text while editing) --
+      matching real Dori's edit-panel.tsx choice of editor. It MUST NOT
+      include edit-panel.tsx's block picker (BlockPickerDrawer) or Council
+      review integration, and MUST NOT expose raw markdown source to the
+      user.
+    rationale: >
+      Resolved 2026-08-31 (revised same day, after initially considering a
+      plain markdown-source textarea and rejecting it): exposing markdown
+      syntax to a lay user contradicts Dori Go's core positioning. Tiptap is
+      a new electron-app dependency but not a new concept in the workspace
+      -- dori-portal already depends on it for the same job.
+    applies_to:
+      requirement_ids:
+        - dori-go.slideover.edit-base

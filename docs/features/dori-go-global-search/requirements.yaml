@@ -1,0 +1,102 @@
+feature_id: dori-go-global-search
+feature: Dori Go global search
+status: build-ready
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - dori-portal/app/sidebar.tsx, app/sidebar-container.tsx (sidebar Search entry)
+    - dori-portal/app/command-palette.tsx, app/shortcut-handler.tsx (modal + shortcut)
+    - dori-mini's search_vault action (actions.mjs, backed by query-vault.mjs)
+  derivation:
+    - New capability, scoped 2026-08-31. Real Dori's palette searches documents,
+      projects, people, tasks, and inbox items in one result list; Dori Go v1
+      stays documents-only since search_vault is the only real full-text search
+      primitive dori-mini has -- the others are filtered lists, not search.
+review_goal: >
+  Requirement catalogue for a sidebar-triggered global search modal, scoped
+  to vault documents only for v1.
+outcome: >
+  Nothing built yet.
+scope:
+  includes:
+    - dori-go.search.sidebar-entry
+    - dori-go.search.keyboard-shortcut
+    - dori-go.search.document-results
+    - dori-go.search.select-result
+  excludes:
+    - Cross-type results (projects, people, tasks, inbox) -- explicitly
+      deferred; would require faking "search" over filtered-list actions
+      rather than a real full-text primitive.
+requirements:
+  - id: dori-go.search.sidebar-entry
+    title: A Search entry in the sidebar opens the search modal
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user wants to find a document without knowing which project or
+      folder it's in.
+    expected: >
+      WHERE the sidebar is shown, in either expanded or collapsed/rail
+      state, THE SYSTEM SHALL include a visible "Search" entry. WHEN the
+      user activates it, THE SYSTEM SHALL open the search modal.
+    failure: >
+      No visible way to reach search from the sidebar, or the entry is
+      missing in a collapsed sidebar state.
+    variants: >
+      Expanded sidebar, collapsed/rail sidebar.
+  - id: dori-go.search.keyboard-shortcut
+    title: A keyboard shortcut opens the search modal from anywhere
+    status: ACCEPTED
+    version: v1
+    priority: low
+    situation: >
+      The user wants to search without reaching for the mouse.
+    expected: >
+      WHEN the user presses the designated global shortcut (matching real
+      Dori's "/" convention, or another choice that doesn't collide with the
+      composer's own typing) from any screen, THE SYSTEM SHALL open the
+      search modal.
+    failure: >
+      The shortcut does nothing, only works from certain screens, or
+      collides with typing into the composer/editor.
+    variants: >
+      Triggered from the home screen, triggered while a text field has
+      focus (should not fire, or should be scoped to avoid stealing "/").
+    note: >
+      Exact key choice is an implementation decision; the requirement is
+      just that some reliable global shortcut exists.
+  - id: dori-go.search.document-results
+    title: Search returns matching vault documents
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      The user types a query into the search modal.
+    expected: >
+      WHEN the user types a query into the search modal, THE SYSTEM SHALL
+      show results reflecting search_vault's current output for that query
+      -- title, type, and enough context to recognize the right document --
+      updating as the user types or on explicit submit.
+    failure: >
+      A document search_vault would return is missing from the modal's
+      results, or the modal shows stale results after the query changes.
+    variants: >
+      No results, one result, many results, a query with no matches.
+  - id: dori-go.search.select-result
+    title: Selecting a result opens that document
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user picks a result from the search modal.
+    expected: >
+      WHEN the user selects a result from the search modal, THE SYSTEM SHALL
+      close the modal and open that document in the file slideover
+      (dori-go-file-slideover) -- the same mechanism Library uses, not a
+      separate viewer.
+    failure: >
+      The modal doesn't close, or the selected document opens somewhere
+      other than the slideover.
+    variants: >
+      Select via click, select via keyboard (arrow keys + Enter).

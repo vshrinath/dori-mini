@@ -1,0 +1,56 @@
+feature: dori-go-file-slideover
+source:
+  verification: docs/features/dori-go-file-slideover/verification-record.yaml
+tasks:
+  - id: task.slideover.save-action
+    seam: >
+      A new, registered actions.mjs entry (save_document) that writes edited
+      content back to the vault-relative path the document was opened with
+      -- never a caller-supplied path -- with its own Zod inputSchema and
+      scope: 'write', then reindexes the saved document (FTS + semantic,
+      non-fatal on indexing failure).
+    owner_scope: main-process
+    depends_on: []
+    verification_ids:
+      - verify.dori-go.slideover.explicit-save
+      - verify.dori-go.slideover.reindex-on-save
+    ladder_rung: >
+      Follow the exact shape of an existing write action (capture-text.mjs,
+      including its reindex-vault.mjs + semantic-index.mjs call pair)
+      rather than inventing a new registration or indexing pattern.
+    evidence_expected:
+      - Focused test(s) covering a successful save, a save that fails
+        (e.g. permission/disk error, reported as failed not success),
+        confirmation the action rejects a path outside the document's own
+        relPath, and confirmation both indexes update after a successful
+        save.
+      - Changed files and exact seam summary.
+  - id: task.slideover.panel-ui
+    seam: >
+      The slide-over panel component: opens from Library and from global
+      search, renders via the existing get_document + renderMarkdownToHtml
+      path, edits via a minimal Tiptap instance (no block picker, no
+      Council), and closes via Escape/control with an unsaved-edits
+      confirmation prompt.
+    owner_scope: electron-app-renderer
+    depends_on:
+      - task.slideover.save-action
+    verification_ids:
+      - verify.dori-go.slideover.open-from-library
+      - verify.dori-go.slideover.open-from-search
+      - verify.dori-go.slideover.view-rendered
+      - verify.dori-go.slideover.edit-base
+      - verify.dori-go.slideover.close-behavior
+    ladder_rung: >
+      Tiptap minimal config only (constraint.slideover.base-editor-is-minimal-tiptap)
+      -- no block picker, no collaborative review, no embedded chat
+      (constraint.slideover.no-embedded-chat).
+    evidence_expected:
+      - Visual proof of open-from-Library, rendered view, edit, save, and
+        the unsaved-edits close prompt.
+      - Changed files and exact component summary.
+    note: >
+      dori-go-global-search's own select-result requirement opens documents
+      in this same panel -- that's a dependency in the other direction (that
+      feature depends on this one), not tracked here since tasks.yaml only
+      records same-feature task ids.

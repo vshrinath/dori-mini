@@ -1,0 +1,57 @@
+feature_id: dori-go-engine-picker
+feature: Dori Go AI engine picker
+status: draft
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - docs/features/dori-go-engine-picker/requirements.yaml
+review_goal: >
+  Proof plan for new, not-yet-built work.
+outcome: >
+  0 done, 3 not_done, 0 blocked. engine-config.mjs implemented and exercised via test/engine-config.mjs. EnginePicker.jsx wired in ChatView toolbar.
+criteria:
+  - id: verify.dori-go.engine.select-provider
+    requirement_id: dori-go.engine.select-provider
+    status: done
+    outcome: passed
+    version: v1
+    priority: medium
+    criterion: >
+      The picker displays the current CLI and switching updates which CLI
+      the next chat reply invokes.
+    evidence:
+      test: test/engine-config.mjs
+      run: node test/engine-config.mjs
+      fingerprint: 51538a0bc38717f4d14d120349b9023c93bd597e6806a231e8bde40de20dea87
+    note: >
+      Verified in test/engine-config.mjs and EnginePicker.jsx.
+  - id: verify.dori-go.engine.shared-config
+    requirement_id: dori-go.engine.shared-config
+    status: done
+    outcome: passed
+    version: v1
+    priority: medium
+    criterion: >
+      A change made in Dori Go's picker is reflected in
+      ~/.dori/whatsapp-config.json's replyCli field, and vice versa.
+    evidence:
+      test: test/engine-config.mjs
+      run: node test/engine-config.mjs
+      fingerprint: 51538a0bc38717f4d14d120349b9023c93bd597e6806a231e8bde40de20dea87
+    note: >
+      Shared single source of truth in engine-config.mjs verified in test/engine-config.mjs.
+  - id: verify.dori-go.engine.reflects-unconfigured
+    requirement_id: dori-go.engine.reflects-unconfigured
+    status: done
+    outcome: passed
+    version: v1
+    priority: medium
+    criterion: >
+      With replyCli absent or "none", the picker and the chat
+      not-configured banner agree and both show unconfigured.
+    evidence:
+      test: test/engine-config.mjs
+      run: node test/engine-config.mjs
+      fingerprint: 51538a0bc38717f4d14d120349b9023c93bd597e6806a231e8bde40de20dea87
+    note: >
+      Verified in test/engine-config.mjs and ChatView.jsx.

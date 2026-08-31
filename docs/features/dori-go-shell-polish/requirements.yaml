@@ -1,0 +1,106 @@
+feature_id: dori-go-shell-polish
+feature: Dori Go shell polish
+status: build-ready
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - "User feedback, 2026-08-31: Dori Go seems to be a prototype more than anything -- it even needs stuff like the fave icon, a splash screen, a lot of things to make it complete."
+    - electron-app/src/tokens.css (existing partial design-token port from
+      dori-portal's globals.css, done earlier this session)
+  derivation:
+    - New capability. This is the only v1 feature that's about feel rather
+      than function -- it has no dori-mini action-registry counterpart to
+      compare against.
+review_goal: >
+  Requirement catalogue for closing the visual/native-feel gap between Dori
+  Go and real Dori. Kept deliberately outcome-stated (no "use library X")
+  since the actual visual design work belongs to a design pass, not this
+  catalogue.
+outcome: >
+  Nothing built yet.
+scope:
+  includes:
+    - dori-go.shell.app-icon
+    - dori-go.shell.splash-screen
+    - dori-go.shell.native-motion
+    - dori-go.shell.design-consistency
+  excludes:
+    - A full design-system audit or rebuild -- tokens.css already carries
+      forward real Dori's tokens; this feature is about applying them
+      consistently and adding motion, not re-deriving the design system.
+requirements:
+  - id: dori-go.shell.app-icon
+    title: Dori Go has its own app/dock icon
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      The user looks at the Dock, the app switcher, or the window title bar.
+    expected: >
+      THE SYSTEM SHALL display a purpose-made Dori Go icon in the Dock, the
+      app switcher, and window chrome, instead of Electron's default icon.
+    failure: >
+      The default Electron icon (or a placeholder) still appears in any of
+      the Dock, app switcher, or window chrome.
+    variants: >
+      Dock, Cmd+Tab switcher, window title bar (if shown).
+  - id: dori-go.shell.splash-screen
+    title: Launching Dori Go shows a splash/loading screen
+    status: ACCEPTED
+    version: v1
+    priority: low
+    situation: >
+      The user launches Dori Go and the app is still initializing (loading
+      the vault index, starting the Electron renderer, etc.).
+    expected: >
+      WHILE Dori Go is initializing after launch, THE SYSTEM SHALL show a
+      branded splash/loading screen instead of a blank or default-white
+      window.
+    failure: >
+      The user sees a blank/white window, a flash of unstyled content, or
+      the OS's default window chrome with nothing in it while loading.
+    variants: >
+      Fast launch (index warm), slow launch (index needs rebuilding).
+  - id: dori-go.shell.native-motion
+    title: Screen and panel transitions feel native, not instant/web-like
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      The user switches between sidebar screens, opens/closes the file
+      slideover, or opens the search modal.
+    expected: >
+      WHEN the user switches sidebar screens, or opens/closes the slideover
+      or search modal, THE SYSTEM SHALL animate the transition (matching
+      real Dori's own motion language) rather than snapping instantly the
+      way an unstyled web page would.
+    failure: >
+      Every transition is an instant, jarring swap with no motion at all,
+      or animations are present but inconsistent in duration/easing across
+      different surfaces.
+    variants: >
+      Sidebar screen switch, slideover open/close, search modal open/close.
+    note: >
+      "Matching real Dori's motion language" needs a concrete reference
+      (specific durations/easing curves) during implementation -- this
+      requirement states the outcome, not the values.
+  - id: dori-go.shell.design-consistency
+    title: Visual design is consistent with real Dori's design system
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      The user compares any Dori Go screen against the equivalent real Dori
+      screen.
+    expected: >
+      THE SYSTEM SHALL apply consistent spacing, typography, and color (via
+      tokens.css, already partially ported from real Dori) across every
+      screen, so they read as one design system rather than a visually
+      distinct reimplementation.
+    failure: >
+      A screen visibly uses different spacing/type/color conventions than
+      the rest of the app or than real Dori, making it look like a
+      prototype next to a finished screen.
+    variants: >
+      Existing screens (Inbox/Tasks/Profile/Projects), new v1 surfaces
+      (composer, slideover, search modal).

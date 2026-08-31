@@ -1,0 +1,101 @@
+feature_id: dori-go-composer-chat
+feature: Dori Go composer and chat
+status: draft
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - docs/features/dori-go-composer-chat/requirements.yaml
+review_goal: >
+  Proof plan for new work.
+outcome: >
+  0 done, 7 not_done, 0 blocked. ChatView.jsx, EnginePicker.jsx, chat-runner.mjs, and chat_send action built and wired.
+criteria:
+  - id: verify.dori-go.chat.global-conversation
+    requirement_id: dori-go.chat.global-conversation
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: high
+    criterion: >
+      The home screen renders an open conversation pane beside the
+      persistent sidebar, and typing + sending produces a visible exchange.
+    note: >
+      Rendered on home screen (App.jsx active === 'chat') beside Sidebar.jsx.
+  - id: verify.dori-go.chat.contextual-embedding
+    requirement_id: dori-go.chat.contextual-embedding
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      A message sent from a project screen carries that project's context;
+      a message sent from home/Inbox does not.
+    note: >
+      ChatView embedded in ProjectView passes projectContext in chat_send.
+  - id: verify.dori-go.chat.action-invocation
+    requirement_id: dori-go.chat.action-invocation
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: high
+    criterion: >
+      For each of the 15 actions.mjs primitives, an unambiguous chat message
+      results in that action being called and its effect visible in the
+      corresponding screen without manual refresh.
+    note: >
+      chat-runner.mjs passes all registered actions in system prompt and action dispatch.
+      2026-08-31: actions.mjs's CLI dispatcher (`run <action_id> '<json>'`)
+      now actually exists (test/chat-runner.mjs regression-guards its
+      presence and that --allowedTools/--sandbox restrict the model to it) --
+      previously the system prompt referenced a command that didn't exist.
+      Still not_done: no end-to-end test proves a real chat message actually
+      results in the corresponding action running and its effect showing up
+      in the UI.
+  - id: verify.dori-go.chat.backend-cli
+    requirement_id: dori-go.chat.backend-cli
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: high
+    criterion: >
+      A chat reply is produced by invoking the user's configured CLI
+      (Claude Code or Codex) headlessly, with no separate API key involved.
+    note: >
+      chat-runner.mjs reuses runClaude and runCodex headless invocation patterns.
+  - id: verify.dori-go.chat.not-configured-state
+    requirement_id: dori-go.chat.not-configured-state
+    status: done
+    outcome: passed
+    version: mvp
+    priority: high
+    criterion: >
+      With no CLI configured, or a forced call failure, the composer shows a
+      distinct visible state rather than hanging or silently doing nothing.
+    evidence:
+      test: test/chat-runner.mjs
+      run: node test/chat-runner.mjs
+      fingerprint: fac7c481c76f1890d8b1bdbee5e096c33e526ce9b0be0c637d9c81958a8456cd
+    note: >
+      Verified in test/chat-runner.mjs and ChatView unconfigured banner.
+  - id: verify.dori-go.chat.blocking-reply
+    requirement_id: dori-go.chat.blocking-reply
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: low
+    criterion: >
+      The UI shows a waiting/thinking indicator until the full reply is
+      ready, with no partial/incremental text implied.
+    note: >
+      ChatView shows Thinking indicator and updates on complete response.
+  - id: verify.dori-go.chat.ephemeral-history
+    requirement_id: dori-go.chat.ephemeral-history
+    status: not_done
+    outcome: partial
+    version: v1
+    priority: low
+    criterion: >
+      Restarting Dori Go starts every conversation fresh, with no prior
+      messages reappearing.
+    note: >
+      Messages stored in React state in memory only.

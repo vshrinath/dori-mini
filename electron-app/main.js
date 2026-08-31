@@ -10,6 +10,7 @@
 import { app, BrowserWindow, globalShortcut, ipcMain, screen } from 'electron';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { getAction } from '../actions.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -45,8 +46,44 @@ function createWindow() {
 // via the same in-process actions.mjs dispatch the main window uses — no
 // HTTP, no engine process, no voice/selection/attachment machinery.
 const MINI_WIDTH = 440;
-const MINI_HEIGHT = 70;
+const MINI_HEIGHT = 84;
 let miniWin = null;
+
+// Remembers where the user dragged the mini window to, across app restarts.
+// Not localStorage — this is a separate BrowserWindow/renderer with nothing
+// shared with the main app's storage, so it needs its own small file.
+const MINI_POSITION_FILE = join(app.getPath('userData'), 'mini-position.json');
+let settingPositionProgrammatically = false;
+
+function loadSavedPosition() {
+  try {
+    if (!existsSync(MINI_POSITION_FILE)) return null;
+    const { x, y } = JSON.parse(readFileSync(MINI_POSITION_FILE, 'utf-8'));
+    return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveMiniPosition() {
+  if (!miniWin) return;
+  const [x, y] = miniWin.getPosition();
+  try {
+    writeFileSync(MINI_POSITION_FILE, JSON.stringify({ x, y }));
+  } catch (err) {
+    console.error('[mini] failed to save window position:', err.message);
+  }
+}
+
+// Default: bottom-center, one-fifth of the screen height above the bottom
+// edge — used only until the user drags the window somewhere else once.
+function defaultMiniPosition() {
+  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const x = Math.round(display.bounds.x + (display.bounds.width - MINI_WIDTH) / 2);
+  const bottomMargin = Math.round(display.bounds.height / 5);
+  const y = display.bounds.y + display.bounds.height - MINI_HEIGHT - bottomMargin;
+  return { x, y };
+}
 
 function createMiniWindow() {
   miniWin = new BrowserWindow({
@@ -56,6 +93,13 @@ function createMiniWindow() {
     show: false,
     frame: false,
     transparent: true,
+    // Electron gives transparent windows a rectangular native drop shadow
+    // by default — with rounded CSS content that shows as a jagged gray
+    // halo around the corners. mini.html draws its own box-shadow on the
+    // capsule; the native one is redundant. Real Dori's own mini window
+    // (dori-engine's tauri.conf.json) sets `"shadow": false` for the same
+    // reason.
+    hasShadow: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     webPreferences: {
@@ -66,6 +110,13 @@ function createMiniWindow() {
   });
   miniWin.loadFile(join(__dirname, 'mini.html'));
   miniWin.on('blur', () => miniWin.hide());
+  // Fires once at the end of a user drag on macOS — guarded so our own
+  // programmatic setPosition() calls (on every toggle-open) don't get
+  // persisted as if the user had dragged it there.
+  miniWin.on('moved', () => {
+    if (settingPositionProgrammatically) return;
+    saveMiniPosition();
+  });
 }
 
 function toggleMiniWindow() {
@@ -74,10 +125,10 @@ function toggleMiniWindow() {
     miniWin.hide();
     return;
   }
-  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-  const x = Math.round(display.bounds.x + (display.bounds.width - MINI_WIDTH) / 2);
-  const y = display.bounds.y + 120;
+  const { x, y } = loadSavedPosition() ?? defaultMiniPosition();
+  settingPositionProgrammatically = true;
   miniWin.setPosition(x, y);
+  settingPositionProgrammatically = false;
   miniWin.show();
   miniWin.focus();
 }
