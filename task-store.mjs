@@ -188,6 +188,16 @@ export function addTask({ title, due, owner }) {
   return task;
 }
 
+export function setTaskStatus(id, status) {
+  const path = join(TASKS_DIR, `${id}.json`);
+  if (!existsSync(path)) return null;
+  const task = JSON.parse(readFileSync(path, 'utf-8'));
+  task.status = status;
+  task.updatedAt = new Date().toISOString();
+  writeTask(task);
+  return task;
+}
+
 function parseFlags(argv) {
   const flags = {};
   for (let i = 0; i < argv.length; i++) {

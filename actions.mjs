@@ -24,6 +24,7 @@ import { canonicalOutputPath } from './route-destination.mjs';
 import { buildTimeline } from './timeline.mjs';
 import { listProjects } from './list-projects.mjs';
 import { getSelf } from './self-store.mjs';
+import { setTaskStatus } from './task-store.mjs';
 
 /** @typedef {{ id: string, description: string, inputSchema: import('zod').ZodType, scope: 'read'|'write', exposeToMcp?: boolean, handler: (input: any) => Promise<any> | any }} ActionDefinition */
 
@@ -38,6 +39,16 @@ export const actions = [
     scope: 'read',
     exposeToMcp: true,
     handler: ({ status }) => listTasks(status),
+  },
+  {
+    id: 'mark_task_done',
+    description: 'Mark an open task done in the real task store',
+    inputSchema: z.object({
+      id: z.string(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ id }) => setTaskStatus(id, 'done'),
   },
   {
     id: 'list_inbox',
@@ -131,7 +142,7 @@ export function getAction(id) {
 
 if (import.meta.main) {
   const { strict: assert } = await import('node:assert');
-  assert.equal(actions.filter((a) => a.exposeToMcp).length, 9, 'all nine sketch actions should be MCP-exposed');
+  assert.equal(actions.filter((a) => a.exposeToMcp).length, 10, 'all ten sketch actions should be MCP-exposed');
   assert.throws(() => getAction('nope'));
   console.log('ok —', actions.map((a) => a.id).join(', '));
 }
