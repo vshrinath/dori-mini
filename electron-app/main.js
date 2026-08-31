@@ -15,6 +15,13 @@ import { getAction } from '../actions.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Must be called before app.whenReady() to take effect on macOS. Without
+// it, an unpackaged `electron .` dev run shows "Electron" as the Dock
+// label and menu bar app name (the raw Electron binary's own bundle name)
+// instead of the product name -- a packaged build gets this from
+// package.json's build config instead, but dev mode needs it set explicitly.
+app.setName('Dori Go');
+
 function getAppIconPath() {
   const distIcon = join(__dirname, 'dist/assets/icon.png');
   const publicIcon = join(__dirname, 'public/assets/icon.png');
