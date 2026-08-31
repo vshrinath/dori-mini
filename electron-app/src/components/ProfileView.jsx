@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Input } from './ui/input.jsx';
 import { Label } from './ui/label.jsx';
 import { Button } from './ui/button.jsx';
+import { Skeleton } from './ui/skeleton.jsx';
 
 function ProfileForm({ initial, onSaved }) {
   const [name, setName] = useState(initial?.name || '');
@@ -69,7 +70,13 @@ export function ProfileView({ onProfileChanged }) {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {profile === undefined && (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-2.5 w-20" />
+            </div>
+          </div>
         )}
         {profile !== undefined && editing && (
           <ProfileForm
