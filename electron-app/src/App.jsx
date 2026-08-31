@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { CircleHelp } from 'lucide-react';
 import { InboxItem, InboxView } from './components/InboxItem.jsx';
+import { Badge } from './components/ui/badge.jsx';
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -17,7 +19,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
+    <div className="flex h-screen flex-col">
       <InboxView header={<h1 className="text-sm font-semibold">Inbox</h1>}>
         {error && <p className="p-4 text-sm text-red-500">{error}</p>}
         {!error && !inbox && <p className="p-4 text-sm text-muted-foreground">Loading…</p>}
@@ -28,8 +30,13 @@ export function App() {
           <InboxItem
             key={item.clarificationId}
             title={item.title}
-            subtitle={item.domain}
+            subtitle={
+              <Badge variant="muted" size="compact">
+                {item.domain}
+              </Badge>
+            }
             meta={formatDate(item.createdAt)}
+            statusIcon={<CircleHelp size={16} />}
           />
         ))}
       </InboxView>

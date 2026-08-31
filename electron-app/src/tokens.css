@@ -48,8 +48,8 @@
   --color-surface-field-hover: var(--surface-field-hover);
   --color-surface-tint: var(--surface-tint);
 
-  --font-display: var(--font-figtree), 'Figtree', system-ui, sans-serif;
-  --font-body: var(--font-figtree), 'Figtree', system-ui, sans-serif;
+  --font-display: 'Figtree', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
   --font-mono:
     var(--font-mono-jetbrains), 'JetBrains Mono', 'Fira Code', monospace;
 
@@ -352,8 +352,8 @@
   /* Fonts — Figtree for both display and body, both loaded as variable fonts
    * (single file, full weight axis) via next/font/local rather than static
    * per-weight cuts. */
-  --font-display: var(--font-figtree), 'Figtree', system-ui, sans-serif;
-  --font-body: var(--font-figtree), 'Figtree', system-ui, sans-serif;
+  --font-display: 'Figtree', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
   --font-mono:
     var(--font-mono-jetbrains), 'JetBrains Mono', 'Fira Code', monospace;
 
@@ -648,5 +648,29 @@
 }
 .anim-stagger > *:nth-child(8) {
   animation-delay: 175ms;
+}
+
+/* Real Dori loads Figtree via next/font/local in app/layout.tsx, which
+ * generates this @font-face and the --font-figtree variable at build time —
+ * there's no literal CSS for it to copy. We don't have Next's font loader,
+ * so this registers the same file (public/fonts/figtree-latin-variable.woff2,
+ * copied verbatim from dori-portal) by hand, and --font-display/--font-body
+ * above were pointed at 'Figtree' directly instead of the generated variable. */
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/figtree-latin-variable.woff2') format('woff2');
+  font-weight: 300 900;
+  font-display: swap;
+}
+
+/* Real Dori's base body rule (app/globals.css) — sets the page canvas
+ * background/text/font that individual screens rely on via cascade instead
+ * of setting bg/text classes on every top-level wrapper themselves. */
+body {
+  min-height: 100%;
+  margin: 0;
+  color: var(--color-text);
+  background: var(--surface-canvas);
+  font-family: var(--font-body);
 }
 
