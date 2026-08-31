@@ -11,7 +11,25 @@ import { dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
-const CONFIG_PATH = resolve(homedir(), 'Library/Application Support/Claude/claude_desktop_config.json');
+// Claude Desktop's config path differs per OS -- macOS and Windows are
+// documented Anthropic install targets; Linux has no official Claude Desktop
+// build, but follows the same ~/.config convention other desktop apps use
+// there, so it's included best-effort rather than left unsupported.
+function claudeDesktopConfigPath() {
+  if (process.platform === 'darwin') {
+    return resolve(homedir(), 'Library/Application Support/Claude/claude_desktop_config.json');
+  }
+  if (process.platform === 'win32') {
+    const appData = process.env.APPDATA || resolve(homedir(), 'AppData/Roaming');
+    return resolve(appData, 'Claude/claude_desktop_config.json');
+  }
+  if (process.platform === 'linux') {
+    return resolve(homedir(), '.config/Claude/claude_desktop_config.json');
+  }
+  throw new Error(`install-mcp-desktop.mjs doesn't support platform: ${process.platform}`);
+}
+
+const CONFIG_PATH = claudeDesktopConfigPath();
 const SERVER_PATH = resolve(dirname(fileURLToPath(import.meta.url)), 'mcp-server.mjs');
 const remove = process.argv.includes('--remove');
 
@@ -29,4 +47,5 @@ if (remove) {
 mkdirSync(dirname(CONFIG_PATH), { recursive: true });
 writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2) + '\n');
 console.log('Wrote', CONFIG_PATH);
-console.log('Restart Claude Desktop (Cmd+Q, reopen) for the change to take effect.');
+const quitHint = process.platform === 'darwin' ? 'Cmd+Q' : 'quit it from the system tray, not just close the window';
+console.log(`Restart Claude Desktop (${quitHint}, reopen) for the change to take effect.`);
