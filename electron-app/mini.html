@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Dori Quick Capture</title>
+<style>
+  /* Standalone, hardcoded palette — this window is a native OS overlay, not
+   * part of the React app, so it doesn't load tokens.css/Tailwind. Mirrors
+   * real Dori's own mini/index.html doing the same for the same reason. */
+  :root {
+    --bg: #ffffff;
+    --border: rgba(15, 23, 42, 0.10);
+    --shadow: 0 20px 60px rgba(15, 23, 42, 0.18), 0 4px 14px rgba(15, 23, 42, 0.06);
+    --text: #26272b;
+    --muted: rgba(38, 39, 43, 0.55);
+    --accent: #1a1f4e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17181c;
+      --border: rgba(255, 255, 255, 0.11);
+      --shadow: 0 20px 64px rgba(0, 0, 0, 0.44), 0 4px 14px rgba(0, 0, 0, 0.22);
+      --text: #f3f4f6;
+      --muted: rgba(243, 244, 246, 0.55);
+      --accent: #4c5ab0;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: transparent; overflow: hidden; }
+  body {
+    font-family: -apple-system, 'Figtree', BlinkMacSystemFont, sans-serif;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12px;
+    user-select: none;
+  }
+  .capsule {
+    width: 420px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: 20px;
+    padding: 10px 10px 10px 16px;
+    -webkit-app-region: drag;
+  }
+  textarea {
+    flex: 1;
+    min-height: 22px;
+    max-height: 72px;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    outline: none;
+    resize: none;
+    padding: 6px 0;
+    -webkit-app-region: no-drag;
+  }
+  textarea::placeholder { color: var(--muted); }
+  button {
+    -webkit-app-region: no-drag;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.4; cursor: default; }
+  .hint {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+</style>
+</head>
+<body>
+  <div class="capsule">
+    <textarea id="input" rows="1" placeholder="Capture a thought…" autofocus></textarea>
+    <button id="send" title="Send (Enter)" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 19V5M5 12l7-7 7 7"/>
+      </svg>
+    </button>
+  </div>
+  <script>
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+
+    function autoGrow() {
+      input.style.height = 'auto';
+      input.style.height = `${Math.min(72, input.scrollHeight)}px`;
+      sendBtn.disabled = !input.value.trim();
+    }
+    input.addEventListener('input', autoGrow);
+
+    async function send() {
+      const text = input.value.trim();
+      if (!text) return;
+      sendBtn.disabled = true;
+      try {
+        await window.dori.call('capture_text', { text });
+        input.value = '';
+        autoGrow();
+        window.dori.closeMini();
+      } catch (err) {
+        sendBtn.disabled = false;
+        console.error('capture failed', err);
+      }
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send();
+      } else if (e.key === 'Escape') {
+        window.dori.closeMini();
+      }
+    });
+    sendBtn.addEventListener('click', send);
+    window.addEventListener('focus', () => input.focus());
+  </script>
+</body>
+</html>

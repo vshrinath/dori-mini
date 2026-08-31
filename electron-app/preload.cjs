@@ -6,4 +6,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('dori', {
   call: (actionId, input) => ipcRenderer.invoke('dori:call', actionId, input),
+  // Only meaningful in the mini-capture window — harmless no-op elsewhere.
+  closeMini: () => ipcRenderer.send('mini:close'),
 });

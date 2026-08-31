@@ -26,6 +26,7 @@ import { buildTimeline } from './timeline.mjs';
 import { listProjects } from './list-projects.mjs';
 import { getSelf, setSelf } from './self-store.mjs';
 import { setTaskStatus } from './task-store.mjs';
+import { captureText } from './capture-text.mjs';
 
 /** @typedef {{ id: string, description: string, inputSchema: import('zod').ZodType, scope: 'read'|'write', exposeToMcp?: boolean, handler: (input: any) => Promise<any> | any }} ActionDefinition */
 
@@ -168,6 +169,16 @@ export const actions = [
       return doc && { ...doc, html: renderMarkdownToHtml(doc.content) };
     },
   },
+  {
+    id: 'capture_text',
+    description: 'Capture a plain-text note to the vault (mirrors the mini-bar\'s quick-capture path) — writes to inbox/ and reindexes',
+    inputSchema: z.object({
+      text: z.string().min(1),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ text }) => captureText(text),
+  },
 ];
 
 export function getAction(id) {
@@ -178,7 +189,7 @@ export function getAction(id) {
 
 if (import.meta.main) {
   const { strict: assert } = await import('node:assert');
-  assert.equal(actions.filter((a) => a.exposeToMcp).length, 13, 'all thirteen sketch actions should be MCP-exposed');
+  assert.equal(actions.filter((a) => a.exposeToMcp).length, 14, 'all fourteen sketch actions should be MCP-exposed');
   assert.throws(() => getAction('nope'));
   console.log('ok —', actions.map((a) => a.id).join(', '));
 }
