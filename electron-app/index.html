@@ -2,16 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Dori Go</title>
+  <title>Dori</title>
   <link rel="icon" type="image/png" href="./assets/icon.png">
   <style>
-    body {
+    @font-face {
+      font-family: 'Figtree';
+      src: url('/fonts/figtree-latin-variable.woff2') format('woff2');
+      font-weight: 300 900;
+      font-display: swap;
+    }
+    html, body {
       margin: 0;
-      background-color: #ffffff;
-      font-family: -apple-system, 'Figtree', BlinkMacSystemFont, sans-serif;
+      padding: 0;
+      background-color: #fafaf8;
+      font-family: 'Figtree', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-size: 15px;
+      line-height: 1.5;
     }
     @media (prefers-color-scheme: dark) {
-      body {
+      html, body {
         background-color: #0e0f13;
       }
     }
@@ -33,10 +44,11 @@
     }
     .splash-text {
       margin-top: 16px;
-      font-size: 15px;
-      font-weight: 500;
+      font-size: 16px;
+      font-weight: 600;
       letter-spacing: -0.02em;
       color: #1a1f4e;
+      font-family: 'Figtree', system-ui, sans-serif;
     }
     @media (prefers-color-scheme: dark) {
       .splash-logo {

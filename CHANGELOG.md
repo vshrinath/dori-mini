@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026-08-31] — Fix Figtree Font Loading, Typography Scale, and SettingsModal 1:1 Parity
+
+**Branch**: `main`
+
+### What changed
+- Fixed Font Loading: registered `@font-face` for `Figtree` variable font in `index.html` and updated root typography in `tokens.css` so `font-family: 'Figtree', system-ui, -apple-system, sans-serif;` is applied as the default sans font across all screens instead of falling back to system San Francisco.
+- Adjusted Typography Scale: updated base body font size to 15px with relaxed line-heights matching Dori Portal's editorial density.
+- Rebuilt SettingsModal to 1:1 Dori Portal Parity: upgraded from a narrow box to a full master-detail dialogue (`h-[80vh] w-[80vw] max-w-4xl min-w-[32rem]`) with vertical left sidebar (`w-60` for `General`, `AI Providers`, `Shortcuts`) and wide right content panel (`p-8`).
+
+### Why
+Ensure Dori Go has the exact same spacious font rendering, warm Figtree geometry, and master-detail Settings layout as Dori Portal.
+
+### Files touched
+- `electron-app/index.html` — Registered Figtree `@font-face` and base font styles.
+- `electron-app/src/components/SettingsModal.jsx` — 1:1 master-detail dialog matching Dori Portal.
+
 ## [2026-08-31] — Complete UX Overhaul: Profile, "My Work", Mini Bar, and Composer Polish
 
 **Branch**: `main`

@@ -56,104 +56,106 @@ export function SettingsModal({ isOpen, onClose, initialTab = 'general' }) {
 
   const TABS = [
     { id: 'general', label: 'General', icon: User },
-    { id: 'intelligence', label: 'AI Engine', icon: Cpu },
+    { id: 'intelligence', label: 'AI Providers', icon: Cpu },
     { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
   ];
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm anim-rise"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[6px] anim-rise p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="flex h-[520px] w-[640px] max-w-[92vw] flex-col overflow-hidden rounded-panel border border-border bg-card shadow-2xl">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <div className="flex items-center gap-2">
-            <h2 className="font-display text-base font-semibold text-foreground">Settings</h2>
-          </div>
+      <div className="flex h-[80vh] w-[80vw] max-w-4xl min-w-[32rem] flex-col overflow-hidden rounded-control border border-border bg-card shadow-2xl">
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-border-soft px-6 py-4">
+          <h2 className="font-display text-lg font-semibold text-foreground">Settings</h2>
           <button
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Close"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Modal Body: Sidebar + Content */}
+        {/* Body: Sidebar + Content */}
         <div className="flex min-h-0 flex-1">
-          {/* Tab Rail */}
-          <div className="w-44 shrink-0 border-r border-border p-3 space-y-1 bg-[var(--surface-canvas)]">
-            {TABS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={cn(
-                  'flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-xs font-medium transition-colors',
-                  activeTab === id
-                    ? 'bg-muted text-foreground font-semibold shadow-xs'
-                    : 'text-foreground-secondary hover:bg-muted/60'
-                )}
-              >
-                <Icon size={15} className="shrink-0" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
+          {/* Left Tab Sidebar */}
+          <aside className="w-60 min-w-[15rem] shrink-0 border-r border-border-soft p-4 bg-[var(--surface-canvas)] flex flex-col justify-start">
+            <div className="flex flex-col gap-1 w-full">
+              {TABS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left text-sm font-medium transition-colors',
+                    activeTab === id
+                      ? 'bg-muted text-foreground font-semibold shadow-xs'
+                      : 'text-foreground-secondary hover:bg-muted/60 hover:text-foreground'
+                  )}
+                >
+                  <Icon size={18} strokeWidth={1.75} className="shrink-0" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </aside>
 
-          {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          {/* Right Panel Area */}
+          <div className="min-w-0 flex-1 overflow-y-auto p-8 bg-card">
             {activeTab === 'general' && (
-              <form onSubmit={handleSaveProfile} className="space-y-4 max-w-md">
+              <form onSubmit={handleSaveProfile} className="space-y-6 max-w-lg">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Personal Profile</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Your name and context used across Dori to personalize responses and notes.
+                  <h3 className="font-display text-base font-semibold text-foreground">Personal Profile</h3>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                    Your name and identity context used across Dori to personalize chats, notes, and summaries.
                   </p>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground-secondary">Your Name</label>
-                  <input
-                    type="text"
-                    value={profile.name}
-                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    placeholder="e.g. Alex Mercer"
-                    className="w-full rounded-control border border-border bg-[var(--surface-field)] px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none"
-                  />
-                </div>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">Your Name</label>
+                    <input
+                      type="text"
+                      value={profile.name}
+                      onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                      placeholder="e.g. Alex Mercer"
+                      className="w-full rounded-control border border-border bg-[var(--surface-field)] px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none"
+                    />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground-secondary">Role / Title</label>
-                  <input
-                    type="text"
-                    value={profile.role}
-                    onChange={(e) => setProfile({ ...profile, role: e.target.value })}
-                    placeholder="e.g. Founder & Architect"
-                    className="w-full rounded-control border border-border bg-[var(--surface-field)] px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none"
-                  />
-                </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">Role / Headline</label>
+                    <input
+                      type="text"
+                      value={profile.role}
+                      onChange={(e) => setProfile({ ...profile, role: e.target.value })}
+                      placeholder="e.g. Founder & Systems Architect"
+                      className="w-full rounded-control border border-border bg-[var(--surface-field)] px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none"
+                    />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground-secondary">Bio / Background Context</label>
-                  <textarea
-                    rows={3}
-                    value={profile.bio}
-                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                    placeholder="Brief background about what you are working on…"
-                    className="w-full resize-none rounded-control border border-border bg-[var(--surface-field)] px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none"
-                  />
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">Bio Context</label>
+                    <textarea
+                      rows={4}
+                      value={profile.bio}
+                      onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                      placeholder="Brief background about what you are working on…"
+                      className="w-full resize-none rounded-control border border-border bg-[var(--surface-field)] px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none leading-relaxed"
+                    />
+                  </div>
                 </div>
 
                 <div className="pt-2 flex items-center gap-3">
-                  <Button type="submit" size="sm" disabled={isSaving} className="text-xs">
+                  <Button type="submit" size="default" disabled={isSaving} className="text-sm font-medium">
                     {isSaving ? 'Saving…' : 'Save Changes'}
                   </Button>
                   {saveSuccess && (
-                    <span className="text-xs text-emerald-600 flex items-center gap-1 font-medium">
-                      <Check size={13} /> Saved
+                    <span className="text-sm text-emerald-600 flex items-center gap-1.5 font-medium">
+                      <Check size={16} /> Saved
                     </span>
                   )}
                 </div>
@@ -161,21 +163,21 @@ export function SettingsModal({ isOpen, onClose, initialTab = 'general' }) {
             )}
 
             {activeTab === 'intelligence' && (
-              <div className="space-y-4">
+              <div className="space-y-6 max-w-xl">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">AI Engine Provider</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Dori Go runs entirely locally on your machine, leveraging your installed coding CLI backend.
+                  <h3 className="font-display text-base font-semibold text-foreground">AI Providers &amp; Engine</h3>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                    Dori Go executes locally on your machine, connecting securely to your installed coding CLI.
                   </p>
                 </div>
 
-                <div className="space-y-2 pt-1">
+                <div className="space-y-3 pt-1">
                   {[
                     {
                       id: 'claude',
                       name: 'Claude Code',
                       badge: 'Recommended',
-                      desc: 'Spawns Claude Code CLI headlessly with strict action dispatch sandboxing.',
+                      desc: 'Spawns Claude Code CLI headlessly with tool dispatch and project context in your vault.',
                     },
                     {
                       id: 'codex',
@@ -186,7 +188,7 @@ export function SettingsModal({ isOpen, onClose, initialTab = 'general' }) {
                     {
                       id: 'none',
                       name: 'Unconfigured / Offline',
-                      desc: 'Disable AI completions. Search, capture, and slideover editing remain fully functional.',
+                      desc: 'Disable AI completions. Search, capture, and slideover editing remain fully operational.',
                     },
                   ].map((opt) => (
                     <button
@@ -194,7 +196,7 @@ export function SettingsModal({ isOpen, onClose, initialTab = 'general' }) {
                       type="button"
                       onClick={() => handleSelectEngine(opt.id)}
                       className={cn(
-                        'flex w-full items-start gap-3 rounded-panel border p-3.5 text-left transition-all',
+                        'flex w-full items-start gap-3.5 rounded-panel border p-4 text-left transition-all',
                         engine === opt.id
                           ? 'border-primary/50 bg-primary/5 shadow-xs'
                           : 'border-border-soft bg-card hover:border-border hover:bg-muted/30'
@@ -202,7 +204,7 @@ export function SettingsModal({ isOpen, onClose, initialTab = 'general' }) {
                     >
                       <div
                         className={cn(
-                          'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                          'mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                           engine === opt.id
                             ? 'border-primary bg-primary text-primary-foreground'
                             : 'border-muted-foreground/40'
@@ -212,14 +214,14 @@ export function SettingsModal({ isOpen, onClose, initialTab = 'general' }) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-foreground">{opt.name}</span>
+                          <span className="text-sm font-semibold text-foreground">{opt.name}</span>
                           {opt.badge && (
-                            <Badge variant="muted" size="compact" className="text-[10px]">
+                            <Badge variant="muted" size="compact" className="text-xs">
                               {opt.badge}
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{opt.desc}</p>
+                        <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{opt.desc}</p>
                       </div>
                     </button>
                   ))}
@@ -228,32 +230,32 @@ export function SettingsModal({ isOpen, onClose, initialTab = 'general' }) {
             )}
 
             {activeTab === 'shortcuts' && (
-              <div className="space-y-4">
+              <div className="space-y-6 max-w-xl">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Keyboard Shortcuts</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="font-display text-base font-semibold text-foreground">Keyboard Shortcuts</h3>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                     Fast desktop keyboard controls available across Dori Go.
                   </p>
                 </div>
 
-                <div className="rounded-panel border border-border overflow-hidden bg-card">
-                  <table className="w-full text-left text-xs border-collapse">
+                <div className="rounded-panel border border-border-soft overflow-hidden bg-card shadow-xs">
+                  <table className="w-full text-left text-sm border-collapse">
                     <tbody>
                       {[
-                        { label: 'Global Search', shortcut: 'Cmd + K  or  /' },
+                        { label: 'Global Search Palette', shortcut: 'Cmd + K  or  /' },
                         { label: 'Quick Capture Mini Window', shortcut: 'Cmd + Shift + Space' },
                         { label: 'Save Document in Slideover', shortcut: 'Cmd + S' },
-                        { label: 'Open Settings', shortcut: 'Cmd + ,' },
-                        { label: 'Close Modal / Slideover', shortcut: 'Esc' },
+                        { label: 'Open Settings Modal', shortcut: 'Cmd + ,' },
+                        { label: 'Close Modal / Slideover Drawer', shortcut: 'Esc' },
                         { label: 'Send Message in Composer', shortcut: 'Enter' },
                         { label: 'New Line in Composer', shortcut: 'Shift + Enter' },
                       ].map((row, i) => (
                         <tr
                           key={i}
-                          className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
+                          className="border-b border-border-soft last:border-b-0 hover:bg-muted/30 transition-colors"
                         >
-                          <td className="px-4 py-2.5 font-medium text-foreground">{row.label}</td>
-                          <td className="px-4 py-2.5 text-right font-mono text-[11px] text-muted-foreground">
+                          <td className="px-5 py-3 font-medium text-foreground">{row.label}</td>
+                          <td className="px-5 py-3 text-right font-mono text-xs text-muted-foreground">
                             {row.shortcut}
                           </td>
                         </tr>
