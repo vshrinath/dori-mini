@@ -275,69 +275,140 @@ export function getDocument(needle) {
 // Full project details: files in projects/<path>, linked meetings in meetings/,
 // linked people in people/ or research/, and context markdown note.
 export function getProjectDetails(projectPath) {
-  const db = openDb();
+  const slug = projectPath.split('/').pop();
+  const projectDir = join(VAULT_ROOT, 'projects', ...projectPath.split('/'));
+  const fileMap = new Map();
+  const meetingMap = new Map();
+  const peopleMap = new Map();
+
+  // 1. Filesystem scan of projects/<projectPath>
   try {
-    const slug = projectPath.split('/').pop();
-    const rows = db.prepare(`SELECT rel_path, title, frontmatter_json, updated_at FROM vault_documents`).all();
-
-    const projectPrefix = `projects/${projectPath}/`;
-    const files = rows
-      .filter((r) => r.rel_path.startsWith(projectPrefix) && !r.rel_path.endsWith('.DS_Store'))
-      .map((r) => {
-        const fm = parseFm(r.frontmatter_json);
-        const name = r.rel_path.slice(projectPrefix.length);
-        const ext = name.split('.').pop()?.toLowerCase() || '';
-        return {
-          relPath: r.rel_path,
-          name,
-          title: r.title,
+    if (existsSync(projectDir)) {
+      const entries = readdirSync(projectDir, { withFileTypes: true });
+      for (const e of entries) {
+        if (e.isDirectory() || e.name === '.DS_Store') continue;
+        const full = join(projectDir, e.name);
+        const st = statSync(full);
+        const ext = e.name.split('.').pop()?.toLowerCase() || '';
+        const relPath = `projects/${projectPath}/${e.name}`;
+        fileMap.set(relPath, {
+          relPath,
+          name: e.name,
+          title: e.name,
           extension: ext,
-          date: rowDate(r.rel_path, fm, r.updated_at),
-          type: fm.type || null,
-        };
-      })
-      .sort((a, b) => b.date.localeCompare(a.date));
+          date: st.mtime.toISOString(),
+          type: ext === 'md' ? 'note' : ext,
+        });
+      }
+    }
+  } catch {}
 
-    const meetings = rows
-      .filter((r) => {
-        if (!r.rel_path.startsWith('meetings/')) return false;
-        const fm = parseFm(r.frontmatter_json);
-        const projects = Array.isArray(fm.projects) ? fm.projects : [fm.project, fm.project_path].filter(Boolean);
-        return projects.some((p) => p === projectPath || p === slug || p?.endsWith(`/${slug}`));
-      })
-      .map((r) => {
-        const fm = parseFm(r.frontmatter_json);
-        return {
-          relPath: r.rel_path,
-          title: r.title,
-          date: rowDate(r.rel_path, fm, r.updated_at),
-          attendees: fm.attendees || fm.people || [],
-        };
-      })
-      .sort((a, b) => b.date.localeCompare(a.date));
+  // 2. Scan DB index if available
+  try {
+    const db = openDb();
+    try {
+      const rows = db.prepare(`SELECT rel_path, title, frontmatter_json, updated_at FROM vault_documents`).all();
 
-    const people = rows
-      .filter((r) => {
-        if (!r.rel_path.startsWith('people/') && !r.rel_path.startsWith('research/people/') && !r.rel_path.startsWith('entities/')) return false;
+      const projectPrefix = `projects/${projectPath}/`;
+      for (const r of rows) {
         const fm = parseFm(r.frontmatter_json);
-        const projects = Array.isArray(fm.projects) ? fm.projects : [fm.project, fm.project_path].filter(Boolean);
-        return projects.some((p) => p === projectPath || p === slug || p?.endsWith(`/${slug}`));
-      })
-      .map((r) => {
-        const fm = parseFm(r.frontmatter_json);
-        return {
-          relPath: r.rel_path,
-          name: r.title || r.rel_path.split('/').pop().replace(/\.md$/, ''),
-          role: fm.role || '',
-          org: fm.org || fm.company || '',
-        };
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
+        const date = rowDate(r.rel_path, fm, r.updated_at);
 
-    return { files, meetings, people };
-  } finally {
-    db.close();
+        // Project files
+        if (r.rel_path.startsWith(projectPrefix) && !r.rel_path.endsWith('.DS_Store')) {
+          const name = r.rel_path.slice(projectPrefix.length);
+          const ext = name.split('.').pop()?.toLowerCase() || '';
+          if (!fileMap.has(r.rel_path)) {
+            fileMap.set(r.rel_path, {
+              relPath: r.rel_path,
+              name,
+              title: r.title,
+              extension: ext,
+              date,
+              type: fm.type || null,
+            });
+          }
+        }
+
+        // Linked meetings
+        if (r.rel_path.startsWith('meetings/') || r.rel_path.startsWith('captures/')) {
+          const projects = Array.isArray(fm.projects)
+            ? fm.projects
+            : [fm.project, fm.project_path, fm.context].filter(Boolean);
+          const isMatch =
+            projects.some((p) => p === projectPath || p === slug || p?.endsWith(`/${slug}`)) ||
+            r.rel_path.toLowerCase().includes(slug.toLowerCase()) ||
+            r.title.toLowerCase().includes(slug.toLowerCase());
+
+          if (isMatch && !meetingMap.has(r.rel_path)) {
+            meetingMap.set(r.rel_path, {
+              relPath: r.rel_path,
+              title: r.title,
+              date,
+              attendees: fm.attendees || fm.people || [],
+            });
+          }
+        }
+
+        // Linked people
+        if (
+          r.rel_path.startsWith('people/') ||
+          r.rel_path.startsWith('research/people/') ||
+          r.rel_path.startsWith('research/') ||
+          r.rel_path.startsWith('entities/')
+        ) {
+          const projects = Array.isArray(fm.projects)
+            ? fm.projects
+            : [fm.project, fm.project_path, fm.context].filter(Boolean);
+          const isMatch =
+            projects.some((p) => p === projectPath || p === slug || p?.endsWith(`/${slug}`)) ||
+            r.rel_path.toLowerCase().includes(slug.toLowerCase());
+
+          if (isMatch && !peopleMap.has(r.rel_path)) {
+            peopleMap.set(r.rel_path, {
+              relPath: r.rel_path,
+              name: r.title || r.rel_path.split('/').pop().replace(/\.md$/, ''),
+              role: fm.role || '',
+              org: fm.org || fm.company || '',
+            });
+          }
+        }
+      }
+    } finally {
+      db.close();
+    }
+  } catch {}
+
+  // 3. Scan meetings/ and captures/ folders on disk if DB had nothing
+  const scanFolders = ['meetings', 'captures'];
+  for (const f of scanFolders) {
+    try {
+      const d = join(VAULT_ROOT, f);
+      if (existsSync(d)) {
+        const list = readdirSync(d, { withFileTypes: true });
+        for (const e of list) {
+          if (e.isDirectory() || !e.name.endsWith('.md')) continue;
+          if (e.name.toLowerCase().includes(slug.toLowerCase())) {
+            const relPath = `${f}/${e.name}`;
+            if (!meetingMap.has(relPath)) {
+              meetingMap.set(relPath, {
+                relPath,
+                title: e.name.replace(/\.md$/, ''),
+                date: new Date().toISOString(),
+                attendees: [],
+              });
+            }
+          }
+        }
+      }
+    } catch {}
   }
+
+  const files = Array.from(fileMap.values()).sort((a, b) => b.date.localeCompare(a.date));
+  const meetings = Array.from(meetingMap.values()).sort((a, b) => b.date.localeCompare(a.date));
+  const people = Array.from(peopleMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+  return { files, meetings, people };
 }
 
 function openDb() {

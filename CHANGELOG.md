@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-08-31] — Enable Dual Filesystem and Index Resolution for Project Details
+
+**Branch**: `main`
+
+### What changed
+- Enhanced `getProjectDetails` in `query-vault.mjs`:
+  - Added direct filesystem scanning of `projects/<projectPath>/` to discover all documents (`.setup.md`, `README.md`, `STATUS.md`, `mempalace.yaml`, `entities.json`, etc.) regardless of whether they have been indexed into `portal.db`.
+  - Added fallback directory scans for `meetings/` and `captures/` to reliably detect related transcripts.
+
+### Why
+Ensure project folders with un-indexed or freshly created files display their complete file inventory and connected documents immediately.
+
+### Files touched
+- `query-vault.mjs` — Implemented dual filesystem and SQLite resolution in `getProjectDetails`.
+
 ## [2026-08-31] — Surface Linked Meetings, Linked People, and Docked Project Composer
 
 **Branch**: `main`
