@@ -197,7 +197,10 @@ export function App() {
           onOpenSearch={() => setIsSearchOpen(true)}
           profileVersion={profileVersion}
         />
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <main
+          key={active}
+          className="anim-rise flex min-h-0 flex-1 flex-col overflow-hidden"
+        >
           {active === 'chat' && <ChatView />}
           {active === 'inbox' && <InboxScreen />}
           {active === 'tasks' && <TasksView />}
@@ -213,7 +216,7 @@ export function App() {
               onSelectProject={(path) => setActive(`project:${path}`)}
             />
           )}
-        </div>
+        </main>
 
         {/* Global Search Modal */}
         <SearchModal

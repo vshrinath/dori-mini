@@ -1,5 +1,28 @@
 # Changelog
 
+## [2026-08-31] — Implement Dori Go Slice 3 (Shell Polish)
+
+**Branch**: `electron-frontend-experiment`
+
+### What changed
+- Configured app icon: added `electron-app/public/assets/icon.png` and wired into `main.js` (`BrowserWindow` icon) and HTML favicons for `index.html` and `mini.html` (`dori-go.shell.app-icon`, `constraint.shell.icon-and-splash-asset-location`).
+- Added branded launch/splash loading shell in `electron-app/index.html` with Dori logo and pulse animation, paired with `show: false` and `ready-to-show` window handler in `main.js` to eliminate blank/white window flashes on launch (`dori-go.shell.splash-screen`).
+- Applied native screen transition motion: added `anim-rise` screen switch animations to `electron-app/src/App.jsx` using shared motion duration/easing constants (`dori-go.shell.native-motion`, `constraint.shell.shared-motion-constants`).
+- Verified design token consistency across `ProjectView`, `TasksView`, `ProfileView`, `ChatView`, `FileSlideover`, and `SearchModal` (`dori-go.shell.design-consistency`, `constraint.shell.tokens-css-is-sole-design-token-source`).
+- Added automated test suite `test/shell-polish.mjs` verifying icon assets, splash markup, window creation, motion tokens, and design token consistency.
+
+### Why
+Bring Dori Go to full desktop visual finish with branded app icon, splash loading shell, smooth native transitions, and design token fidelity matching real Dori.
+
+### Files touched
+- `electron-app/public/assets/icon.png` — Dori app icon asset.
+- `electron-app/main.js` — App icon resolution, `show: false`, `backgroundColor`, and `ready-to-show` launch handler.
+- `electron-app/index.html` — Favicon link and initial branded splash loading shell in `#root`.
+- `electron-app/mini.html` — Favicon link.
+- `electron-app/src/App.jsx` — Screen switch motion container using `anim-rise`.
+- `docs/features/dori-go-shell-polish/verification-record.yaml` — Updated all 4 criteria to `done` with fingerprint and test citations.
+- `test/shell-polish.mjs` — Automated unit test verifying shell polish constraints.
+
 ## [2026-08-31] — Implement Dori Go Slice 1 & Slice 2
 
 **Branch**: `electron-frontend-experiment`

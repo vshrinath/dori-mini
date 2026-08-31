@@ -11,11 +11,31 @@ constraints:
     rule: >
       New/changed spacing, typography, and color values MUST be expressed
       as tokens.css custom properties (extending it where a needed token is
-      missing), not as new hardcoded hex/px values in component styles.
+      missing), not as new hardcoded hex/px values in component styles. The
+      consistency sweep MUST cover every one of these components, not a
+      subset -- this list is the requirement's own variants field restated
+      here so a plan-writer working from tech-constraints.yaml alone sees
+      full scope without also having to cross-reference requirements.yaml:
+        - electron-app/src/components/InboxItem.jsx
+        - electron-app/src/components/TasksView.jsx
+        - electron-app/src/components/ProfileView.jsx
+        - electron-app/src/components/ProjectView.jsx
+        - electron-app/src/components/LibraryView.jsx
+        - electron-app/src/components/ChatView.jsx (new v1 surface)
+        - electron-app/src/components/FileSlideover.jsx (new v1 surface)
+        - electron-app/src/components/SearchModal.jsx (new v1 surface)
+      A component already built cleanly against tokens.css counts as swept
+      if spot-checked and confirmed clean -- it does not need rewriting, but
+      it MUST be checked, not silently skipped because it's already new.
     rationale: >
       Directly enforces dori-go.shell.design-consistency -- hardcoded values
       scattered across components is exactly the drift that makes an app
       "read as a distinct reimplementation" instead of one design system.
+      Component list added 2026-08-31 after a plan swept only
+      TasksView/ProfileView/InboxItem -- the full list existed in
+      requirements.yaml's variants field but this constraint only pointed at
+      the requirement by id, so a plan-writer reading constraints in
+      isolation had no way to see it was incomplete.
     applies_to:
       requirement_ids:
         - dori-go.shell.design-consistency
@@ -47,15 +67,31 @@ constraints:
   - id: constraint.shell.icon-and-splash-asset-location
     type: workflow
     rule: >
-      The app icon and splash screen asset(s) MUST live under a single,
-      predictable location in electron-app/ (e.g. electron-app/assets/) and
-      be wired into the Electron build config from there -- not scattered
-      across ad hoc paths.
+      The icon source file MUST live at exactly one path:
+      electron-app/public/assets/icon.png (Vite's public/ dir -- already the
+      established convention here via electron-app/public/fonts/). It MUST
+      NOT also exist as a separate copy under electron-app/assets/ or any
+      other path. Both consumers reference this same built file, not two
+      different source files:
+      - main.js's BrowserWindow icon option needs a filesystem path, and
+        MUST reference the built copy: join(__dirname, 'dist/assets/icon.png')
+        (Vite copies public/ into dist/ at build time; vite.config.js's
+        base: './' makes this resolve correctly under Electron's file://
+        loadFile()).
+      - index.html's favicon link MUST reference the web-servable path:
+        <link rel="icon" href="/assets/icon.png">.
+      Splash screen markup lives inline in index.html (not a separate asset
+      file) per dori-go.shell.splash-screen.
     rationale: >
-      Keeps the app-icon and splash-screen requirements independently
-      verifiable (a test can assert the config points at a real file at a
-      known path) rather than needing to search the repo for where the
-      asset ended up.
+      Revised 2026-08-31 after a plan proposed electron-app/assets/icon.png
+      AND electron-app/public/ as two separate copies -- the earlier version
+      of this constraint said "a single, predictable location... e.g.
+      electron-app/assets/" without resolving that Electron's main process
+      and Vite's HTML build need the file via two different mechanisms
+      (filesystem path vs. web-servable path). One example path can't
+      satisfy both, so it got read as license to keep two files instead of
+      one file consumed two ways. This version names the actual resolved
+      answer instead of an example.
     applies_to:
       requirement_ids:
         - dori-go.shell.app-icon

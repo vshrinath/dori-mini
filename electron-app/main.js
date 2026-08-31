@@ -15,6 +15,14 @@ import { getAction } from '../actions.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function getAppIconPath() {
+  const distIcon = join(__dirname, 'dist/assets/icon.png');
+  const publicIcon = join(__dirname, 'public/assets/icon.png');
+  if (existsSync(distIcon)) return distIcon;
+  if (existsSync(publicIcon)) return publicIcon;
+  return null;
+}
+
 ipcMain.handle('dori:call', async (_event, actionId, input) => {
   const action = getAction(actionId);
   const parsed = action.inputSchema.parse(input ?? {});
@@ -24,16 +32,26 @@ ipcMain.handle('dori:call', async (_event, actionId, input) => {
 });
 
 function createWindow() {
+  const iconPath = getAppIconPath();
   const win = new BrowserWindow({
     width: 900,
     height: 640,
+    show: false,
+    backgroundColor: '#ffffff',
+    ...(iconPath ? { icon: iconPath } : {}),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
       preload: join(__dirname, 'preload.cjs'),
     },
   });
+
   win.loadFile(join(__dirname, 'dist/index.html'));
+
+  win.once('ready-to-show', () => {
+    win.show();
+  });
+
   win.webContents.on('console-message', (_e, level, message) => {
     console.log(`[renderer:${level}]`, message);
   });
