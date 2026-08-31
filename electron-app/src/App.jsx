@@ -160,7 +160,12 @@ export function App() {
           {active === 'profile' && (
             <ProfileView onProfileChanged={() => setProfileVersion((v) => v + 1)} />
           )}
-          {active.startsWith('project:') && <ProjectView projectPath={active.slice(8)} />}
+          {active.startsWith('project:') && (
+            <ProjectView
+              projectPath={active.slice(8)}
+              onSelectProject={(path) => setActive(`project:${path}`)}
+            />
+          )}
         </div>
       </div>
     </TooltipProvider>

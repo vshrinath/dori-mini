@@ -1,10 +1,15 @@
+// Matches dori-portal's real app/profile/page.tsx: 64px initials avatar +
+// identity block laid out side by side (not stacked), Edit as an outline
+// button with a Pencil icon in the header actions slot (not an inline
+// hover-pencil), org shown in a bordered/shadowed Panel card.
 import { useCallback, useEffect, useState } from 'react';
+import { Briefcase, Pencil } from 'lucide-react';
 import { Input } from './ui/input.jsx';
 import { Label } from './ui/label.jsx';
 import { Button } from './ui/button.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
 
-function ProfileForm({ initial, onSaved }) {
+function ProfileForm({ initial, onSaved, onCancel }) {
   const [name, setName] = useState(initial?.name || '');
   const [role, setRole] = useState(initial?.role || '');
   const [org, setOrg] = useState(initial?.org || '');
@@ -40,11 +45,27 @@ function ProfileForm({ initial, onSaved }) {
         <Label htmlFor="profile-org">Org</Label>
         <Input id="profile-org" value={org} onChange={(e) => setOrg(e.target.value)} />
       </div>
-      <Button type="submit" size="sm" disabled={saving} className="self-start">
-        {saving ? 'Saving…' : 'Save'}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button type="submit" size="sm" disabled={saving}>
+          {saving ? 'Saving…' : 'Save'}
+        </Button>
+        {onCancel && (
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+      </div>
     </form>
   );
+}
+
+function initialsOf(name) {
+  return name
+    .split(/\s+/)
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 }
 
 export function ProfileView({ onProfileChanged }) {
@@ -65,14 +86,20 @@ export function ProfileView({ onProfileChanged }) {
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
-      <div className="sticky top-0 z-10 border-b bg-background px-4 py-3">
+      <div className="bg-background sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3">
         <h1 className="text-sm font-semibold">Profile</h1>
+        {profile && !editing && (
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            <Pencil size={13} />
+            Edit
+          </Button>
+        )}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {profile === undefined && (
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <div className="space-y-2">
+          <div className="flex items-start gap-5">
+            <Skeleton className="h-16 w-16 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2 pt-1">
               <Skeleton className="h-3 w-32" />
               <Skeleton className="h-2.5 w-20" />
             </div>
@@ -86,35 +113,36 @@ export function ProfileView({ onProfileChanged }) {
               setEditing(false);
               onProfileChanged?.();
             }}
+            onCancel={profile ? () => setEditing(false) : undefined}
           />
         )}
         {profile && !editing && (
-          <div className="flex flex-col gap-4">
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-              <dt className="text-muted-foreground">Name</dt>
-              <dd>{profile.name}</dd>
-              {profile.role && (
-                <>
-                  <dt className="text-muted-foreground">Role</dt>
-                  <dd>{profile.role}</dd>
-                </>
-              )}
-              {profile.org && (
-                <>
-                  <dt className="text-muted-foreground">Org</dt>
-                  <dd>{profile.org}</dd>
-                </>
-              )}
-              {profile.projects?.length > 0 && (
-                <>
-                  <dt className="text-muted-foreground">Projects</dt>
-                  <dd>{profile.projects.join(', ')}</dd>
-                </>
-              )}
-            </dl>
-            <Button variant="outline" size="sm" className="self-start" onClick={() => setEditing(true)}>
-              Edit
-            </Button>
+          <div className="flex flex-col gap-6">
+            <div className="flex items-start gap-5">
+              <span className="bg-primary text-primary-foreground flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-bold">
+                {initialsOf(profile.name)}
+              </span>
+              <div className="min-w-0 flex-1 space-y-3 pt-1">
+                <h2 className="text-lg font-medium">{profile.name}</h2>
+                {profile.role && (
+                  <p className="text-foreground-secondary text-base leading-relaxed">{profile.role}</p>
+                )}
+              </div>
+            </div>
+            {profile.org && (
+              <div className="border-border bg-card rounded-panel border p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Briefcase size={14} className="text-muted-foreground" />
+                  {profile.org}
+                </div>
+              </div>
+            )}
+            {profile.projects?.length > 0 && (
+              <div>
+                <p className="text-muted-foreground mb-1.5 text-xs font-medium uppercase tracking-wide">Projects</p>
+                <p className="text-sm">{profile.projects.join(', ')}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
