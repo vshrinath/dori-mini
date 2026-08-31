@@ -1,5 +1,29 @@
 # Changelog
 
+## [2026-08-31] — Extract Markdown Action Items Attributed to People and Sync Task Status
+
+**Branch**: `main`
+
+### What changed
+- Action Item Extraction (`query-vault.mjs`):
+  - Added `extractActionItems` to scan meetings and project markdown files for checklist items (`- [ ]`, `- [x]`) under `# Action Items` / `# Tasks`.
+  - Parsed assigned person attribution (`**Person Name**`, `@person`), deadlines (`| Deadline: ...`), and dependencies (`| Depends on: ...`).
+  - Added `toggleMarkdownTask` to toggle markdown checklist checkboxes on disk when completing tasks in the UI.
+- Supported Markdown Checklist Tasks in Actions (`actions.mjs`):
+  - Updated `mark_task_done` action to seamlessly handle both engine task store records and file-based markdown checklist tasks (`<relPath>:<line>`).
+- Person-Attributed Tasks Tab (`ProjectView.jsx`):
+  - Grouped project tasks by assigned person with circular avatar badges and task count headers.
+  - Displayed source document links (e.g. `2026-08-07 MoM`), due dates, and dependency pills.
+  - Enabled inline completion toggling directly from the project tasks tab.
+
+### Why
+Attributed action items to their assigned people (e.g. Preethi Gopinath, Durgaprasad Shanmugam, Shrinath V) across meeting notes and project documents, allowing direct tracking and completion from the project view.
+
+### Files touched
+- `query-vault.mjs` — Added `extractActionItems` and `toggleMarkdownTask`.
+- `actions.mjs` — Updated `mark_task_done` to support markdown checklist tasks.
+- `electron-app/src/components/ProjectView.jsx` — Grouped and rendered tasks attributed to people.
+
 ## [2026-08-31] — Deduplicate Linked People and Enhance Slideover HTML Typography (17px)
 
 **Branch**: `main`

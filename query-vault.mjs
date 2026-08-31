@@ -669,11 +669,122 @@ export function getProjectDetails(projectPath) {
     }
   }
 
+  // 6. Extract action items / tasks from meetings and project files
+  const tasks = [];
+  for (const m of meetingMap.values()) {
+    try {
+      const full = join(VAULT_ROOT, m.relPath);
+      if (existsSync(full)) {
+        const content = readFileSync(full, 'utf-8');
+        tasks.push(...extractActionItems(content, m.relPath));
+      }
+    } catch {}
+  }
+  for (const f of fileMap.values()) {
+    if (f.extension === 'md') {
+      try {
+        const full = join(VAULT_ROOT, f.relPath);
+        if (existsSync(full)) {
+          const content = readFileSync(full, 'utf-8');
+          tasks.push(...extractActionItems(content, f.relPath));
+        }
+      } catch {}
+    }
+  }
+
   const files = Array.from(fileMap.values()).sort((a, b) => b.date.localeCompare(a.date));
   const meetings = Array.from(meetingMap.values()).sort((a, b) => b.date.localeCompare(a.date));
   const people = Array.from(peopleMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
-  return { files, meetings, people };
+  return { files, meetings, people, tasks };
+}
+
+export function extractActionItems(content, relPath) {
+  if (!content) return [];
+  const lines = content.split('\n');
+  const tasks = [];
+  let currentPerson = null;
+  let inActionSection = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (/^#+\s+(Action Items|Tasks|To-?dos|Next Steps|Follow-?up)/i.test(line)) {
+      inActionSection = true;
+      currentPerson = null;
+      continue;
+    }
+    if (inActionSection && /^#+\s+/.test(line)) {
+      inActionSection = false;
+      currentPerson = null;
+    }
+
+    if (inActionSection) {
+      const personMatch = line.match(/^\*\*([^*]+)\*\*$/);
+      if (personMatch) {
+        currentPerson = personMatch[1].trim();
+        continue;
+      }
+    }
+
+    const taskMatch = line.match(/^-\s*\[([ xX])\]\s*(.+)$/);
+    if (taskMatch) {
+      const status = taskMatch[1].toLowerCase() === 'x' ? 'done' : 'open';
+      let rawText = taskMatch[2].trim();
+      let person = currentPerson || null;
+      let deadline = null;
+      let dependsOn = null;
+
+      if (rawText.includes('|')) {
+        const parts = rawText.split('|').map((s) => s.trim());
+        rawText = parts[0];
+        for (const p of parts.slice(1)) {
+          if (/^deadline:\s*/i.test(p)) deadline = p.replace(/^deadline:\s*/i, '').trim();
+          if (/^depends on:\s*/i.test(p)) dependsOn = p.replace(/^depends on:\s*/i, '').trim();
+          if (/^assignee:\s*/i.test(p)) person = p.replace(/^assignee:\s*/i, '').trim();
+        }
+      }
+
+      const atMatch = rawText.match(/@([\w-]+)/);
+      if (atMatch && !person) {
+        person = atMatch[1];
+      }
+
+      tasks.push({
+        id: `${relPath}:${i}`,
+        title: rawText,
+        status,
+        person: person || 'Unassigned',
+        deadline: deadline || null,
+        dependsOn: dependsOn || null,
+        relPath,
+        line: i,
+      });
+    }
+  }
+  return tasks;
+}
+
+export function toggleMarkdownTask(taskId, targetStatus = 'done') {
+  const lastColon = taskId.lastIndexOf(':');
+  if (lastColon === -1) return false;
+  const relPath = taskId.slice(0, lastColon);
+  const lineNum = parseInt(taskId.slice(lastColon + 1), 10);
+  const full = join(VAULT_ROOT, relPath);
+  if (!existsSync(full)) return false;
+
+  const content = readFileSync(full, 'utf-8');
+  const lines = content.split('\n');
+  if (lineNum >= 0 && lineNum < lines.length) {
+    const oldLine = lines[lineNum];
+    if (targetStatus === 'done') {
+      lines[lineNum] = oldLine.replace(/^(-\s*\[)\s*(\])/, '$1x$2');
+    } else {
+      lines[lineNum] = oldLine.replace(/^(-\s*\[)[xX](\])/, '$1 $2');
+    }
+    writeFileSync(full, lines.join('\n'), 'utf-8');
+    return true;
+  }
+  return false;
 }
 
 function openDb() {

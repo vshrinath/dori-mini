@@ -169,20 +169,55 @@ export function ProjectView({
     }
   }, [details.files]);
 
-  // Filter tasks belonging to this project
+  // Filter tasks belonging to this project from details.tasks and allTasks
   const projectTasks = useMemo(() => {
+    const map = new Map();
+    if (Array.isArray(details.tasks)) {
+      for (const t of details.tasks) {
+        map.set(t.id, t);
+      }
+    }
     const prefix = `projects/${projectPath}`;
-    return allTasks.filter(
-      (t) => t.relPath?.startsWith(prefix) || t.projectPath === projectPath
-    );
-  }, [allTasks, projectPath]);
+    for (const t of allTasks) {
+      if (t.relPath?.startsWith(prefix) || t.projectPath === projectPath) {
+        if (!map.has(t.id)) {
+          map.set(t.id, t);
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [details.tasks, allTasks, projectPath]);
+
+  // Group tasks by attributed person
+  const tasksByPerson = useMemo(() => {
+    const groups = new Map();
+    for (const t of projectTasks) {
+      const personName = t.person || 'Unassigned';
+      if (!groups.has(personName)) {
+        groups.set(personName, []);
+      }
+      groups.get(personName).push(t);
+    }
+    return Array.from(groups.entries()).map(([person, tasks]) => ({
+      person,
+      tasks,
+    }));
+  }, [projectTasks]);
 
   // Handle task status toggle
   const handleToggleTask = async (taskId) => {
     try {
       await window.dori?.call('mark_task_done', { id: taskId });
+      setDetails((prev) => ({
+        ...prev,
+        tasks: (prev.tasks || []).map((t) =>
+          t.id === taskId ? { ...t, status: t.status === 'done' ? 'open' : 'done' } : t
+        ),
+      }));
       setAllTasks((prev) =>
-        prev.map((t) => (t.id === taskId ? { ...t, status: 'done' } : t))
+        prev.map((t) =>
+          t.id === taskId ? { ...t, status: t.status === 'done' ? 'open' : 'done' } : t
+        )
       );
     } catch (e) {
       console.error('Failed to toggle task:', e);
@@ -752,7 +787,7 @@ export function ProjectView({
                 </TabsContent>
 
                 {/* TASKS TAB */}
-                <TabsContent value="tasks" className="space-y-4 mt-2">
+                <TabsContent value="tasks" className="space-y-6 mt-2">
                   {projectTasks.length === 0 ? (
                     <EmptyState
                       icon={ListTodo}
@@ -760,47 +795,89 @@ export function ProjectView({
                       description="All open loops and action items for this project will appear here."
                     />
                   ) : (
-                    <div className="rounded-panel border border-[var(--space-sidebar-border)] bg-card overflow-hidden shadow-2xs divide-y divide-[var(--space-sidebar-border)]">
-                      {projectTasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-[var(--space-nav-hover)] transition-colors"
-                        >
-                          <button
-                            onClick={() => handleToggleTask(task.id)}
-                            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                    <div className="space-y-5">
+                      {tasksByPerson.map(({ person, tasks }) => {
+                        const initials = person
+                          .split(/\s+/)
+                          .map((s) => s[0])
+                          .slice(0, 2)
+                          .join('')
+                          .toUpperCase();
+                        const openCount = tasks.filter((t) => t.status === 'open').length;
+
+                        return (
+                          <div
+                            key={person}
+                            className="rounded-panel border border-[var(--space-sidebar-border)] bg-card overflow-hidden shadow-2xs"
                           >
-                            {task.status === 'done' ? (
-                              <CheckCircle2 size={19} className="text-emerald-500" />
-                            ) : (
-                              <Circle size={19} />
-                            )}
-                          </button>
-                          <div className="min-w-0 flex-1">
-                            <span
-                              className={cn(
-                                'text-sm font-medium text-foreground block truncate',
-                                task.status === 'done' && 'line-through text-muted-foreground'
-                              )}
-                            >
-                              {task.title}
-                            </span>
-                            {task.sourceFile && (
-                              <span className="text-xs text-muted-foreground block truncate mt-0.5 font-mono">
-                                {task.sourceFile}
+                            {/* Person Group Header */}
+                            <div className="flex items-center justify-between border-b border-[var(--space-sidebar-border)] bg-[var(--surface-field)] px-4 py-3">
+                              <div className="flex items-center gap-2.5">
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-xs font-bold text-white shadow-2xs">
+                                  {initials}
+                                </span>
+                                <h4 className="text-sm font-semibold text-foreground">
+                                  {person}
+                                </h4>
+                              </div>
+                              <span className="text-xs font-medium text-muted-foreground">
+                                {openCount} open · {tasks.length} total
                               </span>
-                            )}
+                            </div>
+
+                            {/* Task List for this Person */}
+                            <div className="divide-y divide-[var(--space-sidebar-border)]">
+                              {tasks.map((task) => (
+                                <div
+                                  key={task.id}
+                                  className="flex items-start gap-3.5 px-4 py-3.5 hover:bg-[var(--space-nav-hover)] transition-colors"
+                                >
+                                  <button
+                                    onClick={() => handleToggleTask(task.id)}
+                                    className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                                  >
+                                    {task.status === 'done' ? (
+                                      <CheckCircle2 size={18} className="text-emerald-500" />
+                                    ) : (
+                                      <Circle size={18} />
+                                    )}
+                                  </button>
+                                  <div className="min-w-0 flex-1 space-y-1">
+                                    <span
+                                      className={cn(
+                                        'text-sm font-medium text-foreground block',
+                                        task.status === 'done' && 'line-through text-muted-foreground'
+                                      )}
+                                    >
+                                      {task.title}
+                                    </span>
+                                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                      {task.relPath && (
+                                        <button
+                                          onClick={() => onSelectDocument?.(task.relPath)}
+                                          className="hover:text-foreground hover:underline font-mono text-[11px] truncate max-w-xs"
+                                        >
+                                          {task.relPath.split('/').pop()}
+                                        </button>
+                                      )}
+                                      {task.deadline && (
+                                        <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                                          Due: {task.deadline}
+                                        </span>
+                                      )}
+                                      {task.dependsOn && task.dependsOn !== 'None' && (
+                                        <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-medium text-blue-600 dark:text-blue-400">
+                                          Depends: {task.dependsOn}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          {task.priority && (
-                            <Badge
-                              size="compact"
-                              variant={task.priority.toLowerCase() === 'high' ? 'danger' : 'muted'}
-                            >
-                              {task.priority}
-                            </Badge>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </TabsContent>

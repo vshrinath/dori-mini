@@ -23,7 +23,7 @@ import { execFileSync } from 'node:child_process';
 import { listTasks } from './list-tasks.mjs';
 import { buildInbox } from './list-inbox.mjs';
 import { resolve as resolveClarification, dismiss as dismissClarification } from './clarification-store.mjs';
-import { search as searchVault, listDocs, getDocument, getProjectDetails } from './query-vault.mjs';
+import { search as searchVault, listDocs, getDocument, getProjectDetails, toggleMarkdownTask } from './query-vault.mjs';
 import { parseFrontmatter } from './frontmatter.mjs';
 import { renderMarkdownToHtml } from './render-html.mjs';
 import { canonicalOutputPath, isYouTubeUrl, VAULT_ROOT } from './route-destination.mjs';
@@ -53,13 +53,18 @@ export const actions = [
   },
   {
     id: 'mark_task_done',
-    description: 'Mark an open task done in the real task store',
+    description: 'Mark an open task done in the real task store or markdown checklist',
     inputSchema: z.object({
       id: z.string(),
     }),
     scope: 'write',
     exposeToMcp: true,
-    handler: ({ id }) => setTaskStatus(id, 'done'),
+    handler: ({ id }) => {
+      if (id.includes('.md:')) {
+        return toggleMarkdownTask(id, 'done');
+      }
+      return setTaskStatus(id, 'done');
+    },
   },
   {
     id: 'list_inbox',
