@@ -35,6 +35,39 @@ constraints:
     applies_to:
       requirement_ids:
         - windows.install.native-setup
+  - id: constraint.windows.git-auto-install-via-winget
+    type: workflow
+    rule: >
+      install.ps1 MUST NOT hard-fail with "git is required, install it
+      yourself" the way install.sh does on macOS/Linux (install.sh:12-15).
+      It MUST attempt `winget install --id Git.Git` first when git is
+      missing, matching setup.ps1's existing Node auto-install treatment
+      (setup.ps1's Get-NodeMajor block). After installing, it MUST refresh
+      $env:Path from the registry (Machine + User scope via
+      [Environment]::GetEnvironmentVariable) before re-checking for git --
+      winget does not update the current session's PATH, and git is needed
+      immediately in this same script (unlike yt-dlp/markitdown, which are
+      only needed by later, separate script invocations). Only fall back
+      to the manual-install error message if winget itself is unavailable
+      or the install still leaves git unfound after the PATH refresh.
+    verified: >
+      git ships preinstalled on macOS via the Xcode Command Line Tools
+      stub, which is why install.sh's own git check never needed an
+      auto-install path -- confirmed this doesn't hold on Windows (no
+      preinstalled git on a stock Windows 10/11 machine), and that
+      README.md's own stated audience ("a founder, consultant, or business
+      leader") makes "already has git" an unsafe assumption to carry over
+      unchanged from the macOS script. Git.Git is a published, actively
+      maintained winget package ID.
+    rationale: >
+      Raised directly by the user asking "why does he need git" about the
+      first-draft install.ps1, which had copied install.sh's hard-fail
+      check without adapting it to a platform where git isn't a safe
+      assumption -- auto-installing it removes a manual prerequisite step
+      for exactly the non-developer audience this product targets.
+    applies_to:
+      requirement_ids:
+        - windows.install.native-setup
   - id: constraint.windows.powershell-5.1-compatible
     type: workflow
     rule: >

@@ -63,18 +63,25 @@ requirements:
     expected: >
       THE SYSTEM SHALL provide a PowerShell install script that clones the
       repository and hands off to a PowerShell setup script, mirroring
-      install.sh/setup.sh's steps (Node version check, dependency install,
-      vault path prompt, wiring global agent config files under
-      $HOME/.claude, $HOME/.codex, and similar directories) without requiring
-      WSL, Git Bash, or any POSIX shell.
+      install.sh/setup.sh's steps (git check, Node version check,
+      dependency install, vault path prompt, wiring global agent config
+      files under $HOME/.claude, $HOME/.codex, and similar directories)
+      without requiring WSL, Git Bash, or any POSIX shell. Unlike
+      install.sh, which hard-fails if git is missing, THE SYSTEM SHALL
+      auto-install git (same treatment as the Node version check) rather
+      than requiring the user to already have it -- this product's stated
+      audience (a founder, consultant, or business leader) cannot be
+      assumed to already have a developer tool preinstalled the way
+      install.sh safely assumes on macOS (git ships with the Xcode Command
+      Line Tools stub there).
     failure: >
       The Windows install command errors out, silently skips a step
       setup.sh performs on macOS/Linux, or requires the user to already have
-      WSL or Git Bash installed.
+      WSL, Git Bash, or git itself installed.
     variants: >
-      Fresh machine with no Node installed, Node already installed but wrong
-      version, existing vault path supplied, no vault path supplied (fresh
-      vault).
+      Fresh machine with no Node installed, fresh machine with no git
+      installed, Node already installed but wrong version, existing vault
+      path supplied, no vault path supplied (fresh vault).
   - id: windows.notify.native-toast
     title: Desktop notifications work on native Windows, not only via WSL
     status: ACCEPTED

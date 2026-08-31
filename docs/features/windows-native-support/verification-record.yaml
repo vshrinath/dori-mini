@@ -26,15 +26,22 @@ criteria:
       way setup.sh wires them on macOS/Linux.
     note: >
       site/install.ps1 and setup.ps1 are written, covering the same scope as
-      setup.sh's Node check, dependency install, vault path prompt, and
-      global-agent wiring, per tech-constraints.yaml's five constraints for
-      this requirement. Manually reviewed line by line for Windows
-      PowerShell 5.1 syntax compatibility -- one real bug was caught and
-      fixed during that review (Get-NodeMajor would have thrown a
-      terminating CommandNotFoundException on a machine with no Node
-      installed at all, since $ErrorActionPreference = 'Stop' turns an
+      setup.sh's git check, Node check, dependency install, vault path
+      prompt, and global-agent wiring, per tech-constraints.yaml's seven
+      constraints for this requirement. Manually reviewed line by line for
+      Windows PowerShell 5.1 syntax compatibility -- two real bugs were
+      caught and fixed during that review: (1) Get-NodeMajor would have
+      thrown a terminating CommandNotFoundException on a machine with no
+      Node installed at all, since $ErrorActionPreference = 'Stop' turns an
       unrecognized-command error terminating; fixed by checking
-      Get-Command node first). $LASTEXITCODE is checked after each native
+      Get-Command node first. (2) install.ps1 originally hard-failed if git
+      was missing, copying install.sh's macOS assumption (git ships via
+      Xcode CLT there) onto a platform where it doesn't hold, for an
+      audience (per README.md: "a founder, consultant, or business leader")
+      unlikely to already have it -- fixed to auto-install via winget,
+      including a PATH refresh from the registry since winget doesn't
+      update the current session's PATH and git is needed immediately in
+      the same script. $LASTEXITCODE is checked after each native
       git/npm call so a failed clone or install doesn't silently continue.
       status: blocked, not not_done or done -- no Windows machine, pwsh
       binary, or working container runtime (OrbStack/Docker was not running

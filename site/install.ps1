@@ -13,9 +13,24 @@ $Repo = 'https://github.com/vshrinath/dori-mini'
 $Dest = $env:DORI_MINI_DIR
 if (-not $Dest) { $Dest = Join-Path $HOME 'dori' }
 
+# git isn't preinstalled on Windows the way it is on macOS (Xcode CLT stub) -- install
+# it via winget rather than erroring out immediately, matching setup.ps1's own
+# auto-install treatment of Node. Also needed to keep the clone that follows -- update.sh
+# later does `git pull` inside it, so this has to be a real repo, not a one-time zip.
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-  Write-Error 'git is required -- install it first.'
-  exit 1
+  Write-Host 'git not found -- installing...'
+  if (Get-Command winget -ErrorAction SilentlyContinue) {
+    winget install --id Git.Git -e --silent --accept-package-agreements --accept-source-agreements
+    # winget doesn't update this session's PATH -- re-read it from the registry (Machine +
+    # User scope) so `git` is usable in this same script right after installing it, not
+    # only after a new shell.
+    $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
+  }
+  if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Write-Error 'Could not install git automatically -- install it from https://git-scm.com/downloads, then re-run this script.'
+    exit 1
+  }
+  Write-Host 'OK git installed'
 }
 
 if (Test-Path $Dest) {
