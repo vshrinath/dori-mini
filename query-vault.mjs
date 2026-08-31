@@ -227,10 +227,26 @@ function loadContent(db, relPath) {
   `).get(relPath);
 }
 
+// Every indexed doc's date (frontmatter `date`, else a YYYY-MM-DD in the path,
+// else the index's own updated_at), title, and type — the raw material for a
+// cross-type timeline. No FTS/ranking, just what's already indexed.
+export function listDocs({ limit } = {}) {
+  const db = openDb();
+  try {
+    const rows = db.prepare(`SELECT rel_path, title, frontmatter_json, updated_at FROM vault_documents`).all();
+    const docs = rows.map((row) => {
+      const fm = parseFm(row.frontmatter_json);
+      return { rel_path: row.rel_path, title: row.title, type: fm.type || null, date: rowDate(row.rel_path, fm, row.updated_at) };
+    }).sort((a, b) => b.date.localeCompare(a.date));
+    return limit ? docs.slice(0, limit) : docs;
+  } finally {
+    db.close();
+  }
+}
+
 function openDb() {
   if (!existsSync(DB_PATH)) {
-    console.error(`Vault index not found: ${DB_PATH}`);
-    process.exit(1);
+    throw new Error(`Vault index not found: ${DB_PATH}`);
   }
   const db = new DatabaseSync(DB_PATH, { readOnly: true });
   db.exec('PRAGMA busy_timeout = 5000');
@@ -273,10 +289,14 @@ function packHit(row, sections, full) {
   };
 }
 
-function printResult(payload) {
+function finalizePayload(payload) {
   const full = payload.bytes.full_content || 0;
   payload.bytes.ratio = full ? Number((payload.bytes.returned / full).toFixed(3)) : 0;
-  console.log(JSON.stringify(payload, null, 2));
+  return payload;
+}
+
+function printResult(payload) {
+  console.log(JSON.stringify(finalizePayload(payload), null, 2));
 }
 
 function lastMeeting(db, person, sections, full) {
@@ -453,8 +473,7 @@ function runSearch(stmt, q, n, scopeSlug) {
     if (!orMatch) return [];
     return run(orMatch);
   } catch (err) {
-    console.error(`FTS query failed: ${err.message}`);
-    process.exit(1);
+    throw new Error(`FTS query failed: ${err.message}`);
   }
 }
 
@@ -542,12 +561,24 @@ async function searchDocs(db, q, limit) {
   const candidates = runSearch(searchStmt(db, Boolean(scopeSlug)), q, candidateN, scopeSlug);
   const reranked = await rerankFtsHits(db, q, candidates);
   const hits = stripInternalFields(reranked.slice(0, n));
-  printResult({
+  return {
     db: DB_PATH,
     query: { cmd: 'search', q, limit: n, full: false },
     bytes: { full_content: 0, returned: bytesOf(hits) },
     hits,
-  });
+  };
+}
+
+// Exported entry point for non-CLI callers (the MCP action registry) — opens
+// and closes its own db connection, same self-contained shape as list-tasks.mjs's
+// listTasks / list-inbox.mjs's buildInbox.
+export async function search(q, { limit } = {}) {
+  const db = openDb();
+  try {
+    return finalizePayload(await searchDocs(db, q, limit));
+  } finally {
+    db.close();
+  }
 }
 
 // Reciprocal Rank Fusion over N result lists, keyed on rel_path. Same k=60 and the
@@ -660,38 +691,44 @@ function relatedCmd(db, startRaw, hops, typeFilter) {
   });
 }
 
-const args = parseArgs(process.argv.slice(2));
-const sections = parseSections(args.flags.sections);
-const full = Boolean(args.bools.full);
-const db = openDb();
-
-try {
-  if (args.cmd === 'last-meeting') {
-    lastMeeting(db, args.flags.person || args.positional[0], sections, full);
-  } else if (args.cmd === 'show') {
-    const needle = args.positional.join(' ').trim();
-    if (!needle) usage('show requires a path or title');
-    showDoc(db, needle, sections, full);
-  } else if (args.cmd === 'search') {
-    const q = args.positional.join(' ').trim();
-    if (!q) usage('search requires keywords');
-    await searchDocs(db, q, args.flags.limit);
-  } else if (args.cmd === 'search-multi') {
-    // Each positional arg is one full rephrasing — quote them individually in the shell.
-    const queries = args.positional.map((q) => q.trim()).filter(Boolean);
-    if (queries.length < 2) usage('search-multi requires 2+ quoted queries');
-    searchMulti(db, queries, args.flags.limit);
-  } else if (args.cmd === 'related') {
-    const start = args.positional.join(' ').trim();
-    if (!start) usage('related requires a person or org slug');
-    const hops = Math.min(Math.max(Number(args.flags.hops) || 2, 1), 3);
-    const typeFilter = args.flags.type ? new Set(args.flags.type.split(',').map((s) => s.trim())) : null;
-    relatedCmd(db, start, hops, typeFilter);
-  } else if (args.cmd === 'stats') {
-    statsCmd(db);
-  } else {
-    usage(`Unknown command: ${args.cmd}`);
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const args = parseArgs(process.argv.slice(2));
+  const sections = parseSections(args.flags.sections);
+  const full = Boolean(args.bools.full);
+  try {
+    const db = openDb();
+    try {
+      if (args.cmd === 'last-meeting') {
+        lastMeeting(db, args.flags.person || args.positional[0], sections, full);
+      } else if (args.cmd === 'show') {
+        const needle = args.positional.join(' ').trim();
+        if (!needle) usage('show requires a path or title');
+        showDoc(db, needle, sections, full);
+      } else if (args.cmd === 'search') {
+        const q = args.positional.join(' ').trim();
+        if (!q) usage('search requires keywords');
+        printResult(await searchDocs(db, q, args.flags.limit));
+      } else if (args.cmd === 'search-multi') {
+        // Each positional arg is one full rephrasing — quote them individually in the shell.
+        const queries = args.positional.map((q) => q.trim()).filter(Boolean);
+        if (queries.length < 2) usage('search-multi requires 2+ quoted queries');
+        searchMulti(db, queries, args.flags.limit);
+      } else if (args.cmd === 'related') {
+        const start = args.positional.join(' ').trim();
+        if (!start) usage('related requires a person or org slug');
+        const hops = Math.min(Math.max(Number(args.flags.hops) || 2, 1), 3);
+        const typeFilter = args.flags.type ? new Set(args.flags.type.split(',').map((s) => s.trim())) : null;
+        relatedCmd(db, start, hops, typeFilter);
+      } else if (args.cmd === 'stats') {
+        statsCmd(db);
+      } else {
+        usage(`Unknown command: ${args.cmd}`);
+      }
+    } finally {
+      db.close();
+    }
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
   }
-} finally {
-  db.close();
 }
