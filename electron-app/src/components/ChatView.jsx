@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Send, Sparkles, AlertCircle, RefreshCw, Folder, Cpu } from 'lucide-react';
+import { Send, AlertCircle, RefreshCw, Folder } from 'lucide-react';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { EnginePicker } from './EnginePicker.jsx';
@@ -87,8 +87,8 @@ export function ChatView({ projectContext = null, className = '' }) {
       {/* Header */}
       <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-border bg-card px-5 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--surface-tint)] text-primary">
-            <Sparkles size={15} />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--surface-tint)]">
+            <img src="./assets/icon.png" alt="" className="h-4 w-4 rounded-sm" />
           </div>
           <div>
             <h1 className="text-sm font-semibold text-foreground">
@@ -136,8 +136,8 @@ export function ChatView({ projectContext = null, className = '' }) {
 
         {messages.length === 0 && isConfigured && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
-              <Sparkles size={24} />
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <img src="./assets/icon.png" alt="" className="h-7 w-7 rounded-md" />
             </div>
             <h3 className="text-base font-semibold text-foreground mb-1">
               {projectContext ? `Ask anything about ${projectContext}` : 'How can Dori help today?'}

@@ -16,6 +16,11 @@ assert.ok(statSync(iconPath).size > 0, 'icon.png must be non-empty');
 const mainJsContent = readFileSync(join(APP_DIR, 'main.js'), 'utf8');
 assert.ok(mainJsContent.includes('getAppIconPath'), 'main.js must define getAppIconPath helper');
 assert.ok(mainJsContent.includes('icon: iconPath'), 'main.js must wire icon to BrowserWindow');
+// BrowserWindow's icon option is a documented no-op for the Dock on macOS --
+// app.dock.setIcon() is the actual mechanism. Without this, "icon: iconPath"
+// alone silently leaves Electron's default icon in the Dock/Cmd+Tab switcher
+// on darwin, the platform this app actually ships on.
+assert.ok(mainJsContent.includes('app.dock?.setIcon') || mainJsContent.includes('app.dock.setIcon'), 'main.js must call app.dock.setIcon on darwin for the Dock icon to actually change');
 
 const indexHtmlContent = readFileSync(join(APP_DIR, 'index.html'), 'utf8');
 assert.ok(indexHtmlContent.includes('rel="icon"'), 'index.html must include favicon link');

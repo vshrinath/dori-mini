@@ -85,6 +85,12 @@ constraints:
         loadFile()).
       - index.html's favicon link MUST reference the web-servable path:
         <link rel="icon" href="/assets/icon.png">.
+      - On macOS specifically, BrowserWindow's icon option does NOT set the
+        Dock/Cmd+Tab icon -- that is a documented Electron behavior, not a
+        bug to work around. main.js MUST additionally call
+        app.dock.setIcon(iconPath) (guarded to process.platform === 'darwin')
+        in app.whenReady(), or the Dock keeps showing Electron's default
+        icon regardless of what BrowserWindow's icon option is set to.
       Splash screen markup lives inline in index.html (not a separate asset
       file) per dori-go.shell.splash-screen.
     verified: >
@@ -95,6 +101,12 @@ constraints:
       file), which is what makes dist/assets/icon.png resolve correctly
       under Electron's file:// loadFile(). electron-app/assets/ does not
       exist yet (checked via `ls`), so there's no prior file to migrate.
+      2026-08-31: added the app.dock.setIcon() requirement after the first
+      version of this constraint (and my own review marking
+      verify.dori-go.shell.app-icon done) missed that BrowserWindow's icon
+      option is a macOS-specific no-op for the Dock -- verified against
+      Electron's own docs, not assumed; confirmed by grep that main.js had
+      no app.dock reference at all before this fix.
     rationale: >
       Revised 2026-08-31 after a plan proposed electron-app/assets/icon.png
       AND electron-app/public/ as two separate copies -- the earlier version

@@ -6,12 +6,17 @@
 // and the version/status fields (dori-mini's vault documents are plain files,
 // not versioned artifacts with a status lifecycle).
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, BookOpen, FileCode2, FileText, Search } from 'lucide-react';
+import { BookOpen, FileCode2, FileText, Search } from 'lucide-react';
 import { Badge } from './ui/badge.jsx';
 import { EmptyState } from './ui/empty-state.jsx';
 import { Input } from './ui/input.jsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
 export function LibraryView({ onSelectDocument }) {
   const [docs, setDocs] = useState(null);
   const [error, setError] = useState(null);
@@ -20,7 +25,7 @@ export function LibraryView({ onSelectDocument }) {
 
   useEffect(() => {
     window.dori
-      .call('list_documents', { limit: LIST_LIMIT })
+      .call('list_documents', {})
       .then(setDocs)
       .catch((e) => setError(e.message));
   }, []);
@@ -37,10 +42,6 @@ export function LibraryView({ onSelectDocument }) {
       .filter((d) => typeFilter === 'all' || (d.type || 'note') === typeFilter)
       .filter((d) => !q || d.title.toLowerCase().includes(q));
   }, [docs, typeFilter, query]);
-
-  if (selectedPath) {
-    return <DocumentDetail relPath={selectedPath} onBack={() => setSelectedPath(null)} />;
-  }
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">

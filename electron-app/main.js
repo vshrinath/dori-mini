@@ -154,6 +154,13 @@ function toggleMiniWindow() {
 ipcMain.on('mini:close', () => miniWin?.hide());
 
 app.whenReady().then(() => {
+  // BrowserWindow's icon option is a no-op for the Dock on macOS (it only
+  // affects the Windows taskbar / Linux window manager) -- app.dock.setIcon()
+  // is the actual mechanism macOS uses.
+  if (process.platform === 'darwin') {
+    const iconPath = getAppIconPath();
+    if (iconPath) app.dock?.setIcon(iconPath);
+  }
   createWindow();
   createMiniWindow();
   const registered = globalShortcut.register('CommandOrControl+Shift+Space', toggleMiniWindow);

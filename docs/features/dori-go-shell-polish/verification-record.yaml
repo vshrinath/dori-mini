@@ -21,7 +21,7 @@ criteria:
       Cmd+Tab switcher, and window chrome.
     evidence:
       test: test/shell-polish.mjs
-      fingerprint: c1523a3fd6af8232fbd6bd7326fd3edeb8291200bbd5df79e52b8f3480eb3b1e
+      fingerprint: 862fbe417babb1c81fa65c05f3630ba3c2fb803a06df44adad2c968f60719489
       run: node test/shell-polish.mjs
     note: >
       public/assets/icon.png asset wired to main.js and HTML favicons, verified in test/shell-polish.mjs.
@@ -36,7 +36,7 @@ criteria:
       blank/white window.
     evidence:
       test: test/shell-polish.mjs
-      fingerprint: c1523a3fd6af8232fbd6bd7326fd3edeb8291200bbd5df79e52b8f3480eb3b1e
+      fingerprint: 862fbe417babb1c81fa65c05f3630ba3c2fb803a06df44adad2c968f60719489
       run: node test/shell-polish.mjs
     note: >
       index.html initial branded splash shell + ready-to-show handler in main.js, verified in test/shell-polish.mjs.
@@ -51,7 +51,7 @@ criteria:
       all animate with consistent duration/easing.
     evidence:
       test: test/shell-polish.mjs
-      fingerprint: c1523a3fd6af8232fbd6bd7326fd3edeb8291200bbd5df79e52b8f3480eb3b1e
+      fingerprint: 862fbe417babb1c81fa65c05f3630ba3c2fb803a06df44adad2c968f60719489
       run: node test/shell-polish.mjs
     note: >
       motion.js shared constants and anim-rise screen transition in App.jsx, verified in test/shell-polish.mjs.
@@ -66,7 +66,7 @@ criteria:
       tokens.css and real Dori's spacing/type/color conventions.
     evidence:
       test: test/shell-polish.mjs
-      fingerprint: c1523a3fd6af8232fbd6bd7326fd3edeb8291200bbd5df79e52b8f3480eb3b1e
+      fingerprint: 862fbe417babb1c81fa65c05f3630ba3c2fb803a06df44adad2c968f60719489
       run: node test/shell-polish.mjs
     note: >
       2026-08-31: test/shell-polish.mjs now actually greps each of the 8
