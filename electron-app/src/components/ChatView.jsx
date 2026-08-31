@@ -152,7 +152,7 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
   const handleInputChange = (e) => {
     setInput(e.target.value);
     e.target.style.height = 'auto';
-    e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
   };
 
   const isConfigured = engine === 'claude' || engine === 'codex';
@@ -172,8 +172,8 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
       {isChatting && (
         <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-[var(--hairline)] bg-[var(--surface-canvas)]/90 backdrop-blur-md px-6 py-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--surface-tint)]">
-              <img src="./assets/icon.png" alt="" className="h-4 w-4 rounded-sm" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--surface-tint)]">
+              <img src="./assets/icon.png" alt="" className="h-5 w-5 rounded-sm" />
             </div>
             <span className="font-display text-base font-semibold text-foreground">
               {projectContext ? `Project: ${projectContext}` : 'Dori'}
@@ -237,10 +237,10 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
                 </span>
                 <div
                   className={cn(
-                    'rounded-2xl text-sm leading-relaxed',
+                    'rounded-2xl text-[15.5px] leading-relaxed',
                     m.role === 'user'
-                      ? 'max-w-xl bg-primary text-primary-foreground px-4.5 py-3 rounded-tr-sm shadow-xs'
-                      : 'w-full max-w-2xl bg-card border border-[var(--border-soft)] px-5 py-4 rounded-tl-sm shadow-xs prose dark:prose-invert text-foreground'
+                      ? 'max-w-xl bg-primary text-primary-foreground px-5 py-3.5 rounded-tr-sm shadow-xs'
+                      : 'w-full max-w-2xl bg-card border border-[var(--border-soft)] px-6 py-4.5 rounded-tl-sm shadow-xs prose dark:prose-invert text-foreground'
                   )}
                 >
                   {m.text}
@@ -282,7 +282,7 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
           </div>
         )}
 
-        {/* Signature 20px Dori Composer Capsule */}
+        {/* Signature Elevated Dori Composer Capsule */}
         <div className="w-full relative">
           {/* Action Popover Menu for + button */}
           {isMenuOpen && (
@@ -337,7 +337,7 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
               title="Add attachment or action"
               aria-label="Add"
             >
-              <Plus size={18} />
+              <Plus size={20} strokeWidth={2} />
             </button>
 
             <textarea
@@ -354,10 +354,10 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
                   : 'Select an AI engine below to start…'
               }
               disabled={isLoading}
-              className="quick-capture-input text-sm"
+              className="quick-capture-input"
             />
 
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center gap-3 shrink-0">
               <EnginePicker onEngineChange={setEngine} />
 
               <button
@@ -367,20 +367,20 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
                 title="Send (Enter)"
                 aria-label="Send"
               >
-                <Send size={14} />
+                <Send size={16} />
               </button>
             </div>
           </form>
 
           {/* Idle Starter Prompt Chips */}
           {!isChatting && (
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               {STARTER_PROMPTS.map((prompt, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => handleSendText(prompt)}
-                  className="chat-starter-chip text-sm font-medium"
+                  className="chat-starter-chip"
                 >
                   {prompt}
                 </button>

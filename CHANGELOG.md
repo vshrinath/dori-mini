@@ -1,5 +1,27 @@
 # Changelog
 
+## [2026-08-31] — Enlarge Center Composer Bar, Hero Title, and Starter Prompt Chips
+
+**Branch**: `main`
+
+### What changed
+- Center Composer Capsule:
+  - Scaled height to `60px` (`min-h-[3.75rem]`), padding to `px-4.5 py-3`, and border-radius to `28px` (`rounded-[28px]`).
+  - Upgraded input typography to `16.8px` (`1.05rem / font-size: 1.05rem`) with `1.5` line-height and `16.3px` placeholder.
+  - Upgraded leading `+` action button to `38px` (`size={20}` icon) and trailing navy circular send button to `40px` (`size={16}` paper plane).
+- Hero Stage:
+  - Enlarged Dori logo to `4.25rem` (68px) with diffused brand shadow.
+  - Scaled "Good evening" time-aware kicker to `15.2px` (`0.95rem`) and "Where should we begin?" headline to `clamp(2.2rem, 4vw, 3rem) font-semibold`.
+- Starter Prompt Chips:
+  - Scaled prompt chips to `15px` (`0.9375rem font-medium`), padding to `px-5 py-2.5`, and gap to `12px` (`gap-3 mt-7`).
+
+### Why
+Eliminate the disproportionately narrow/shallow composer slot and provide a spacious, luxurious home canvas matching Dori Portal.
+
+### Files touched
+- `electron-app/src/tokens.css` — Updated composer container dimensions, input font sizes, button diameters, and hero title clamping.
+- `electron-app/src/components/ChatView.jsx` — Updated icon sizes and container spacing.
+
 ## [2026-08-31] — Interactive Draggable Sidebar Boundary and Enlarged Navigation Scale
 
 **Branch**: `main`
