@@ -27,6 +27,11 @@ constraints:
       A component already built cleanly against tokens.css counts as swept
       if spot-checked and confirmed clean -- it does not need rewriting, but
       it MUST be checked, not silently skipped because it's already new.
+    verified: >
+      This exact list is requirements.yaml's own `variants` field for
+      dori-go.shell.design-consistency, copied verbatim (checked by reading
+      that field directly, not paraphrased from memory) -- confirms it's the
+      full stated scope, not a subset chosen here.
     rationale: >
       Directly enforces dori-go.shell.design-consistency -- hardcoded values
       scattered across components is exactly the drift that makes an app
@@ -82,6 +87,14 @@ constraints:
         <link rel="icon" href="/assets/icon.png">.
       Splash screen markup lives inline in index.html (not a separate asset
       file) per dori-go.shell.splash-screen.
+    verified: >
+      electron-app/public/fonts/ exists and is the only static-asset dir in
+      the repo today (checked via `ls electron-app/public`) -- confirms
+      public/ is the established Vite-public convention, not a guess.
+      electron-app/vite.config.js has base: './' (confirmed by reading the
+      file), which is what makes dist/assets/icon.png resolve correctly
+      under Electron's file:// loadFile(). electron-app/assets/ does not
+      exist yet (checked via `ls`), so there's no prior file to migrate.
     rationale: >
       Revised 2026-08-31 after a plan proposed electron-app/assets/icon.png
       AND electron-app/public/ as two separate copies -- the earlier version

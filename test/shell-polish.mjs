@@ -49,4 +49,16 @@ assert.ok(tokensCss.includes('--motion-enter:'), 'tokens.css must define --motio
 assert.ok(tokensCss.includes('.anim-rise'), 'tokens.css must define .anim-rise');
 assert.ok(tokensCss.includes('--radius-panel:'), 'tokens.css must define --radius-panel');
 
+// Tokens existing in tokens.css doesn't prove any component uses them --
+// the full sweep list from constraint.shell.tokens-css-is-sole-design-token-source.
+const SWEPT_COMPONENTS = [
+  'InboxItem', 'TasksView', 'ProfileView', 'ProjectView',
+  'LibraryView', 'ChatView', 'FileSlideover', 'SearchModal',
+];
+for (const name of SWEPT_COMPONENTS) {
+  const src = readFileSync(join(APP_DIR, `src/components/${name}.jsx`), 'utf8');
+  const hexLiterals = src.match(/#[0-9a-fA-F]{3,8}\b/g) || [];
+  assert.equal(hexLiterals.length, 0, `${name}.jsx must not hardcode hex colors, found: ${hexLiterals.join(', ')}`);
+}
+
 console.log('shell-polish: all assertions passed');
