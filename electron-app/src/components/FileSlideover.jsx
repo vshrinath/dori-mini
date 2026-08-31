@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { X, Check, Save, Edit3, Eye, AlertTriangle } from 'lucide-react';
+import { X, Check, Save, Edit3, Eye, AlertTriangle, Calendar } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
@@ -143,7 +143,7 @@ export function FileSlideover({ relPath, onClose, onSaved }) {
       {/* Slideover Panel */}
       <div
         style={{ transition: TRANSITION.slideover }}
-        className="relative z-10 flex h-full w-full max-w-3xl flex-col bg-background shadow-2xl border-l border-border"
+        className="relative z-10 flex h-full w-full md:w-1/2 max-w-none flex-col bg-background shadow-2xl border-l border-border"
       >
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3.5 bg-card">
@@ -268,7 +268,7 @@ export function FileSlideover({ relPath, onClose, onSaved }) {
           )}
 
           {doc && !isEditing && (
-            <article className="mx-auto w-full max-w-2xl px-6 py-8">
+            <article className="mx-auto w-full max-w-3xl px-6 py-8">
               {/* Clean Frontmatter Metadata Block if present */}
               {(() => {
                 const fm = doc.frontmatter || {};
@@ -296,6 +296,47 @@ export function FileSlideover({ relPath, onClose, onSaved }) {
                   </div>
                 );
               })()}
+
+              {/* Linked Meetings for Person / Entity */}
+              {doc.linkedMeetings && doc.linkedMeetings.length > 0 && (
+                <div className="mb-6 space-y-2.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Calendar size={13} className="text-[var(--brand-primary)]" />
+                    <span>Linked Meetings ({doc.linkedMeetings.length})</span>
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {doc.linkedMeetings.map((m) => (
+                      <button
+                        key={m.relPath}
+                        onClick={() => {
+                          window.dori?.call('get_document', { path: m.relPath }).then((loaded) => {
+                            if (loaded) {
+                              setDoc(loaded);
+                              originalContentRef.current = loaded.content || '';
+                              setDraftContent(loaded.content || '');
+                            }
+                          });
+                        }}
+                        className="flex items-center justify-between p-3 rounded-xl border border-border/80 bg-muted/20 hover:bg-muted/50 transition-colors text-left group"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <span className="text-xs font-semibold text-foreground block truncate group-hover:text-[var(--brand-primary)]">
+                            {m.title}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground block truncate font-mono mt-0.5">
+                            {m.relPath}
+                          </span>
+                        </div>
+                        {m.date && (
+                          <span className="text-[11px] text-muted-foreground shrink-0 ml-2">
+                            {m.date.slice(0, 10)}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {doc.html ? (
                 <div

@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-08-31] — 50% Slideover Width, Person Linked Meetings, and Scannable Brief Highlights
+
+**Branch**: `main`
+
+### What changed
+- Scannable Project Brief Cards (`ProjectView.jsx`): parsed context notes into structured key-value badges (Type, Status, Contact, Key References) and clean summary paragraphs instead of raw markdown syntax strings.
+- 50% Slideover Layout (`FileSlideover.jsx`): expanded the slideover panel width to 50% on desktop (`w-full md:w-1/2 max-w-none`), giving a balanced reading split view with the background blurred.
+- Linked Meetings in Slideover (`FileSlideover.jsx` & `query-vault.mjs`):
+  - Added `findMeetingsForPerson` in `query-vault.mjs` to resolve all meetings where a person is tagged as attendee or participant across `meetings/`, `captures/`, and `projects/<path>/meetings/`.
+  - Displayed interactive Linked Meeting cards inside the person slideover with click-to-open navigation.
+  - Added direct discovery of `projects/<path>/meetings/` subfolders in `getProjectDetails`.
+
+### Why
+Provide a readable, scannable overview on project pages and complete relational context (linked meetings) on person slideover drawers with a 50% screen split.
+
+### Files touched
+- `query-vault.mjs` — Added `findMeetingsForPerson` and `projects/<path>/meetings` scanning.
+- `electron-app/src/components/ProjectView.jsx` — Implemented structured brief highlights.
+- `electron-app/src/components/FileSlideover.jsx` — Set 50% width and added linked meeting cards.
+
 ## [2026-08-31] — Strip Frontmatter from Rendered HTML and Add Metadata Property Grid to Slideover
 
 **Branch**: `main`

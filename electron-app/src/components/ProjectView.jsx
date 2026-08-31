@@ -64,6 +64,30 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+function renderBriefHighlights(rawContent) {
+  if (!rawContent) return { items: [], summary: '' };
+  const lines = rawContent.split('\n');
+  const items = [];
+  let summary = '';
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('**') && trimmed.includes(':**')) {
+      const match = trimmed.match(/^\*\*(.+?):\*\*\s*(.+)$/);
+      if (match) {
+        items.push({ label: match[1], value: match[2] });
+      }
+    } else if (trimmed.startsWith('- `') || (trimmed.startsWith('- ') && !trimmed.startsWith('---'))) {
+      const text = trimmed.replace(/^-\s*/, '');
+      if (text) items.push({ label: 'Key Ref', value: text });
+    } else if (!trimmed.startsWith('#') && !trimmed.startsWith('---') && !trimmed.startsWith('**') && trimmed.length > 25 && !summary) {
+      summary = trimmed;
+    }
+  }
+
+  return { items, summary };
+}
+
 export function ProjectView({
   projectPath,
   onSelectProject,
@@ -352,11 +376,11 @@ export function ProjectView({
                   {/* Context Brief Preview Card */}
                   {contextDoc && (
                     <div className="rounded-panel border border-[var(--space-sidebar-border)] bg-card p-5 shadow-2xs">
-                      <div className="flex items-center justify-between border-b border-[var(--space-sidebar-border)] pb-3 mb-3">
+                      <div className="flex items-center justify-between border-b border-[var(--space-sidebar-border)] pb-3 mb-3.5">
                         <div className="flex items-center gap-2">
                           <FileText size={16} className="text-[var(--brand-primary)]" />
                           <h3 className="text-sm font-semibold text-foreground">
-                            {contextDoc.title || 'Project Context'}
+                            {contextDoc.title || 'Project Overview & Brief'}
                           </h3>
                         </div>
                         <Button
@@ -369,9 +393,36 @@ export function ProjectView({
                           <ExternalLink size={12} />
                         </Button>
                       </div>
-                      <p className="text-sm text-foreground-secondary leading-relaxed line-clamp-4 font-normal">
-                        {contextDoc.content?.slice(0, 450)}…
-                      </p>
+
+                      {(() => {
+                        const { items, summary } = renderBriefHighlights(contextDoc.content);
+                        return (
+                          <div className="space-y-3">
+                            {items.length > 0 && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                {items.map((item, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex items-baseline gap-2 rounded-lg bg-[var(--surface-field)] px-3 py-2 border border-[var(--space-sidebar-border)]"
+                                  >
+                                    <span className="font-semibold text-muted-foreground shrink-0">
+                                      {item.label}:
+                                    </span>
+                                    <span className="font-medium text-foreground truncate">
+                                      {item.value}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {summary && (
+                              <p className="text-sm text-foreground-secondary leading-relaxed font-normal pt-1">
+                                {summary}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 

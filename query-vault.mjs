@@ -274,6 +274,11 @@ export function getDocument(needle) {
           else if (c.startsWith('projects/')) type = 'project';
           else type = 'document';
         }
+        let linkedMeetings = [];
+        if (type === 'person') {
+          const personSlug = c.split('/').pop().replace(/\.md$/, '');
+          linkedMeetings = findMeetingsForPerson(personSlug);
+        }
         return {
           relPath: c,
           title,
@@ -281,6 +286,7 @@ export function getDocument(needle) {
           date: fm.date || st.mtime.toISOString(),
           frontmatter: fm,
           content: raw,
+          linkedMeetings,
         };
       }
     } catch {}
@@ -299,13 +305,20 @@ export function getDocument(needle) {
       if (rows.length) {
         const row = loadContent(db, rows[0].rel_path);
         const fm = parseFm(row.frontmatter_json);
+        const type = fm.type || null;
+        let linkedMeetings = [];
+        if (type === 'person' || rows[0].rel_path.startsWith('entities/people')) {
+          const personSlug = rows[0].rel_path.split('/').pop().replace(/\.md$/, '');
+          linkedMeetings = findMeetingsForPerson(personSlug);
+        }
         return {
           relPath: row.rel_path,
           title: row.title,
-          type: fm.type || null,
+          type,
           date: rowDate(row.rel_path, fm, row.updated_at),
           frontmatter: fm,
           content: row.content,
+          linkedMeetings,
         };
       }
     } finally {
@@ -314,6 +327,76 @@ export function getDocument(needle) {
   } catch {}
 
   return null;
+}
+
+export function findMeetingsForPerson(personSlug) {
+  const meetings = [];
+  const searchDirs = ['meetings', 'captures'];
+  for (const dirName of searchDirs) {
+    const d = join(VAULT_ROOT, dirName);
+    try {
+      if (existsSync(d)) {
+        const entries = readdirSync(d, { withFileTypes: true });
+        for (const e of entries) {
+          if (e.isDirectory() || !e.name.endsWith('.md')) continue;
+          try {
+            const content = readFileSync(join(d, e.name), 'utf-8');
+            const { fm } = parseFrontmatter(content);
+            const people = Array.isArray(fm.people) ? fm.people : [fm.person].filter(Boolean);
+            const attendees = Array.isArray(fm.attendees) ? fm.attendees : [];
+            const isMatch =
+              people.some((p) => p === personSlug || p?.toLowerCase().includes(personSlug.toLowerCase())) ||
+              attendees.some((a) => a?.toLowerCase().includes(personSlug.toLowerCase()) || personSlug.toLowerCase().includes(a?.toLowerCase())) ||
+              content.toLowerCase().includes(personSlug.replace(/-/g, ' '));
+            if (isMatch) {
+              meetings.push({
+                relPath: `${dirName}/${e.name}`,
+                title: fm.title || e.name.replace(/\.md$/, ''),
+                date: fm.date || '',
+              });
+            }
+          } catch {}
+        }
+      }
+    } catch {}
+  }
+
+  // Also check projects/*/meetings
+  try {
+    const projectsDir = join(VAULT_ROOT, 'projects');
+    if (existsSync(projectsDir)) {
+      const projEntries = readdirSync(projectsDir, { withFileTypes: true });
+      for (const pe of projEntries) {
+        if (!pe.isDirectory()) continue;
+        const pMeetDir = join(projectsDir, pe.name, 'meetings');
+        if (existsSync(pMeetDir)) {
+          const mList = readdirSync(pMeetDir, { withFileTypes: true });
+          for (const me of mList) {
+            if (me.isDirectory() || !me.name.endsWith('.md')) continue;
+            try {
+              const content = readFileSync(join(pMeetDir, me.name), 'utf-8');
+              const { fm } = parseFrontmatter(content);
+              const people = Array.isArray(fm.people) ? fm.people : [fm.person].filter(Boolean);
+              const attendees = Array.isArray(fm.attendees) ? fm.attendees : [];
+              const isMatch =
+                people.some((p) => p === personSlug || p?.toLowerCase().includes(personSlug.toLowerCase())) ||
+                attendees.some((a) => a?.toLowerCase().includes(personSlug.toLowerCase()) || personSlug.toLowerCase().includes(a?.toLowerCase())) ||
+                content.toLowerCase().includes(personSlug.replace(/-/g, ' '));
+              if (isMatch) {
+                meetings.push({
+                  relPath: `projects/${pe.name}/meetings/${me.name}`,
+                  title: fm.title || me.name.replace(/\.md$/, ''),
+                  date: fm.date || '',
+                });
+              }
+            } catch {}
+          }
+        }
+      }
+    }
+  } catch {}
+
+  return meetings;
 }
 
 // Full project details: files in projects/<path>, linked meetings in meetings/,
@@ -428,7 +511,7 @@ export function getProjectDetails(projectPath) {
     }
   } catch {}
 
-  // 3. Scan meetings/ and captures/ folders on disk
+  // 3. Scan meetings/, captures/, and projects/<projectPath>/meetings folders on disk
   const scanFolders = ['meetings', 'captures'];
   for (const f of scanFolders) {
     try {
@@ -442,17 +525,20 @@ export function getProjectDetails(projectPath) {
             if (!meetingMap.has(relPath)) {
               let attendees = [];
               let title = e.name.replace(/\.md$/, '');
+              let date = new Date().toISOString();
               try {
                 const content = readFileSync(join(d, e.name), 'utf-8');
                 const parsed = parseFrontmatter(content);
                 if (parsed.fm.title) title = parsed.fm.title;
+                if (parsed.fm.date) date = parsed.fm.date;
                 if (Array.isArray(parsed.fm.attendees)) attendees = parsed.fm.attendees;
+                if (Array.isArray(parsed.fm.people)) attendees.push(...parsed.fm.people);
               } catch {}
 
               meetingMap.set(relPath, {
                 relPath,
                 title,
-                date: new Date().toISOString(),
+                date,
                 attendees,
               });
             }
@@ -461,6 +547,37 @@ export function getProjectDetails(projectPath) {
       }
     } catch {}
   }
+
+  // 3b. Scan projects/<projectPath>/meetings
+  try {
+    const projMeetingsDir = join(projectDir, 'meetings');
+    if (existsSync(projMeetingsDir)) {
+      const list = readdirSync(projMeetingsDir, { withFileTypes: true });
+      for (const e of list) {
+        if (e.isDirectory() || !e.name.endsWith('.md')) continue;
+        const full = join(projMeetingsDir, e.name);
+        const relPath = `projects/${projectPath}/meetings/${e.name}`;
+        let attendees = [];
+        let title = e.name.replace(/\.md$/, '');
+        let date = new Date().toISOString();
+        try {
+          const content = readFileSync(full, 'utf-8');
+          const parsed = parseFrontmatter(content);
+          if (parsed.fm.title) title = parsed.fm.title;
+          if (parsed.fm.date) date = parsed.fm.date;
+          if (Array.isArray(parsed.fm.attendees)) attendees = parsed.fm.attendees;
+          if (Array.isArray(parsed.fm.people)) attendees.push(...parsed.fm.people);
+        } catch {}
+
+        meetingMap.set(relPath, {
+          relPath,
+          title,
+          date,
+          attendees,
+        });
+      }
+    }
+  } catch {}
 
   // 4. Scan entities/people/ folder on disk for people linked via projects or meetings
   try {
