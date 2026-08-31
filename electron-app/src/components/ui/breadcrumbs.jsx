@@ -31,7 +31,7 @@ export function BreadcrumbLink({ className, onClick, children, ...props }) {
     <button
       type="button"
       onClick={onClick}
-      className={cn('transition-colors hover:text-foreground hover:underline underline-offset-2', className)}
+      className={cn('inline-flex items-center gap-1.5 transition-colors hover:text-foreground hover:underline underline-offset-2', className)}
       {...props}
     >
       {children}

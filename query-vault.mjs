@@ -14,11 +14,12 @@
 //   node query-vault.mjs search "<keywords>" [--limit 5]
 //   node query-vault.mjs related <person-or-org-slug> [--hops 2] [--type co_meeting,person_org]
 import { DatabaseSync } from 'node:sqlite';
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { RERANK_ENABLED, RERANK_CANDIDATE_MULTIPLIER, rerank } from './reranker.mjs';
 import { discoverProjects, discoverPeople, matchProject } from './scope.mjs';
+import { parseFrontmatter } from './frontmatter.mjs';
 
 const DB_PATH = process.env.VAULT_INDEX_DB || resolve(homedir(), 'proto-space/dori/store/portal.db');
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');

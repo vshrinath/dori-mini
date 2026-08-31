@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-08-31] — Fix Breadcrumb Home Icon Alignment and Entity Frontmatter Parsing
+
+**Branch**: `main`
+
+### What changed
+- Fixed Breadcrumbs Home Icon Alignment: updated `BreadcrumbLink` in `breadcrumbs.jsx` to `inline-flex items-center gap-1.5` so the `<Home>` icon and "Home" label stay horizontally aligned on a single row.
+- Fixed Linked People Resolution:
+  - Imported `readFileSync` and `parseFrontmatter` properly in `query-vault.mjs` to parse YAML multiline list frontmatter (`projects: [ - dsource-ai ]`).
+  - Correctly resolved Preethi Gopinath and Durgaprasad Shanmugam for `dsource-ai` as linked entities.
+
+### Why
+Fix breadcrumb layout wrapping and ensure all people linked in `entities/people/*.md` appear in project headers and people tabs.
+
+### Files touched
+- `electron-app/src/components/ui/breadcrumbs.jsx` — Inline-flex alignment for breadcrumb links.
+- `query-vault.mjs` — Fixed imports and YAML parser for disk people resolution.
+
 ## [2026-08-31] — Filter Internal Files, Extract Linked People from Transcripts, and Add Sticky d-source Tab
 
 **Branch**: `main`
