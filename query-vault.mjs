@@ -272,6 +272,74 @@ export function getDocument(needle) {
   }
 }
 
+// Full project details: files in projects/<path>, linked meetings in meetings/,
+// linked people in people/ or research/, and context markdown note.
+export function getProjectDetails(projectPath) {
+  const db = openDb();
+  try {
+    const slug = projectPath.split('/').pop();
+    const rows = db.prepare(`SELECT rel_path, title, frontmatter_json, updated_at FROM vault_documents`).all();
+
+    const projectPrefix = `projects/${projectPath}/`;
+    const files = rows
+      .filter((r) => r.rel_path.startsWith(projectPrefix) && !r.rel_path.endsWith('.DS_Store'))
+      .map((r) => {
+        const fm = parseFm(r.frontmatter_json);
+        const name = r.rel_path.slice(projectPrefix.length);
+        const ext = name.split('.').pop()?.toLowerCase() || '';
+        return {
+          relPath: r.rel_path,
+          name,
+          title: r.title,
+          extension: ext,
+          date: rowDate(r.rel_path, fm, r.updated_at),
+          type: fm.type || null,
+        };
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
+
+    const meetings = rows
+      .filter((r) => {
+        if (!r.rel_path.startsWith('meetings/')) return false;
+        const fm = parseFm(r.frontmatter_json);
+        const projects = Array.isArray(fm.projects) ? fm.projects : [fm.project, fm.project_path].filter(Boolean);
+        return projects.some((p) => p === projectPath || p === slug || p?.endsWith(`/${slug}`));
+      })
+      .map((r) => {
+        const fm = parseFm(r.frontmatter_json);
+        return {
+          relPath: r.rel_path,
+          title: r.title,
+          date: rowDate(r.rel_path, fm, r.updated_at),
+          attendees: fm.attendees || fm.people || [],
+        };
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
+
+    const people = rows
+      .filter((r) => {
+        if (!r.rel_path.startsWith('people/') && !r.rel_path.startsWith('research/people/') && !r.rel_path.startsWith('entities/')) return false;
+        const fm = parseFm(r.frontmatter_json);
+        const projects = Array.isArray(fm.projects) ? fm.projects : [fm.project, fm.project_path].filter(Boolean);
+        return projects.some((p) => p === projectPath || p === slug || p?.endsWith(`/${slug}`));
+      })
+      .map((r) => {
+        const fm = parseFm(r.frontmatter_json);
+        return {
+          relPath: r.rel_path,
+          name: r.title || r.rel_path.split('/').pop().replace(/\.md$/, ''),
+          role: fm.role || '',
+          org: fm.org || fm.company || '',
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return { files, meetings, people };
+  } finally {
+    db.close();
+  }
+}
+
 function openDb() {
   if (!existsSync(DB_PATH)) {
     throw new Error(`Vault index not found: ${DB_PATH}`);

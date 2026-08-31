@@ -1,5 +1,26 @@
 # Changelog
 
+## [2026-08-31] — Surface Linked Meetings, Linked People, and Docked Project Composer
+
+**Branch**: `main`
+
+### What changed
+- Added `get_project_details` action in `actions.mjs` and `query-vault.mjs`: resolves all project files, meetings in `meetings/` linked via frontmatter `project`/`projects`, and people in `people/` or `research/` linked to the project.
+- Rebuilt `ProjectView.jsx` Workspace:
+  - Removed duplicate home idle hero stage ("Where should we begin?", big logo, prompt starter chips).
+  - Added **Linked People** section and dedicated `People` tab with circular initials badges and role metadata.
+  - Added **Linked Meetings** section and dedicated `Meetings` tab with meeting dates, titles, and attendee lists.
+  - Added sleek **Docked Project Composer** fixed at the bottom of the page for contextual notes, questions, and captures.
+  - Rendered conversation stream inline in the overview when messages are sent.
+
+### Why
+Provide authentic 1:1 Dori Portal project knowledge graph experience connecting people, meetings, files, and loops with a clean docked composer.
+
+### Files touched
+- `query-vault.mjs` — Added `getProjectDetails` query resolving files, linked meetings, and linked people.
+- `actions.mjs` — Registered `get_project_details` action.
+- `electron-app/src/components/ProjectView.jsx` — Surfaced linked meetings, people cards, and docked bottom composer.
+
 ## [2026-08-31] — Complete Project Detail Parity with Shadcn Attachments, Tabs, Files, and Projects Index
 
 **Branch**: `main`

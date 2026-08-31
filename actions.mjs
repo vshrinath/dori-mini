@@ -19,7 +19,7 @@ import { z } from 'zod';
 import { listTasks } from './list-tasks.mjs';
 import { buildInbox } from './list-inbox.mjs';
 import { resolve as resolveClarification, dismiss as dismissClarification } from './clarification-store.mjs';
-import { search as searchVault, listDocs, getDocument } from './query-vault.mjs';
+import { search as searchVault, listDocs, getDocument, getProjectDetails } from './query-vault.mjs';
 import { renderMarkdownToHtml } from './render-html.mjs';
 import { canonicalOutputPath } from './route-destination.mjs';
 import { buildTimeline } from './timeline.mjs';
@@ -129,6 +129,16 @@ export const actions = [
     scope: 'read',
     exposeToMcp: true,
     handler: () => listProjects(),
+  },
+  {
+    id: 'get_project_details',
+    description: 'Get linked files, meetings, people, and details for a project',
+    inputSchema: z.object({
+      projectPath: z.string().min(1),
+    }),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: ({ projectPath }) => getProjectDetails(projectPath),
   },
   {
     id: 'get_profile',
@@ -284,7 +294,7 @@ if (import.meta.main) {
     await runFromCli(actionId, jsonInput);
   } else {
     const { strict: assert } = await import('node:assert');
-    assert.equal(actions.filter((a) => a.exposeToMcp).length, 19, 'all nineteen sketch actions should be MCP-exposed');
+    assert.equal(actions.filter((a) => a.exposeToMcp).length, 20, 'all twenty sketch actions should be MCP-exposed');
     assert.throws(() => getAction('nope'));
     console.log('ok —', actions.map((a) => a.id).join(', '));
   }
