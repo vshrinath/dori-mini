@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-08-31] — Complete Action Registry Verification for URL Captures and Profile Updates
+
+**Branch**: `main`
+
+### What changed
+- Registered `capture_url` in `actions.mjs`: enables capturing web links and YouTube videos directly into the vault from `AddToProfileModal` and `ChatView` quick-capture modals.
+- Registered `save_profile` in `actions.mjs`: added direct alias for `set_profile` ensuring compatibility with `SettingsModal` and MCP clients.
+- Exported `isYouTubeUrl` helper from `route-destination.mjs`.
+- Verified all 22 actions across frontend IPC callers and test suites with 100% pass rate.
+
+### Why
+Close all loose ends across IPC action dispatch, ensuring every user modal and renderer call maps to an authoritative handler.
+
+### Files touched
+- `actions.mjs` — Registered `capture_url` and `save_profile` with Zod validation.
+- `route-destination.mjs` — Exported `isYouTubeUrl`.
+
 ## [2026-08-31] — Enable Direct Filesystem Document Resolution for Slideover and Viewer
 
 **Branch**: `main`

@@ -21,7 +21,7 @@ function sanitizePathPart(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
 }
 
-function isYouTubeUrl(u) {
+export function isYouTubeUrl(u) {
   try {
     const h = new URL(u).hostname.toLowerCase();
     return h === 'youtube.com' || h.endsWith('.youtube.com') || h === 'youtu.be';

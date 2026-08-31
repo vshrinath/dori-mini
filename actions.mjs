@@ -16,12 +16,16 @@
 // Dori Mini has no equivalent on the other end to plug into; porting the
 // gate without anything to gate would be complexity with nothing to hold up.
 import { z } from 'zod';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { listTasks } from './list-tasks.mjs';
 import { buildInbox } from './list-inbox.mjs';
 import { resolve as resolveClarification, dismiss as dismissClarification } from './clarification-store.mjs';
 import { search as searchVault, listDocs, getDocument, getProjectDetails } from './query-vault.mjs';
 import { renderMarkdownToHtml } from './render-html.mjs';
-import { canonicalOutputPath } from './route-destination.mjs';
+import { canonicalOutputPath, isYouTubeUrl, VAULT_ROOT } from './route-destination.mjs';
 import { buildTimeline } from './timeline.mjs';
 import { listProjects } from './list-projects.mjs';
 import { getSelf, setSelf } from './self-store.mjs';
@@ -256,6 +260,56 @@ export const actions = [
     handler: ({ message, history, projectContext }) =>
       sendChatMessage({ message, history, projectContext }),
   },
+  {
+    id: 'capture_url',
+    description: 'Capture a URL/bookmark or YouTube link into the vault',
+    inputSchema: z.object({
+      url: z.string().min(1),
+      title: z.string().optional(),
+      projectPath: z.string().optional(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: async ({ url, title, projectPath }) => {
+      const isYt = isYouTubeUrl(url);
+      const kind = isYt ? 'youtube' : 'url';
+      const relPath = canonicalOutputPath({ kind, urls: [url], projectPath });
+      const absPath = join(VAULT_ROOT, relPath);
+      const docTitle = title || (isYt ? 'YouTube Video' : url);
+      const now = new Date().toISOString();
+      const content = `---
+title: "${docTitle.replace(/"/g, '\\"')}"
+type: "${kind}"
+url: "${url}"
+created: ${now}
+source: "quick_capture"
+${projectPath ? `project: "${projectPath}"\n` : ''}---
+
+[${docTitle}](${url})
+`;
+      mkdirSync(dirname(absPath), { recursive: true });
+      writeFileSync(absPath, content);
+      try {
+        const HERE = dirname(fileURLToPath(import.meta.url));
+        execFileSync('node', [join(HERE, 'reindex-vault.mjs')], { stdio: 'ignore' });
+      } catch {}
+      return { relPath, title: docTitle };
+    },
+  },
+  {
+    id: 'save_profile',
+    description: 'Save/update user profile fields (alias for set_profile)',
+    inputSchema: z.object({
+      name: z.string().optional(),
+      role: z.string().optional(),
+      org: z.string().nullable().optional(),
+      projects: z.array(z.string()).optional(),
+      links: z.record(z.string(), z.string()).optional(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: (input) => setSelf(input),
+  },
 ];
 
 export function getAction(id) {
@@ -294,7 +348,7 @@ if (import.meta.main) {
     await runFromCli(actionId, jsonInput);
   } else {
     const { strict: assert } = await import('node:assert');
-    assert.equal(actions.filter((a) => a.exposeToMcp).length, 20, 'all twenty sketch actions should be MCP-exposed');
+    assert.equal(actions.filter((a) => a.exposeToMcp).length, 22, 'all twenty-two sketch actions should be MCP-exposed');
     assert.throws(() => getAction('nope'));
     console.log('ok —', actions.map((a) => a.id).join(', '));
   }
