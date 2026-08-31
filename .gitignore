@@ -1,5 +1,6 @@
 node_modules/
 .env
+.pnpm-store/
 
 # The credentials store itself ships (macOS-only — Keychain/pbcopy). Its bulk importer
 # does not: it defaults to a path in the author's own vault layout and is a personal

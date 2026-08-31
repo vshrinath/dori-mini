@@ -18,9 +18,19 @@
 import { z } from 'zod';
 import { listTasks } from './list-tasks.mjs';
 import { buildInbox } from './list-inbox.mjs';
-import { search as searchVault } from './query-vault.mjs';
+import { resolve as resolveClarification, dismiss as dismissClarification } from './clarification-store.mjs';
+import { search as searchVault, listDocs, getDocument } from './query-vault.mjs';
+import { renderMarkdownToHtml } from './render-html.mjs';
 import { canonicalOutputPath } from './route-destination.mjs';
 import { buildTimeline } from './timeline.mjs';
+import { listProjects } from './list-projects.mjs';
+import { getSelf, setSelf } from './self-store.mjs';
+import { setTaskStatus } from './task-store.mjs';
+import { captureText } from './capture-text.mjs';
+import { captureFile } from './capture-file.mjs';
+import { saveDocument } from './save-document.mjs';
+import { getEngineConfig, setEngineConfig } from './engine-config.mjs';
+import { sendChatMessage } from './chat-runner.mjs';
 
 /** @typedef {{ id: string, description: string, inputSchema: import('zod').ZodType, scope: 'read'|'write', exposeToMcp?: boolean, handler: (input: any) => Promise<any> | any }} ActionDefinition */
 
@@ -37,6 +47,16 @@ export const actions = [
     handler: ({ status }) => listTasks(status),
   },
   {
+    id: 'mark_task_done',
+    description: 'Mark an open task done in the real task store',
+    inputSchema: z.object({
+      id: z.string(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ id }) => setTaskStatus(id, 'done'),
+  },
+  {
     id: 'list_inbox',
     description: 'List pending items detected by watch-inbox.mjs, optionally filtered by status',
     inputSchema: z.object({
@@ -45,6 +65,27 @@ export const actions = [
     scope: 'read',
     exposeToMcp: true,
     handler: ({ status }) => buildInbox({ includeFailures: false }).filter((i) => !status || i.status === status),
+  },
+  {
+    id: 'approve_inbox_item',
+    description: 'Approve a pending inbox clarification (resolves it, optionally picking a candidate)',
+    inputSchema: z.object({
+      clarificationId: z.string(),
+      choiceId: z.string().optional(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ clarificationId, choiceId }) => resolveClarification(clarificationId, { choiceId }),
+  },
+  {
+    id: 'ignore_inbox_item',
+    description: 'Ignore a pending inbox clarification (dismisses it)',
+    inputSchema: z.object({
+      clarificationId: z.string(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ clarificationId }) => dismissClarification(clarificationId),
   },
   {
     id: 'search_vault',
@@ -81,6 +122,130 @@ export const actions = [
     exposeToMcp: true,
     handler: ({ limit, since }) => buildTimeline({ limit, since }),
   },
+  {
+    id: 'list_projects',
+    description: 'List projects and sub-projects (project_path is slash-separated, e.g. "aligna/platform")',
+    inputSchema: z.object({}),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: () => listProjects(),
+  },
+  {
+    id: 'get_profile',
+    description: 'Get the user\'s own profile (the person entity marked is_self: true)',
+    inputSchema: z.object({}),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: () => getSelf(),
+  },
+  {
+    id: 'set_profile',
+    description: 'Set the user\'s own profile (creates/updates the person entity marked is_self: true)',
+    inputSchema: z.object({
+      name: z.string().min(1),
+      role: z.string().optional(),
+      org: z.string().optional(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ name, role, org }) => setSelf({ name, role, org }),
+  },
+  {
+    id: 'list_documents',
+    description: 'List every indexed vault document (rel_path, title, type, date) for browsing by type',
+    inputSchema: z.object({
+      limit: z.number().int().min(1).max(500).optional(),
+    }),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: ({ limit }) => listDocs({ limit }),
+  },
+  {
+    id: 'get_document',
+    description: 'Get one document\'s raw content + frontmatter + pre-rendered HTML by rel_path (or title)',
+    inputSchema: z.object({
+      path: z.string().min(1),
+    }),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: ({ path }) => {
+      const doc = getDocument(path);
+      return doc && { ...doc, html: renderMarkdownToHtml(doc.content) };
+    },
+  },
+  {
+    id: 'capture_text',
+    description: 'Capture a plain-text note to the vault (mirrors the mini-bar\'s quick-capture path) — writes to inbox/ and reindexes',
+    inputSchema: z.object({
+      text: z.string().min(1),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ text }) => captureText(text),
+  },
+  {
+    id: 'capture_file',
+    description: 'Copy a dropped/attached file into the vault (does not convert or index it — a raw document, same as any other file already in the vault)',
+    inputSchema: z.object({
+      sourcePath: z.string().min(1),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ sourcePath }) => captureFile(sourcePath),
+  },
+  {
+    id: 'save_document',
+    description: 'Save edited markdown content to an existing vault document and trigger non-fatal reindexing (FTS + semantic)',
+    inputSchema: z.object({
+      path: z.string().min(1),
+      content: z.string(),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ path, content }) => saveDocument(path, content),
+  },
+  {
+    id: 'get_engine_config',
+    description: 'Get the active local coding-agent AI engine config (claude | codex | none)',
+    inputSchema: z.object({}),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: () => getEngineConfig(),
+  },
+  {
+    id: 'set_engine_config',
+    description: 'Set the active local coding-agent AI engine config in ~/.dori/whatsapp-config.json',
+    inputSchema: z.object({
+      replyCli: z.enum(['claude', 'codex', 'none']),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ replyCli }) => setEngineConfig({ replyCli }),
+  },
+  {
+    id: 'chat_send',
+    description: 'Send a message to Dori conversational AI using the configured local CLI backend (claude or codex)',
+    inputSchema: z.object({
+      message: z.string().min(1),
+      history: z
+        .array(
+          z.object({
+            role: z.enum(['user', 'dori']),
+            text: z.string(),
+          })
+        )
+        .optional(),
+      projectContext: z.string().optional(),
+    }),
+    // 'write', not 'read': the model behind this can (once sandboxed
+    // correctly) invoke any of the write actions in this same registry via
+    // the CLI dispatcher below. Labeling it 'read' understated what it can
+    // actually do.
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ message, history, projectContext }) =>
+      sendChatMessage({ message, history, projectContext }),
+  },
 ];
 
 export function getAction(id) {
@@ -89,9 +254,38 @@ export function getAction(id) {
   return action;
 }
 
+// CLI dispatch: `node actions.mjs run <action_id> '<json_input>'`. This is
+// the one command chat-runner.mjs's --allowedTools/--sandbox restriction
+// allowlists for the headless model -- it must actually exist and actually
+// go through getAction()/inputSchema.parse(), not just be a string the
+// system prompt claims works (see docs/features/dori-go-composer-chat's
+// review notes, 2026-08-31: the prompt referenced this command before it
+// was implemented).
+async function runFromCli(actionId, jsonInput) {
+  if (!actionId) {
+    console.error("Usage: node actions.mjs run <action_id> '<json_input>'");
+    process.exit(1);
+  }
+  try {
+    const action = getAction(actionId);
+    const input = jsonInput ? JSON.parse(jsonInput) : {};
+    const parsed = action.inputSchema.parse(input);
+    const result = await action.handler(parsed);
+    console.log(JSON.stringify(result, null, 2));
+  } catch (err) {
+    console.error(JSON.stringify({ error: err.message }, null, 2));
+    process.exit(1);
+  }
+}
+
 if (import.meta.main) {
-  const { strict: assert } = await import('node:assert');
-  assert.equal(actions.filter((a) => a.exposeToMcp).length, 5, 'all five sketch actions should be MCP-exposed');
-  assert.throws(() => getAction('nope'));
-  console.log('ok —', actions.map((a) => a.id).join(', '));
+  const [cmd, actionId, jsonInput] = process.argv.slice(2);
+  if (cmd === 'run') {
+    await runFromCli(actionId, jsonInput);
+  } else {
+    const { strict: assert } = await import('node:assert');
+    assert.equal(actions.filter((a) => a.exposeToMcp).length, 19, 'all nineteen sketch actions should be MCP-exposed');
+    assert.throws(() => getAction('nope'));
+    console.log('ok —', actions.map((a) => a.id).join(', '));
+  }
 }

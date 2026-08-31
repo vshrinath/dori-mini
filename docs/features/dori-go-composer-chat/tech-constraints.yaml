@@ -1,0 +1,135 @@
+feature_id: dori-go-composer-chat
+feature: Dori Go composer and chat
+status: build-ready
+source:
+  derived_from:
+    - dori-mini/answer-whatsapp.mjs (runClaude/runCodex headless-CLI pattern)
+    - dori-go-desktop/tech-constraints.yaml (inherited IPC-boundary and
+      actions-registry-is-source-of-truth constraints, restated here as they
+      apply specifically to chat)
+constraints:
+  - id: constraint.chat.cli-spawn-happens-in-main-process-only
+    type: ownership
+    rule: >
+      Invoking a coding-agent CLI (Claude Code or Codex) MUST happen in the
+      Electron main process (or a dori-mini script it calls via actions.mjs)
+      -- never from the renderer. The renderer only ever calls
+      window.dori.call('chat_send', ...) or equivalent and receives a
+      result; it never spawns a child process itself.
+    rationale: >
+      nodeIntegration:false means the renderer has no child_process access
+      by design. Spawning a CLI from the renderer would require weakening
+      that boundary, which this feature does not need to do -- main.js /
+      actions.mjs already has the access it needs.
+    applies_to:
+      requirement_ids:
+        - dori-go.chat.backend-cli
+  - id: constraint.chat.reuse-answer-whatsapp-cli-invocation
+    type: workflow
+    rule: >
+      The headless CLI invocation (spawning Claude Code or Codex, capturing
+      its output) MUST reuse or extract answer-whatsapp.mjs's
+      runClaude/runCodex functions rather than writing a second,
+      independent implementation of the same mechanism. Reusing the
+      surrounding shape (timeout handling, env setup, error shapes) is not
+      sufficient by itself -- see
+      constraint.chat.model-has-exactly-one-allowed-command, which is the
+      actually load-bearing part of that reuse.
+    rationale: >
+      Two independently-maintained implementations of "spawn the user's
+      configured CLI headlessly" would drift even though they do the same
+      job. Revised 2026-08-31: an earlier implementation reused this
+      function's surrounding structure but dropped the --allowedTools/
+      --sandbox flags that made the original safe -- this rationale
+      previously listed the wrong things as what needed to stay consistent.
+    applies_to:
+      requirement_ids:
+        - dori-go.chat.backend-cli
+  - id: constraint.chat.model-has-exactly-one-allowed-command
+    type: api
+    rule: >
+      The headless CLI invocation MUST restrict the model to exactly one
+      command: the actions.mjs CLI dispatcher (`node actions.mjs run
+      <action_id> '<json_input>'`), via Claude's --allowedTools (scoped to
+      that exact command) or Codex's --sandbox flag. The model MUST NOT
+      have general Bash, Edit, Write, or arbitrary file access. The
+      dispatcher command referenced in the system prompt MUST actually
+      exist and actually go through getAction()/inputSchema.parse() -- not
+      be a command the prompt claims works without the code backing it.
+    rationale: >
+      Added 2026-08-31 after review found chat-runner.mjs's runClaude/
+      runCodex had no --allowedTools/--sandbox restriction at all (full,
+      unrestricted CLI access) AND the system prompt referenced a
+      `node actions.mjs <id> <json>` command that didn't exist in the code
+      -- a live, unsandboxed arbitrary-command-execution gap, not a
+      hypothetical one. This constraint exists specifically so that gap
+      cannot silently reopen.
+    applies_to:
+      requirement_ids:
+        - dori-go.chat.action-invocation
+  - id: constraint.chat.codex-sandbox-is-workspace-write
+    type: api
+    rule: >
+      Codex's sandbox level for chat MUST be --sandbox workspace-write, not
+      read-only (writes are required) and not danger-full-access. This is
+      an accepted, explicit v1 tradeoff: Codex has no per-command allowlist
+      the way Claude's --allowedTools does, so workspace-write permits any
+      command that stays within cwd (dori-mini's own directory), not only
+      the actions dispatcher. The system prompt's "no other command is
+      available to you" is the only thing narrowing Codex further -- a
+      prompt-level instruction, not an enforced one. Do not present Codex's
+      guarantee as equivalent to Claude's in any UI copy or documentation.
+    rationale: >
+      Decided 2026-08-31. Weaker than Claude's guarantee by design choice,
+      not oversight -- recorded explicitly so it's not later "fixed" into
+      false equivalence, and so a real per-command Codex sandbox (if one
+      becomes available) is recognized as a genuine improvement to adopt.
+    applies_to:
+      requirement_ids:
+        - dori-go.chat.action-invocation
+  - id: constraint.chat.action-invocation-is-existing-actions-only
+    type: api
+    rule: >
+      When the assistant acts during a conversation, it MUST do so by
+      calling an id registered in actions.mjs, through the same
+      getAction()/inputSchema.parse() path window.dori.call already uses.
+      The chat feature MUST NOT introduce a separate, less-validated way for
+      the model to trigger a write.
+    rationale: >
+      actions.mjs's Zod schemas are the only validation boundary for writes
+      today. A parallel path (e.g. letting the model emit raw shell/file
+      commands) would bypass that boundary entirely -- unacceptable for
+      input that ultimately originates from a headless model response. See
+      constraint.chat.model-has-exactly-one-allowed-command for how this is
+      actually enforced, not just stated.
+    applies_to:
+      requirement_ids:
+        - dori-go.chat.action-invocation
+  - id: constraint.chat.no-persistent-message-store-for-v1
+    type: data
+    rule: >
+      v1 MUST NOT introduce a new persistent store (file or database) for
+      conversation history. Messages live in renderer/main-process memory
+      only, for the lifetime of the running app.
+    rationale: >
+      Directly enforces dori-go.chat.ephemeral-history -- stated here as a
+      constraint (not just a requirement) so a later implementer doesn't
+      "helpfully" add persistence as a natural-seeming extension.
+    applies_to:
+      requirement_ids:
+        - dori-go.chat.ephemeral-history
+  - id: constraint.chat.no-token-streaming-for-v1
+    type: workflow
+    rule: >
+      v1 MUST implement chat reply delivery as a single blocking
+      request/response (matching real Dori's own chat, which is not
+      token-streamed either). Do not add SSE/websocket infrastructure for
+      chat replies.
+    rationale: >
+      Prevents scope creep toward a streaming implementation that neither
+      real Dori nor this spec actually requires; stated as a constraint
+      because "add streaming" is an easy, plausible-looking overreach for an
+      agent that assumes chat UIs always stream.
+    applies_to:
+      requirement_ids:
+        - dori-go.chat.blocking-reply

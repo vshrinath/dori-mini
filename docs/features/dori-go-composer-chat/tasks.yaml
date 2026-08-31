@@ -1,0 +1,61 @@
+feature: dori-go-composer-chat
+source:
+  verification: docs/features/dori-go-composer-chat/verification-record.yaml
+tasks:
+  - id: task.chat.backend-cli-invocation
+    seam: >
+      Headless invocation of the user's configured CLI (Claude Code or
+      Codex) from the Electron main process, plus detecting "not configured"
+      vs. "call failed" as two distinct, reportable states.
+    owner_scope: main-process
+    depends_on: []
+    verification_ids:
+      - verify.dori-go.chat.backend-cli
+      - verify.dori-go.chat.not-configured-state
+    ladder_rung: >
+      Extract/reuse answer-whatsapp.mjs's runClaude/runCodex functions
+      rather than writing a second CLI-spawn implementation
+      (constraint.chat.reuse-answer-whatsapp-cli-invocation).
+    evidence_expected:
+      - Focused test(s) covering a successful reply, an unconfigured CLI,
+        and a failed/timed-out call, distinguishing the two failure states.
+      - Changed files and exact seam summary.
+  - id: task.chat.action-orchestration
+    seam: >
+      Given a chat message and a model reply, invoke the correct
+      actions.mjs action (of the existing 15) when the message unambiguously
+      implies one, through the existing getAction()/inputSchema.parse()
+      path -- no new, separately-validated invocation path.
+    owner_scope: main-process
+    depends_on:
+      - task.chat.backend-cli-invocation
+    verification_ids:
+      - verify.dori-go.chat.action-invocation
+    evidence_expected:
+      - Focused test(s) covering at least one read action and one write
+        action being correctly invoked, and one message that maps to no
+        action (no false-positive invocation).
+      - Changed files and exact seam summary.
+  - id: task.chat.renderer-ui
+    seam: >
+      The chat-first home pane (open conversation beside the persistent
+      sidebar), contextual embedding on Inbox/Tasks/Project screens, the
+      not-configured/failed visual state, a loading indicator for the
+      blocking-reply wait, and in-memory-only (no persistence) message
+      state.
+    owner_scope: electron-app-renderer
+    depends_on:
+      - task.chat.backend-cli-invocation
+    verification_ids:
+      - verify.dori-go.chat.global-conversation
+      - verify.dori-go.chat.contextual-embedding
+      - verify.dori-go.chat.blocking-reply
+      - verify.dori-go.chat.ephemeral-history
+    ladder_rung: >
+      Can start against a stubbed IPC contract (agree the request/response
+      shape with task.chat.backend-cli-invocation's owner early) rather than
+      waiting for that task to fully land before UI work starts.
+    evidence_expected:
+      - Visual proof (screenshot or interaction trace) of the home
+        conversation, project-scoped chat, and the not-configured state.
+      - Changed files and exact component/route summary.

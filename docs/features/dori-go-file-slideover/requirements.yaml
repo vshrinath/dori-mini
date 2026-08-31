@@ -1,0 +1,188 @@
+feature_id: dori-go-file-slideover
+feature: Dori Go file slideover
+status: build-ready
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - dori-portal/app/edit-panel.tsx (real Dori's slide-over file panel)
+    - dori-mini electron-app's ArticleViewer.jsx/LibraryView.jsx (the read-only
+      viewer this supersedes)
+    - dori-mini's actions.mjs (get_document; a new save/write action is required
+      -- none of the 15 actions currently write document content)
+  derivation:
+    - Supersedes dori-go-desktop's dori-go.library.view-document (RETIRED
+      2026-08-31), per the decision that Dori Go should have one file-viewing
+      mechanism (the slideover), not a separate full-page viewer plus a modal.
+review_goal: >
+  Requirement catalogue for turning the read-only ArticleViewer into an
+  editable slide-over panel, deliberately smaller than real Dori's
+  edit-panel.tsx (no Council review, no block picker, no embedded per-file
+  chat).
+outcome: >
+  Nothing built yet.
+scope:
+  includes:
+    - dori-go.slideover.reindex-on-save
+    - dori-go.slideover.open-from-library
+    - dori-go.slideover.open-from-search
+    - dori-go.slideover.view-rendered
+    - dori-go.slideover.edit-base
+    - dori-go.slideover.explicit-save
+    - dori-go.slideover.close-behavior
+  excludes:
+    - Council review, block picker, and any other edit-panel.tsx machinery
+      beyond a base text editor -- explicitly descoped by the user.
+    - An embedded per-file chat inside the slideover -- explicitly descoped;
+      chat lives on the surrounding screens, not inside this panel.
+    - Remote-change detection (real Dori's remoteChangeWaiting warning when
+      the file changed elsewhere while open) -- flagged as an easy add-on,
+      not yet confirmed as required for v1.
+requirements:
+  - id: dori-go.slideover.reindex-on-save
+    title: A saved edit is reflected in search and Library without a manual reindex
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      The user saves an edit to a document's content.
+    expected: >
+      WHEN a save succeeds, THE SYSTEM SHALL reindex the document so
+      search results and the Library listing reflect the new content
+      without the user running a manual reindex.
+    failure: >
+      A saved edit's old content still surfaces in search results or the
+      Library listing after the save completes.
+    variants: >
+      Edit changes the title, edit changes body content only, edit changes
+      neither (no-op save).
+    note: >
+      Missed in the original pass -- surfaced by reviewing Antigravity's
+      implementation plan (2026-08-31), which independently identified the
+      need to reindex on save but only addressed the FTS half. Every
+      existing vault-write action (capture-text.mjs) runs BOTH
+      reindex-vault.mjs (FTS) AND semantic-index.mjs index <path>
+      (embeddings), non-fatally, right after writing -- this requirement
+      matches that established convention rather than inventing a new one.
+  - id: dori-go.slideover.open-from-library
+    title: Selecting a document in Library opens the slideover
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      The user selects a document from the Library list.
+    expected: >
+      WHEN the user selects a document from the Library list, THE SYSTEM
+      SHALL open it in a slide-over panel over the current screen, rather
+      than navigating away to a full-page view, and THE SYSTEM SHALL keep
+      the underlying Library list's filter/search state intact behind it.
+    failure: >
+      Selecting a document navigates away from Library instead of opening a
+      panel over it, or closing the panel loses the list's prior filter/scroll
+      state.
+    variants: >
+      From an unfiltered list, from a filtered/searched list.
+  - id: dori-go.slideover.open-from-search
+    title: Selecting a global search result opens the slideover
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user picks a document from the global search modal
+      (dori-go-global-search).
+    expected: >
+      WHEN the user selects a document from the global search modal, THE
+      SYSTEM SHALL close the modal and open the document in the same
+      slideover panel Library uses -- one file-viewing mechanism regardless
+      of entry point.
+    failure: >
+      Search results open a different viewer than Library does, or opening
+      from search doesn't close the search modal first.
+    variants: >
+      Opened while on the home screen, opened while already viewing another
+      file in the slideover (replace vs. stack).
+  - id: dori-go.slideover.view-rendered
+    title: The panel renders the document as formatted content
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      The slideover opens for a given document.
+    expected: >
+      WHEN the slideover opens for a document, THE SYSTEM SHALL render its
+      content as formatted HTML (headings, links, tables, code) -- the same
+      rendering behavior the retired ArticleViewer had -- before any edit is
+      made.
+    failure: >
+      Content renders as raw markdown text, or fails to load.
+    variants: >
+      Plain-text document, document with a table, document with no
+      renderable content.
+  - id: dori-go.slideover.edit-base
+    title: The document's text can be edited in place
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      The user wants to change the document's content from within the
+      slideover.
+    expected: >
+      WHERE the slideover is open, THE SYSTEM SHALL let the user edit the
+      document's text content directly in the panel using a base editor --
+      no rich block-insertion UI, no collaborative review flow.
+    failure: >
+      There is no way to edit content from the panel, or editing requires
+      leaving the app / using an external editor.
+    variants: >
+      Edit a heading, edit a paragraph, edit within a table.
+    note: >
+      Resolved 2026-08-31 (revised same day): "base editor" means a minimal
+      Tiptap WYSIWYG instance -- formatted text while editing, no block
+      picker, no Council integration. A raw markdown-source textarea was
+      considered and rejected: it would expose markdown syntax to a lay
+      user, contradicting Dori Go's core positioning. Tiptap is a new
+      dependency for electron-app specifically, but already used elsewhere
+      in the workspace (dori-portal's edit-panel.tsx).
+  - id: dori-go.slideover.explicit-save
+    title: Changes save only when the user explicitly saves
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      The user has made edits and wants to persist them, or wants to close
+      the panel without keeping unfinished edits.
+    expected: >
+      THE SYSTEM SHALL NOT write edits to the vault file until the user
+      explicitly saves. WHEN the user triggers Save (a Save action or
+      Cmd/Ctrl+S), THE SYSTEM SHALL write the current content to the vault
+      file -- matching real Dori's own edit-panel.tsx, no autosave/live-save.
+    failure: >
+      Content is written to disk before the user saves, or Cmd/Ctrl+S does
+      nothing, or a failed save is reported as successful.
+    variants: >
+      Save succeeds, save fails (e.g. disk/permission error), close without
+      saving.
+  - id: dori-go.slideover.close-behavior
+    title: The panel can be closed back to where it was opened from
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user is done viewing or editing and wants to return to the
+      previous screen.
+    expected: >
+      WHEN the user presses Escape or activates the close control with no
+      unsaved edits, THE SYSTEM SHALL close the panel and return focus to
+      whatever screen it was opened from (Library list, search results, or
+      elsewhere), preserving that screen's state. IF unsaved edits are
+      present, THEN THE SYSTEM SHALL prompt the user to confirm before
+      discarding them.
+    failure: >
+      Closing loses the underlying screen's scroll/filter state, Escape
+      doesn't close the panel, or closing with unsaved edits discards them
+      with no warning.
+    variants: >
+      Close with no unsaved edits, close with unsaved edits present.
+    note: >
+      Resolved 2026-08-31: an unsaved-edits warning is required for v1 --
+      folded into this requirement's expected/failure rather than staying a
+      separate open question.

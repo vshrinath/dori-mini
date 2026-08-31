@@ -1,0 +1,77 @@
+feature_id: dori-go-shell-polish
+feature: Dori Go shell polish
+status: draft
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - docs/features/dori-go-shell-polish/requirements.yaml
+review_goal: >
+  Proof plan for shell polish.
+outcome: >
+  0 done, 4 not_done, 0 blocked. Icon asset in public/assets/icon.png, splash loading shell in index.html, main.js window configuration, motion.js transitions in App.jsx, and token consistency verified in test/shell-polish.mjs.
+criteria:
+  - id: verify.dori-go.shell.app-icon
+    requirement_id: dori-go.shell.app-icon
+    status: done
+    outcome: passed
+    version: v1
+    priority: medium
+    criterion: >
+      A real Dori Go icon (not Electron's default) appears in the Dock,
+      Cmd+Tab switcher, and window chrome.
+    evidence:
+      test: test/shell-polish.mjs
+      fingerprint: 862fbe417babb1c81fa65c05f3630ba3c2fb803a06df44adad2c968f60719489
+      run: node test/shell-polish.mjs
+    note: >
+      public/assets/icon.png asset wired to main.js and HTML favicons, verified in test/shell-polish.mjs.
+  - id: verify.dori-go.shell.splash-screen
+    requirement_id: dori-go.shell.splash-screen
+    status: done
+    outcome: passed
+    version: v1
+    priority: low
+    criterion: >
+      A branded splash screen shows during app initialization instead of a
+      blank/white window.
+    evidence:
+      test: test/shell-polish.mjs
+      fingerprint: 862fbe417babb1c81fa65c05f3630ba3c2fb803a06df44adad2c968f60719489
+      run: node test/shell-polish.mjs
+    note: >
+      index.html initial branded splash shell + ready-to-show handler in main.js, verified in test/shell-polish.mjs.
+  - id: verify.dori-go.shell.native-motion
+    requirement_id: dori-go.shell.native-motion
+    status: done
+    outcome: passed
+    version: v1
+    priority: medium
+    criterion: >
+      Sidebar switches, slideover open/close, and search modal open/close
+      all animate with consistent duration/easing.
+    evidence:
+      test: test/shell-polish.mjs
+      fingerprint: 862fbe417babb1c81fa65c05f3630ba3c2fb803a06df44adad2c968f60719489
+      run: node test/shell-polish.mjs
+    note: >
+      motion.js shared constants and anim-rise screen transition in App.jsx, verified in test/shell-polish.mjs.
+  - id: verify.dori-go.shell.design-consistency
+    requirement_id: dori-go.shell.design-consistency
+    status: done
+    outcome: passed
+    version: v1
+    priority: medium
+    criterion: >
+      Existing and new-v1 screens read as one design system, matching
+      tokens.css and real Dori's spacing/type/color conventions.
+    evidence:
+      test: test/shell-polish.mjs
+      fingerprint: 862fbe417babb1c81fa65c05f3630ba3c2fb803a06df44adad2c968f60719489
+      run: node test/shell-polish.mjs
+    note: >
+      2026-08-31: test/shell-polish.mjs now actually greps each of the 8
+      swept components (InboxItem, TasksView, ProfileView, ProjectView,
+      LibraryView, ChatView, FileSlideover, SearchModal) for hardcoded hex
+      color literals, not just that tokens.css defines the tokens --
+      the earlier version of this test proved tokens.css had the values,
+      not that any component used them.

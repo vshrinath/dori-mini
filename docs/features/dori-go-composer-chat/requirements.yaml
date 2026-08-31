@@ -1,0 +1,182 @@
+feature_id: dori-go-composer-chat
+feature: Dori Go composer and chat
+status: build-ready
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - dori-portal/app/home-page-client.tsx, app/inbox/page.tsx,
+      app/projects/[...slug]/page.tsx (ChatInput/ChatProvider embedding patterns)
+    - dori-mini/answer-whatsapp.mjs (headless-CLI reply pattern)
+    - dori-mini/actions.mjs (the 15 callable primitives)
+  derivation:
+    - New capability, scoped via the Problem Statement interview on 2026-08-31.
+      Dori Go currently has no conversational AI at all -- the mini capture bar
+      is fire-and-forget, no reply, no history.
+review_goal: >
+  First requirements pass for Dori Go's chat/composer, v1. Brings Dori Go from
+  "discrete screens with a one-shot capture bar" to "chat is a first-class way
+  to use the app," matching real Dori's layout without its Pro-only surfaces
+  (Threads, Workflows, structured tool cards).
+outcome: >
+  Nothing built yet -- this is the requirement catalogue for new work, not an
+  as-built inventory. See verification-record.yaml for the (currently empty)
+  proof plan.
+scope:
+  includes:
+    - dori-go.chat.global-conversation
+    - dori-go.chat.contextual-embedding
+    - dori-go.chat.action-invocation
+    - dori-go.chat.backend-cli
+    - dori-go.chat.not-configured-state
+    - dori-go.chat.blocking-reply
+    - dori-go.chat.ephemeral-history
+  excludes:
+    - Token-level streaming -- real Dori's own chat is a single blocking
+      request/response, not SSE; matching that is parity, not a gap.
+    - Structured tool/workflow cards in the reply stream (InlineChatCard) --
+      Workflows itself is Pro-only for Dori Go, so there is nothing such a
+      card would represent yet.
+    - Citations/sources rendering (MemorySources) -- deferred; not requested,
+      and search_vault's results aren't yet threaded into chat replies.
+requirements:
+  - id: dori-go.chat.global-conversation
+    title: The main screen is an open conversation with Dori
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      The user opens Dori Go to the main/home screen.
+    expected: >
+      WHEN the user opens Dori Go to the main screen, THE SYSTEM SHALL
+      present an open conversation as the main content pane, beside the
+      persistent sidebar navigation (Inbox, Tasks, Projects, Profile), ready
+      for the user to start typing immediately.
+    failure: >
+      The user must navigate to a separate "chat" screen to start a
+      conversation, or the sidebar disappears while chatting.
+    variants: >
+      First launch (no messages yet), returning to an in-progress
+      conversation, empty-state prompt before the first message.
+  - id: dori-go.chat.contextual-embedding
+    title: Chat is scoped to the screen it's embedded in
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user is on the Inbox, Tasks, or a Project screen and uses the
+      composer there instead of the home screen.
+    expected: >
+      WHEN the user sends a message from a Project screen, THE SYSTEM SHALL
+      scope the conversation to that project's context. WHEN the user sends
+      a message from the home screen or Inbox, THE SYSTEM SHALL treat it as
+      the general/global conversation.
+    failure: >
+      A project-scoped message is answered with no awareness of which
+      project the user was viewing, or scoped conversations bleed into each
+      other's history.
+    variants: >
+      Home (global), Inbox (global), a top-level project, a sub-project.
+    note: >
+      The file slideover does NOT get its own embedded chat -- explicitly
+      decided during scoping, unlike real Dori's edit-panel.tsx. See
+      dori-go-file-slideover.
+  - id: dori-go.chat.action-invocation
+    title: The assistant can act, not just answer
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      A user's message implies a concrete action Dori Go can already perform
+      on its own -- capturing a note, marking a task done, approving an
+      inbox item, searching the vault, and so on.
+    expected: >
+      WHEN a user's message unambiguously implies one of actions.mjs's 15
+      primitives (list_tasks, mark_task_done, list_inbox, approve_inbox_item,
+      ignore_inbox_item, search_vault, route_destination, timeline,
+      list_projects, get_profile, set_profile, list_documents, get_document,
+      capture_text, capture_file), THE SYSTEM SHALL invoke that action and
+      reflect the resulting change in the relevant screen without requiring
+      a manual refresh.
+    failure: >
+      The assistant describes what it would do instead of doing it when the
+      user's intent is unambiguous, or calls an action the user didn't
+      intend, or a successful action doesn't show up in the corresponding
+      screen.
+    variants: >
+      A read action (search, list), a write action (capture, complete a
+      task), and a request that maps to no existing action.
+  - id: dori-go.chat.backend-cli
+    title: Replies come from the user's own configured coding-agent CLI
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      The user sends a chat message.
+    expected: >
+      WHEN the system generates a chat reply, THE SYSTEM SHALL invoke
+      whichever CLI the user has configured (Claude Code or Codex) headlessly
+      -- the same pattern answer-whatsapp.mjs already uses -- rather than
+      calling a separate hosted API requiring its own key or billing
+      relationship.
+    failure: >
+      Dori Go requires a new/separate API key to function, or silently uses
+      a different backend than the one configured.
+    variants: >
+      Claude Code configured, Codex configured.
+  - id: dori-go.chat.not-configured-state
+    title: A missing or failed CLI is visible, not silent
+    status: ACCEPTED
+    version: mvp
+    priority: high
+    situation: >
+      Neither CLI is configured, or the configured CLI call fails or times
+      out.
+    expected: >
+      WHILE no CLI is configured, THE SYSTEM SHALL show a distinct "AI isn't
+      configured" state in the composer. IF a configured CLI call fails or
+      times out, THEN THE SYSTEM SHALL show a distinct failure state --
+      unlike the WhatsApp channel's silent-null behavior, acceptable for an
+      unattended channel but not for a screen the user is actively watching.
+    failure: >
+      The user sends a message and sees no feedback at all, or a generic
+      error that doesn't distinguish "not configured" from "call failed."
+    variants: >
+      Never configured, was working then the CLI became unavailable,
+      timeout mid-call.
+  - id: dori-go.chat.blocking-reply
+    title: A reply arrives as one complete response
+    status: ACCEPTED
+    version: mvp
+    priority: low
+    situation: >
+      The user sends a message and waits for the reply.
+    expected: >
+      WHILE a reply is pending, THE SYSTEM SHALL show a loading/thinking
+      indicator. WHEN the full reply is ready, THE SYSTEM SHALL display it as
+      one complete message rather than incrementally -- matching real Dori's
+      own behavior, which is not token-streamed either.
+    failure: >
+      The UI implies token-by-token streaming that never actually arrives
+      incrementally, or gives no waiting indicator at all.
+    variants: >
+      Fast reply, slow reply.
+  - id: dori-go.chat.ephemeral-history
+    title: Conversation history does not persist across restarts (v1)
+    status: ACCEPTED
+    version: v1
+    priority: low
+    situation: >
+      The user closes and reopens Dori Go.
+    expected: >
+      WHEN the user restarts Dori Go, THE SYSTEM SHALL start every
+      conversation fresh, with no prior message history retained for v1.
+    failure: >
+      N/A for v1 -- there is no expected persistence behavior to violate.
+    variants: >
+      N/A
+    note: >
+      Extrapolated from the scoping decision that per-file chat didn't need
+      persistence -- applying the same "no persistence infra yet" reasoning
+      to the global/contextual chat too, since dori-mini has no message-store
+      today. Flag if persistence across restarts is actually wanted for v1;
+      this was not explicitly re-confirmed for the non-file chat surfaces.

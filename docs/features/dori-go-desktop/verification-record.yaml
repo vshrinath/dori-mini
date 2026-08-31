@@ -1,0 +1,221 @@
+feature_id: dori-go-desktop
+feature: Dori Go desktop app
+status: draft
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - electron-app/src/App.jsx, electron-app/src/components/*.jsx
+    - electron-app/main.js, electron-app/mini.html, actions.mjs
+  derivation:
+    - Reverse-engineered per dori-build-system's reverse-engineering.md
+    - test/ (dedupe.mjs, ignore.mjs, query-vault.mjs, rerank-fts.mjs, rerank.mjs,
+      scope.mjs, verify.mjs) covers vault search/ranking internals only -- none
+      of it exercises actions.mjs handlers or any electron-app component, so it
+      does not count as evidence for any criterion in this file
+review_goal: >
+  First verification pass for dori-go-desktop. No focused, version-controlled
+  test exists yet for any screen or the mini capture bar, so every criterion
+  is not_done or blocked -- this is the gap list, not a health report.
+outcome: >
+  Zero criteria are done. Thirteen are not_done (code runs, behavior was
+  exercised manually or by direct code review during this session, but no
+  committed test proves it). Two are blocked: mini-bar drag-to-reposition
+  persistence and the live Finder file-drop, both because synthetic UI
+  automation cannot reliably drive a real OS window drag or a genuine
+  pasteboard-backed file-drop session -- see each item's note for what was
+  and was not provable another way. verify.dori-go.library.view-document was
+  retired 2026-08-31 (superseded by dori-go-file-slideover) but stays listed
+  per the RETIRED-not-deleted lifecycle model; its evidence carries forward.
+criteria:
+  - id: verify.dori-go.inbox.list-pending
+    requirement_id: dori-go.inbox.list-pending
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      The Inbox screen's list matches list_inbox's current output, and type
+      filter / search narrow it correctly.
+    note: >
+      InboxScreen.jsx calls list_inbox and filters client-side; no test
+      exercises the action or the component.
+  - id: verify.dori-go.inbox.approve-clarification
+    requirement_id: dori-go.inbox.approve-clarification
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      Approving a clarification resolves it via approve_inbox_item and it
+      leaves the pending list.
+    note: >
+      No test on approve_inbox_item / resolveClarification or the UI path.
+  - id: verify.dori-go.inbox.dismiss-clarification
+    requirement_id: dori-go.inbox.dismiss-clarification
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      Dismissing a clarification removes it from the pending list without
+      assigning a destination.
+    note: >
+      No test on ignore_inbox_item / dismissClarification.
+  - id: verify.dori-go.tasks.list-open
+    requirement_id: dori-go.tasks.list-open
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      TasksView's list matches list_tasks output for the selected status
+      filter.
+    note: >
+      No test on list_tasks or TasksView's filter/search logic.
+  - id: verify.dori-go.tasks.complete
+    requirement_id: dori-go.tasks.complete
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      Marking a task done calls mark_task_done and the list reflects it
+      without a manual refresh.
+    note: >
+      No test on mark_task_done / setTaskStatus or the UI refresh path.
+  - id: verify.dori-go.library.browse-documents
+    requirement_id: dori-go.library.browse-documents
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      LibraryView's list matches list_documents output and the type filter
+      narrows correctly.
+    note: >
+      list_documents/listDocs was exercised manually against the real vault
+      (300 documents) during this session; no committed test exists.
+  - id: verify.dori-go.library.view-document
+    requirement_id: dori-go.library.view-document
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      Selecting a document renders get_document's markdown through
+      renderMarkdownToHtml as formatted HTML in ArticleViewer.
+    note: >
+      RETIRED 2026-08-31 along with its requirement -- superseded by
+      dori-go-file-slideover's verify.dori-go.slideover.view-rendered.
+      get_document + renderMarkdownToHtml was exercised manually on a real
+      document during this session (1044-char HTML output confirmed) and
+      that evidence carries forward to the slideover's criterion; no
+      committed test exists for either.
+  - id: verify.dori-go.profile.view
+    requirement_id: dori-go.profile.view
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      ProfileView renders get_profile's current fields.
+    note: >
+      No test on get_profile / getSelf or ProfileView.
+  - id: verify.dori-go.profile.edit
+    requirement_id: dori-go.profile.edit
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      Saving the profile form calls set_profile and the sidebar reflects the
+      change without restart.
+    note: >
+      No test on set_profile / setSelf or the profileVersion refresh wiring.
+  - id: verify.dori-go.projects.browse
+    requirement_id: dori-go.projects.browse
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      ProjectView derives the selected project and its direct sub-projects
+      correctly from list_projects' flat list.
+    note: >
+      No test on list_projects or ProjectView's path-prefix child derivation.
+  - id: verify.dori-go.capture.mini-bar-text
+    requirement_id: dori-go.capture.mini-bar-text
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      Enter in the mini bar calls capture_text and closes the window;
+      Shift+Enter does not send.
+    note: >
+      capture_text/captureText has no committed test; the mini.html keydown
+      handler is unverified by any test.
+  - id: verify.dori-go.capture.mini-bar-file-drop
+    requirement_id: dori-go.capture.mini-bar-file-drop
+    status: blocked
+    outcome: partial
+    version: v1
+    priority: medium
+    criterion: >
+      Dropping a file on the mini bar copies it into the vault via
+      capture_file and shows success feedback.
+    note: >
+      capture-file.mjs was run directly and verified correct (produced the
+      expected vault file with correct content). The renderer-side path
+      (webUtils.getPathForFile -> capture_file IPC call, triggered by a real
+      Finder drag onto the capsule) is blocked: synthetic UI automation in
+      this environment cannot reproduce a genuine OS drag-and-drop session
+      with real pasteboard/file-promise data, so the drop handler has not
+      fired under test conditions since the drag-handle restructuring that
+      was meant to stop -webkit-app-region:drag from swallowing the drop
+      event. Needs a human to drag a real file onto the mini bar once.
+  - id: verify.dori-go.capture.mini-bar-position-persist
+    requirement_id: dori-go.capture.mini-bar-position-persist
+    status: blocked
+    outcome: partial
+    version: v1
+    priority: low
+    criterion: >
+      The mini bar reopens at the last dragged position, saved via the
+      BrowserWindow 'moved' event to mini-position.json.
+    note: >
+      The load half (a manually-written mini-position.json is honored on
+      next open) was verified directly. The save half (a real user drag
+      firing Electron's 'moved' event) is blocked: synthetic
+      left_click_drag does not reliably trigger a native
+      -webkit-app-region:drag window move in this environment. Needs a
+      human to drag the mini bar once and confirm mini-position.json
+      updates.
+  - id: verify.dori-go.capture.mini-bar-default-position
+    requirement_id: dori-go.capture.mini-bar-default-position
+    status: not_done
+    outcome: partial
+    version: v1
+    priority: low
+    criterion: >
+      defaultMiniPosition() centers the window horizontally and places it
+      one-fifth of the screen height above the bottom edge, on the display
+      nearest the cursor.
+    note: >
+      Confirmed visually via a screenshot after removing any saved position
+      file; no committed test covers the arithmetic (e.g. against a mocked
+      multi-display screen.getAllDisplays()).
+  - id: verify.dori-go.capture.mini-bar-global-shortcut
+    requirement_id: dori-go.capture.mini-bar-global-shortcut
+    status: not_done
+    outcome: partial
+    version: mvp
+    priority: medium
+    criterion: >
+      CommandOrControl+Shift+Space toggles mini bar visibility and focus;
+      blur hides it; a failed globalShortcut.register logs rather than
+      crashing.
+    note: >
+      Exercised manually during this session (shortcut opened/closed the
+      bar). No committed test; the already-taken-shortcut path is untested
+      even manually.

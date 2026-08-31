@@ -1,0 +1,92 @@
+feature_id: dori-go-engine-picker
+feature: Dori Go AI engine picker
+status: build-ready
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - dori-portal/components/chat/runtime-picker.tsx (real Dori's provider picker)
+    - "dori-mini's ~/.dori/whatsapp-config.json (existing replyCli config field, values claude/codex/none)"
+  derivation:
+    - New capability, scoped 2026-08-31 -- v1 is a smaller version of
+      RuntimePicker. Real Dori lists Claude/OpenAI/OpenRouter/Groq/antigravity/
+      Grok; Dori Go v1 only needs the two CLI backends dori-mini already knows
+      how to invoke.
+review_goal: >
+  Requirement catalogue for a small feature: let the user see and change which
+  CLI answers chat, matching the existing whatsapp-config.json options rather
+  than inventing a new provider list.
+outcome: >
+  Nothing built yet.
+scope:
+  includes:
+    - dori-go.engine.select-provider
+    - dori-go.engine.shared-config
+    - dori-go.engine.reflects-unconfigured
+  excludes:
+    - Real API providers (Anthropic/OpenAI/OpenRouter/Groq direct calls) --
+      dori-mini has no such integration; adding one is new work beyond
+      matching Dori Mini's current capability, out of scope for this pass.
+    - Additional CLI backends (antigravity, Grok CLI) beyond claude/codex --
+      dori-mini's config format doesn't support them today.
+requirements:
+  - id: dori-go.engine.select-provider
+    title: The user can see and change which CLI answers chat
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      The user wants to switch between Claude Code and Codex as the chat
+      backend, or check which one is currently active.
+    expected: >
+      WHERE the composer or toolbar is shown, THE SYSTEM SHALL display a
+      picker showing the current CLI selection. WHEN the user chooses a
+      different option, THE SYSTEM SHALL use that CLI for subsequent chat
+      replies.
+    failure: >
+      The current selection isn't visible anywhere, or switching doesn't
+      actually change which CLI subsequent chat replies use.
+    variants: >
+      Switch while idle, switch mid-conversation.
+  - id: dori-go.engine.shared-config
+    title: The picker reads and writes the same config the WhatsApp channel uses
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      The user has already configured a reply CLI for the WhatsApp channel
+      (or is configuring one for the first time via Dori Go).
+    expected: >
+      WHEN the user changes the engine selection in Dori Go, THE SYSTEM
+      SHALL persist it to the same ~/.dori/whatsapp-config.json replyCli
+      field the WhatsApp channel reads, so the setting stays consistent
+      across both surfaces rather than each keeping an independent copy.
+    failure: >
+      Changing the engine in Dori Go doesn't affect what WhatsApp uses (or
+      vice versa), or Dori Go silently creates a second, conflicting config
+      file.
+    variants: >
+      No config file yet (first-time setup from Dori Go), existing config
+      set by the WhatsApp setup flow.
+    note: >
+      Open implementation question, not a product one: whether Dori Go
+      writes directly to that file or goes through a shared accessor. Either
+      is fine as long as the two surfaces stay consistent.
+  - id: dori-go.engine.reflects-unconfigured
+    title: The picker shows when nothing is configured
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      replyCli is "none" or the config file doesn't exist yet.
+    expected: >
+      WHILE replyCli is absent or set to "none", THE SYSTEM SHALL show the
+      picker in an unconfigured state rather than defaulting silently to one
+      CLI or showing stale/blank UI. This is the same underlying condition
+      dori-go.chat.not-configured-state (dori-go-composer-chat) responds to
+      -- one condition, two places it's visible.
+    failure: >
+      The picker shows a CLI as selected when none is actually configured,
+      or the two surfaces (picker and chat's own not-configured banner)
+      disagree with each other.
+    variants: >
+      Never configured, config file present but replyCli: "none".

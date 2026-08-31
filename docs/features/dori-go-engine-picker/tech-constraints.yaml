@@ -1,0 +1,47 @@
+feature_id: dori-go-engine-picker
+feature: Dori Go AI engine picker
+status: build-ready
+source:
+  derived_from:
+    - dori-mini's ~/.dori/whatsapp-config.json (existing replyCli config)
+constraints:
+  - id: constraint.engine-picker.single-config-file
+    type: data
+    rule: >
+      The engine selection MUST be read from and written to
+      ~/.dori/whatsapp-config.json's replyCli field. Dori Go MUST NOT create
+      a second config file for this setting.
+    rationale: >
+      Directly enforces dori-go.engine.shared-config -- a second file would
+      let the two surfaces (Dori Go, WhatsApp) silently disagree about which
+      CLI is active.
+    applies_to:
+      requirement_ids:
+        - dori-go.engine.shared-config
+  - id: constraint.engine-picker.values-match-existing-enum
+    type: api
+    rule: >
+      The picker MUST only offer values whatsapp-config.json's replyCli
+      already accepts today: "claude", "codex", "none". It MUST NOT add a
+      new value to that enum as part of this feature.
+    rationale: >
+      Adding a new CLI backend is out of scope for v1 (per
+      dori-go-engine-picker/requirements.yaml's excludes) -- the picker's UI
+      surface should not imply support that doesn't exist yet.
+    applies_to:
+      requirement_ids:
+        - dori-go.engine.select-provider
+  - id: constraint.engine-picker.config-write-path
+    type: ownership
+    rule: >
+      Writes to whatsapp-config.json go through a single shared
+      accessor (new or existing) that both the WhatsApp setup flow and Dori
+      Go's picker call -- not two independent fs.writeFileSync call sites
+      with their own idea of the file's shape.
+    rationale: >
+      Two independent writers of the same JSON file risk one silently
+      dropping a field the other relies on (e.g. a future field added for
+      WhatsApp-only setup).
+    applies_to:
+      requirement_ids:
+        - dori-go.engine.shared-config

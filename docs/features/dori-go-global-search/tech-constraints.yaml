@@ -1,0 +1,46 @@
+feature_id: dori-go-global-search
+feature: Dori Go global search
+status: build-ready
+source:
+  derived_from:
+    - actions.mjs's search_vault action (query-vault.mjs)
+constraints:
+  - id: constraint.search.results-source-is-search-vault-only
+    type: api
+    rule: >
+      The search modal's results MUST come from actions.mjs's search_vault
+      action only. It MUST NOT compose results from list_tasks,
+      list_projects, or list_inbox client-side to fake cross-type search.
+    rationale: >
+      Enforces the v1 documents-only scope decision (2026-08-31) at the
+      constraint level -- composing filtered lists into "search" would look
+      like real Dori's multi-type palette while actually being a weaker
+      client-side approximation, which was explicitly rejected.
+    applies_to:
+      requirement_ids:
+        - dori-go.search.document-results
+  - id: constraint.search.no-new-index
+    type: data
+    rule: >
+      This feature MUST NOT introduce a new search index or database. It
+      reuses query-vault.mjs's existing FTS-backed search_vault as-is.
+    rationale: >
+      A second index would need its own reindex/consistency story;
+      search_vault already exists, is exercised, and is the correct single
+      source for vault document search.
+    applies_to:
+      requirement_ids:
+        - dori-go.search.document-results
+  - id: constraint.search.result-selection-opens-slideover
+    type: workflow
+    rule: >
+      Selecting a result MUST open the file slideover
+      (dori-go-file-slideover), the same component Library uses -- not a
+      separate preview or a third viewing surface.
+    rationale: >
+      Directly enforces "one file-viewing mechanism" established across
+      dori-go-desktop and dori-go-file-slideover; stated here too since this
+      is the other place a document can be opened from.
+    applies_to:
+      requirement_ids:
+        - dori-go.search.select-result

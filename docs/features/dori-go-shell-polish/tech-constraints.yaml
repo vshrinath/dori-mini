@@ -1,0 +1,123 @@
+feature_id: dori-go-shell-polish
+feature: Dori Go shell polish
+status: build-ready
+source:
+  derived_from:
+    - electron-app/src/tokens.css (existing partial token port from
+      dori-portal/app/globals.css)
+constraints:
+  - id: constraint.shell.tokens-css-is-sole-design-token-source
+    type: experience
+    rule: >
+      New/changed spacing, typography, and color values MUST be expressed
+      as tokens.css custom properties (extending it where a needed token is
+      missing), not as new hardcoded hex/px values in component styles. The
+      consistency sweep MUST cover every one of these components, not a
+      subset -- this list is the requirement's own variants field restated
+      here so a plan-writer working from tech-constraints.yaml alone sees
+      full scope without also having to cross-reference requirements.yaml:
+        - electron-app/src/components/InboxItem.jsx
+        - electron-app/src/components/TasksView.jsx
+        - electron-app/src/components/ProfileView.jsx
+        - electron-app/src/components/ProjectView.jsx
+        - electron-app/src/components/LibraryView.jsx
+        - electron-app/src/components/ChatView.jsx (new v1 surface)
+        - electron-app/src/components/FileSlideover.jsx (new v1 surface)
+        - electron-app/src/components/SearchModal.jsx (new v1 surface)
+      A component already built cleanly against tokens.css counts as swept
+      if spot-checked and confirmed clean -- it does not need rewriting, but
+      it MUST be checked, not silently skipped because it's already new.
+    verified: >
+      This exact list is requirements.yaml's own `variants` field for
+      dori-go.shell.design-consistency, copied verbatim (checked by reading
+      that field directly, not paraphrased from memory) -- confirms it's the
+      full stated scope, not a subset chosen here.
+    rationale: >
+      Directly enforces dori-go.shell.design-consistency -- hardcoded values
+      scattered across components is exactly the drift that makes an app
+      "read as a distinct reimplementation" instead of one design system.
+      Component list added 2026-08-31 after a plan swept only
+      TasksView/ProfileView/InboxItem -- the full list existed in
+      requirements.yaml's variants field but this constraint only pointed at
+      the requirement by id, so a plan-writer reading constraints in
+      isolation had no way to see it was incomplete.
+    applies_to:
+      requirement_ids:
+        - dori-go.shell.design-consistency
+  - id: constraint.shell.shared-motion-constants
+    type: experience
+    rule: >
+      Animated transitions (sidebar switch, slideover open/close, search
+      modal open/close) MUST use one shared set of duration/easing constants
+      defined in one place, not per-component magic numbers. Where a value
+      already exists as a tokens.css custom property (e.g. --ease-out-strong,
+      --ease-in-out-strong), the shared module MUST reference it via
+      var(--x), not duplicate the literal value as a second copy that can
+      drift out of sync.
+    rationale: >
+      Prevents the "animations are present but inconsistent" failure mode
+      named in dori-go.shell.native-motion's own failure clause -- a shared
+      constants module is the concrete mechanism that keeps them consistent.
+      The var(--x)-reference requirement was added 2026-08-31 after
+      motion.js's initial version hardcoded cubic-bezier literals that
+      happened to match tokens.css's values at the time, rather than
+      referencing them -- itself exactly the two-sources-of-truth problem
+      constraint.shell.tokens-css-is-sole-design-token-source exists to
+      prevent, just inside this constraint's own file instead of a
+      component.
+      as more surfaces gain motion over time.
+    applies_to:
+      requirement_ids:
+        - dori-go.shell.native-motion
+  - id: constraint.shell.icon-and-splash-asset-location
+    type: workflow
+    rule: >
+      The icon source file MUST live at exactly one path:
+      electron-app/public/assets/icon.png (Vite's public/ dir -- already the
+      established convention here via electron-app/public/fonts/). It MUST
+      NOT also exist as a separate copy under electron-app/assets/ or any
+      other path. Both consumers reference this same built file, not two
+      different source files:
+      - main.js's BrowserWindow icon option needs a filesystem path, and
+        MUST reference the built copy: join(__dirname, 'dist/assets/icon.png')
+        (Vite copies public/ into dist/ at build time; vite.config.js's
+        base: './' makes this resolve correctly under Electron's file://
+        loadFile()).
+      - index.html's favicon link MUST reference the web-servable path:
+        <link rel="icon" href="/assets/icon.png">.
+      - On macOS specifically, BrowserWindow's icon option does NOT set the
+        Dock/Cmd+Tab icon -- that is a documented Electron behavior, not a
+        bug to work around. main.js MUST additionally call
+        app.dock.setIcon(iconPath) (guarded to process.platform === 'darwin')
+        in app.whenReady(), or the Dock keeps showing Electron's default
+        icon regardless of what BrowserWindow's icon option is set to.
+      Splash screen markup lives inline in index.html (not a separate asset
+      file) per dori-go.shell.splash-screen.
+    verified: >
+      electron-app/public/fonts/ exists and is the only static-asset dir in
+      the repo today (checked via `ls electron-app/public`) -- confirms
+      public/ is the established Vite-public convention, not a guess.
+      electron-app/vite.config.js has base: './' (confirmed by reading the
+      file), which is what makes dist/assets/icon.png resolve correctly
+      under Electron's file:// loadFile(). electron-app/assets/ does not
+      exist yet (checked via `ls`), so there's no prior file to migrate.
+      2026-08-31: added the app.dock.setIcon() requirement after the first
+      version of this constraint (and my own review marking
+      verify.dori-go.shell.app-icon done) missed that BrowserWindow's icon
+      option is a macOS-specific no-op for the Dock -- verified against
+      Electron's own docs, not assumed; confirmed by grep that main.js had
+      no app.dock reference at all before this fix.
+    rationale: >
+      Revised 2026-08-31 after a plan proposed electron-app/assets/icon.png
+      AND electron-app/public/ as two separate copies -- the earlier version
+      of this constraint said "a single, predictable location... e.g.
+      electron-app/assets/" without resolving that Electron's main process
+      and Vite's HTML build need the file via two different mechanisms
+      (filesystem path vs. web-servable path). One example path can't
+      satisfy both, so it got read as license to keep two files instead of
+      one file consumed two ways. This version names the actual resolved
+      answer instead of an example.
+    applies_to:
+      requirement_ids:
+        - dori-go.shell.app-icon
+        - dori-go.shell.splash-screen

@@ -1,0 +1,319 @@
+feature_id: dori-go-desktop
+feature: Dori Go desktop app
+status: build-ready
+writing_style: ASD-STE100
+source:
+  derived_from:
+    - electron-app/src/App.jsx (screen routing)
+    - electron-app/src/components/*.jsx (InboxItem, TasksView, LibraryView, ProfileView, ProjectView)
+    - electron-app/main.js, electron-app/mini.html, electron-app/preload.cjs (mini capture bar)
+    - actions.mjs (action registry the UI calls over IPC)
+  derivation:
+    - Reverse-engineered from live code per dori-build-system's reverse-engineering.md; no scenario/verification catalogue existed for this app before this pass
+review_goal: >
+  First as-built catalogue for Dori Go's Electron desktop app: the main
+  window's five screens and the always-on-top mini capture bar. Items stay
+  WORKING (not ACCEPTED) until the user reviews and confirms this is the
+  intended scope.
+outcome: >
+  Every item here reflects code that exists and runs. None have a
+  version-controlled, focused test yet -- see verification-record.yaml.
+  Mini-bar window-position persistence and drag-to-reposition have not been
+  provable end to end because synthetic UI automation cannot reliably drive
+  a real OS window drag or a genuine Finder file-drop session; see that
+  file's blocked items.
+scope:
+  includes:
+    - dori-go.inbox.list-pending
+    - dori-go.inbox.approve-clarification
+    - dori-go.inbox.dismiss-clarification
+    - dori-go.tasks.list-open
+    - dori-go.tasks.complete
+    - dori-go.library.browse-documents
+    - dori-go.library.view-document
+    - dori-go.profile.view
+    - dori-go.profile.edit
+    - dori-go.projects.browse
+    - dori-go.capture.mini-bar-text
+    - dori-go.capture.mini-bar-file-drop
+    - dori-go.capture.mini-bar-position-persist
+    - dori-go.capture.mini-bar-default-position
+    - dori-go.capture.mini-bar-global-shortcut
+  excludes:
+    - search_vault is now covered by dori-go-global-search (v1). route_destination
+      and timeline remain unwired to any screen -- no UI entrypoint to catalogue
+      a product requirement against yet.
+    - Settings and first-run onboarding -- explicitly deferred per the user's
+      own scope brief until something currently hardcoded needs to become
+      user-configurable.
+requirements:
+  - id: dori-go.inbox.list-pending
+    title: Inbox lists items awaiting a routing decision
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      A capture (file or clarification) is pending a routing decision.
+    expected: >
+      WHILE a capture is pending a routing decision, THE SYSTEM SHALL list
+      it on the Inbox screen with its type, title, and creation date, and
+      THE SYSTEM SHALL let the user filter by type or search by title.
+    failure: >
+      A pending item is missing from the list, filtering hides an item that
+      matches, or a resolved item continues to appear as pending.
+    variants: >
+      No pending items, one clarification, one file, and a mixed list
+      filtered by type.
+  - id: dori-go.inbox.approve-clarification
+    title: A clarification can be approved with a chosen destination
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user picks a candidate destination for a pending clarification.
+    expected: >
+      WHEN the user picks a candidate destination for a pending
+      clarification, THE SYSTEM SHALL resolve it to that candidate and
+      remove it from the pending list.
+    failure: >
+      The clarification remains pending after approval, resolves to the
+      wrong candidate, or the app errors without resolving it.
+    variants: >
+      One candidate, several candidates.
+  - id: dori-go.inbox.dismiss-clarification
+    title: A clarification can be dismissed
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user decides a pending clarification needs no routing decision.
+    expected: >
+      WHEN the user dismisses a pending clarification, THE SYSTEM SHALL
+      remove it from the pending list without creating a destination
+      assignment.
+    failure: >
+      The item remains pending after dismissal, or dismissal silently routes
+      it somewhere.
+    variants: >
+      Dismiss from a filtered view, dismiss the last pending item.
+  - id: dori-go.tasks.list-open
+    title: Tasks lists open (or completed, or all) tasks from the real task store
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user opens the Tasks screen with a status filter (open/done/all).
+    expected: >
+      WHEN the user opens the Tasks screen with a status filter, THE SYSTEM
+      SHALL list tasks reflecting the task store's current state for that
+      filter, with title, due date, and priority visible.
+    failure: >
+      A task is missing under the correct filter, appears under the wrong
+      filter, or the list is stale after a completion.
+    variants: >
+      Empty state, open only, done only, all, and search within the list.
+  - id: dori-go.tasks.complete
+    title: An open task can be marked done from the Tasks screen
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user marks an open task complete.
+    expected: >
+      WHEN the user marks an open task complete, THE SYSTEM SHALL record it
+      done in the task store and reflect the new state on the Tasks screen
+      without a manual refresh.
+    failure: >
+      The task store is not updated, the UI shows it done before the write
+      succeeds, or a second click double-completes without error.
+    variants: >
+      Complete from the open filter, complete from the all filter.
+  - id: dori-go.library.browse-documents
+    title: Library lists indexed vault documents by type
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user opens the Library screen to browse vault documents.
+    expected: >
+      WHEN the user opens the Library screen, THE SYSTEM SHALL list every
+      indexed document with title, type, and date, and THE SYSTEM SHALL let
+      the user filter by type. WHEN the user selects a document, THE SYSTEM
+      SHALL open it in the file slideover (dori-go-file-slideover), not a
+      full-page view.
+    failure: >
+      An indexed document is missing from the list, or the type filter
+      excludes a document that matches.
+    variants: >
+      No documents, one type, several types.
+  - id: dori-go.library.view-document
+    title: Selecting a document renders its content read-only
+    status: RETIRED
+    version: mvp
+    priority: medium
+    situation: >
+      The user selects a document from the Library list.
+    expected: >
+      WHEN the user selects a document from the Library list, THE SYSTEM
+      SHALL render its markdown content as formatted HTML (headings, links,
+      tables, code) in a read-only view, with word count and estimated
+      reading time, and THE SYSTEM SHALL let the user navigate back to the
+      list.
+    failure: >
+      The document fails to load, renders as raw markdown instead of
+      formatted HTML, or the back navigation loses the list's filter state.
+    variants: >
+      Plain-text document, document with a table, document with no
+      renderable content.
+    note: >
+      Superseded 2026-08-31 by dori-go-file-slideover: selecting a document
+      now opens the file slideover (view + edit) instead of this full-page
+      read-only viewer. Retained here, RETIRED, for Git history per the
+      lifecycle model -- see docs/decisions/log.md.
+  - id: dori-go.profile.view
+    title: Profile shows the user's own identity
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      A self profile already exists.
+    expected: >
+      WHEN a self profile exists, THE SYSTEM SHALL show name, role, and org
+      on the Profile screen, plus associated projects when present.
+    failure: >
+      An existing field fails to display, or the screen shows stale data
+      after an edit.
+    variants: >
+      Name only, full profile, profile with projects.
+  - id: dori-go.profile.edit
+    title: The user's own profile can be created or edited
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      No self profile exists yet, or the user edits an existing one.
+    expected: >
+      WHEN the user saves the profile form, THE SYSTEM SHALL create or
+      update the single self-marked profile entity, and THE SYSTEM SHALL
+      reflect the change in the sidebar without restarting the app.
+    failure: >
+      Saving fails silently, creates a second self entity, or the sidebar
+      keeps showing the old value after a successful save.
+    variants: >
+      First-time creation, edit name only, edit all fields.
+  - id: dori-go.projects.browse
+    title: A project's page shows its identity and sub-projects
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user navigates to a project from the sidebar.
+    expected: >
+      WHEN the user navigates to a project from the sidebar, THE SYSTEM
+      SHALL show its title, status, breadcrumb trail, and any direct
+      sub-projects, each clickable to navigate deeper.
+    failure: >
+      A sub-project is missing, the breadcrumb trail is wrong, or navigating
+      into a sub-project loads the wrong project.
+    variants: >
+      Top-level project with no children, project with children, unknown
+      project path.
+  - id: dori-go.capture.mini-bar-text
+    title: Typed text in the mini capture bar becomes a vault note
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user opens the mini bar (global shortcut) and types a note.
+    expected: >
+      WHEN the user presses Enter in the mini bar, THE SYSTEM SHALL capture
+      the typed text to the vault's inbox and close the mini bar. WHEN the
+      user presses Shift+Enter, THE SYSTEM SHALL insert a newline instead of
+      sending.
+    failure: >
+      The note is not written to the vault, the mini bar closes without
+      capturing, or Shift+Enter sends instead of inserting a newline.
+    variants: >
+      Single-line note, multi-line note, empty input (no-op).
+  - id: dori-go.capture.mini-bar-file-drop
+    title: A file dropped on the mini bar is copied into the vault
+    status: ACCEPTED
+    version: v1
+    priority: medium
+    situation: >
+      The user drags a file from Finder onto the mini bar.
+    expected: >
+      WHEN the user drops a file on the mini bar, THE SYSTEM SHALL copy it
+      into the vault under the same document convention as other captures,
+      show a success status briefly, and close the mini bar. THE SYSTEM
+      SHALL NOT convert or index the file for search.
+    failure: >
+      The file is not copied, the source file is moved or deleted instead of
+      copied, or the drop is silently swallowed with no feedback.
+    variants: >
+      Single file, multiple files, unsupported/unknown file type.
+    note: >
+      Not yet proven end to end with a real Finder drag: synthetic UI
+      automation cannot reliably drive a genuine OS file-drop session. The
+      underlying copy handler (capture-file.mjs) was exercised directly and
+      behaves correctly; the renderer's drop-event wiring is unverified live.
+  - id: dori-go.capture.mini-bar-position-persist
+    title: The mini bar reopens where the user last dragged it
+    status: ACCEPTED
+    version: v1
+    priority: low
+    situation: >
+      The user drags the mini bar to a new screen position, then closes and
+      reopens it (including after an app restart).
+    expected: >
+      WHEN the user reopens the mini bar after having dragged it, THE
+      SYSTEM SHALL reopen it at the last dragged position rather than the
+      default position.
+    failure: >
+      The mini bar reopens at the default position after being dragged, or
+      reopens at a position from a stale/corrupted save file.
+    variants: >
+      Reopen in the same session, reopen after an app restart, first launch
+      (no saved position yet).
+    note: >
+      The load path (saved position file honored on open) was verified
+      directly. The save path (a real drag triggering Electron's `moved`
+      event) has not been provable via synthetic UI automation, which
+      cannot reliably trigger a native `-webkit-app-region: drag` window
+      move.
+  - id: dori-go.capture.mini-bar-default-position
+    title: A never-moved mini bar opens bottom-center
+    status: ACCEPTED
+    version: v1
+    priority: low
+    situation: >
+      The user opens the mini bar for the first time, or after any saved
+      position file is absent/invalid.
+    expected: >
+      WHEN the user opens the mini bar with no saved position (first launch,
+      or the save file is absent/invalid), THE SYSTEM SHALL open it
+      horizontally centered, about one-fifth of the screen height above the
+      bottom edge, on the display nearest the cursor.
+    failure: >
+      The mini bar opens off-screen, on the wrong display, or at a position
+      other than bottom-center-ish on first launch.
+    variants: >
+      Single display, multiple displays with cursor on a secondary display.
+  - id: dori-go.capture.mini-bar-global-shortcut
+    title: A global shortcut toggles the mini bar
+    status: ACCEPTED
+    version: mvp
+    priority: medium
+    situation: >
+      The user presses Cmd/Ctrl+Shift+Space from any app.
+    expected: >
+      WHEN the user presses Cmd/Ctrl+Shift+Space, THE SYSTEM SHALL show and
+      focus the mini bar's input if it was hidden, or hide it if it was
+      currently visible. WHEN the mini bar loses focus, THE SYSTEM SHALL
+      hide it.
+    failure: >
+      The shortcut does nothing, fails silently when already bound by
+      another app, or the mini bar does not hide on blur.
+    variants: >
+      Toggle from hidden, toggle from visible, shortcut already taken by
+      another app.

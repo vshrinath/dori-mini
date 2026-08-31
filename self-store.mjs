@@ -31,7 +31,7 @@ function slugify(name) {
 import { parseFrontmatter, asList } from './frontmatter.mjs';
 
 function isSelfValue(fm) {
-  return fm.is_self === 'true' || fm.isSelf === 'true';
+  return fm.is_self === true || fm.is_self === 'true' || fm.isSelf === true || fm.isSelf === 'true';
 }
 
 function parseLinks(fm) {

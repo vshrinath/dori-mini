@@ -58,3 +58,19 @@ e.g. "Dori, ..." or "hey Dori ..."). Strip that prefix, then match the rest norm
 Rule of thumb: if the message could *only* be about capture (a link, a file, a
 transcript), act on it directly. If it's a sentence that could plausibly be about
 anything else going on in this session, wait for the "Dori" prefix.
+
+<!-- dori-build:start -->
+Build-system process (features, reverse-engineering, brainstorm-to-requirement) lives
+in the repo in `.dori-build.json` → `processRoot`. Product features live in
+`docs/features/` here. Run `node scripts/dori-build-check.mjs`. Do not put PHI
+in feature files. For as-built inventory see that repo's `docs/reverse-engineering.md`.
+<!-- dori-build:end -->
+
+## electron-app checks
+
+`pnpm --prefix electron-app run lint` (no-undef only, `eslint.config.mjs`) MUST pass
+before marking any `dori-go-*` UI verification criterion `done`. It exists because a
+2026-08-31 refactor left a dead branch in `LibraryView.jsx` referencing removed
+`selectedPath`/`setSelectedPath`/`DocumentDetail`/`formatDate` identifiers, crashing the
+screen at runtime — something that builds, tests, and `dori-build-check.mjs` all stayed
+green through, since none of them execute the renderer's actual code paths. Lint does.

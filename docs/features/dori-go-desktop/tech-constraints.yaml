@@ -1,0 +1,70 @@
+feature_id: dori-go-desktop
+feature: Dori Go desktop app
+status: build-ready
+source:
+  derived_from:
+    - electron-app/main.js, electron-app/preload.cjs (existing IPC boundary)
+    - actions.mjs (existing action-registry pattern)
+constraints:
+  - id: constraint.dori-go-desktop.ipc-boundary
+    type: ownership
+    rule: >
+      The renderer process (all of electron-app/src/**) MUST NOT import or
+      call dori-mini scripts directly. Every call from the UI to dori-mini
+      logic goes through window.dori.call(actionId, input), which invokes
+      ipcMain.handle('dori:call', ...) in main.js. Do not add a second IPC
+      channel per feature or per action.
+    rationale: >
+      Matches the existing contextIsolation:true/nodeIntegration:false
+      setup and the single generic 'dori:call' channel already in place
+      (main.js, preload.cjs). Adding feature-specific channels or direct
+      requires from the renderer would silently widen the security boundary
+      those settings exist to hold.
+    applies_to:
+      requirement_ids: []
+  - id: constraint.dori-go-desktop.actions-registry-is-source-of-truth
+    type: api
+    rule: >
+      Every operation the UI performs (read or write) MUST be a registered
+      entry in actions.mjs, called by its id via window.dori.call. No screen
+      or component invokes a dori-mini script's exported function directly,
+      even indirectly through main.js.
+    rationale: >
+      actions.mjs is already the single validated (Zod-schema'd), typed
+      surface shared with the MCP server (mcp-server.mjs). Bypassing it from
+      one screen would create a second, unvalidated call path.
+    applies_to:
+      requirement_ids: []
+  - id: constraint.dori-go-desktop.no-new-electron-app-deps
+    type: workflow
+    rule: >
+      electron-app/package.json MUST NOT gain new dependencies for
+      capability the root dori-mini package.json already provides (e.g.
+      markdown rendering via unified/remark/rehype). Reuse via Node's
+      bare-specifier resolution from main.js, the way render-html.mjs's
+      renderMarkdownToHtml is already reused, before adding a package.
+    rationale: >
+      Established this session while building the Library screen
+      specifically to avoid duplicating the markdown pipeline; stated here
+      so it isn't silently reversed by a later change.
+    applies_to:
+      requirement_ids:
+        - dori-go.library.browse-documents
+  - id: constraint.dori-go-desktop.mini-bar-is-a-separate-window
+    type: ownership
+    rule: >
+      The mini capture bar stays a separate, frameless, always-on-top
+      BrowserWindow (mini.html), not a mode/overlay of the main window. It
+      keeps its own preload surface (window.dori.call, closeMini,
+      getFilePath) rather than sharing the main window's renderer state.
+    rationale: >
+      Matches real Dori's own mini window being a distinct Tauri window
+      (dori-engine/desktop/src/mini/), and avoids coupling the always-on-top
+      capture flow to the main window's lifecycle.
+    applies_to:
+      requirement_ids:
+        - dori-go.capture.mini-bar-text
+        - dori-go.capture.mini-bar-file-drop
+        - dori-go.capture.mini-bar-position-persist
+        - dori-go.capture.mini-bar-default-position
+        - dori-go.capture.mini-bar-global-shortcut

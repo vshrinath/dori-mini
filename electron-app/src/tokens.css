@@ -1,0 +1,1099 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@source './components';
+@source './lib';
+@source '../index.html';
+
+/* Tailwind v4 CSS-first theme bridge. `inline` makes utilities reference the
+ * live product variables below, so light/dark theme overrides remain dynamic. */
+@theme inline {
+  --color-brand-primary: rgb(var(--brand-primary-rgb) / 1);
+  --color-brand-accent: rgb(var(--brand-accent-rgb) / 1);
+  --color-brand-primary-light: var(--brand-primary-light);
+  --color-brand-primary-dark: var(--brand-primary-dark);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-beige: var(--brand-beige);
+  --color-brand-canvas: var(--brand-canvas);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--color-danger);
+  --color-destructive-foreground: #ffffff;
+  --color-popover: var(--surface-panel-solid);
+  --color-popover-foreground: var(--foreground);
+  --color-input: var(--surface-field);
+  --color-ring: var(--focus-ring);
+
+  --color-surface-canvas: var(--surface-canvas);
+  --color-surface-canvas-top: var(--surface-canvas-top);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-panel-solid: var(--surface-panel-solid);
+  --color-surface-panel-soft: var(--surface-panel-soft);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-field: var(--surface-field);
+  --color-surface-field-hover: var(--surface-field-hover);
+  --color-surface-tint: var(--surface-tint);
+
+  --font-display: 'Figtree', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
+  --font-mono:
+    var(--font-mono-jetbrains), 'JetBrains Mono', 'Fira Code', monospace;
+
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-lg);
+
+  /* Deliberately NOT mapping sm/md/lg/xl here — Tailwind v4's own default
+   * radius scale already owns those names. This app's --radius-app-sm/md/
+   * lg/xl (:root, below) are a SEPARATE semantic scale for hand-rolled CSS;
+   * naming them sm/md/lg/xl too would silently collide with (and override)
+   * Tailwind's defaults, which 101 files / 515 rounded-lg/-md/-sm usages
+   * rely on staying stock. Confirmed this exact collision once already —
+   * don't reintroduce it by "completing" this list. */
+  --radius-xs: var(--radius-xs);
+  --radius-control: var(--radius-control);
+  --radius-panel: var(--radius-panel);
+  --radius-sheet: var(--radius-sheet);
+
+  --z-index-base: var(--z-base);
+  --z-index-sticky: var(--z-sticky);
+  --z-index-docked: var(--z-docked);
+  --z-index-dropdown: var(--z-dropdown);
+  --z-index-overlay: var(--z-overlay);
+  --z-index-modal: var(--z-modal);
+  --z-index-popover: var(--z-popover);
+  --z-index-toast: var(--z-toast);
+  --z-index-max: var(--z-max);
+
+  --ease-out-strong: var(--ease-out-strong);
+  --ease-in-out-strong: var(--ease-in-out-strong);
+
+  --text-display: var(--text-display);
+  --text-display--line-height: var(--leading-display);
+  --text-display--letter-spacing: var(--tracking-display);
+  --text-heading-lg: var(--text-heading-lg);
+  --text-heading-lg--line-height: var(--leading-heading);
+  --text-heading-lg--letter-spacing: var(--tracking-heading);
+  --text-heading: var(--text-heading);
+  --text-heading--line-height: var(--leading-heading);
+  --text-heading--letter-spacing: var(--tracking-heading);
+  --text-title: var(--text-title);
+  --text-title--line-height: var(--leading-title);
+  --text-title--letter-spacing: var(--tracking-title);
+  --text-body: var(--text-body);
+  --text-body--line-height: var(--leading-body);
+  --text-control: var(--text-control);
+  --text-control--line-height: var(--leading-control);
+  --text-control-lg: var(--text-control-lg);
+  --text-control-lg--line-height: var(--leading-control);
+  --text-label: var(--text-label);
+  --text-label--line-height: var(--leading-label);
+  --text-label--letter-spacing: var(--tracking-label);
+  --text-caption: var(--text-caption);
+  --text-caption--line-height: var(--leading-caption);
+  --text-micro: var(--text-micro);
+  --text-micro--line-height: var(--leading-micro);
+
+  --animate-dialog-in: dialog-in 150ms ease;
+  --animate-backdrop-in: backdrop-in 150ms ease;
+
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes backdrop-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Redefine Tailwind's built-in `hover:` so every hover: utility app-wide
+ * only applies on devices that support real hovering. Without this, touch
+ * taps trigger :hover and it can stick until a second tap elsewhere. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+@custom-variant data-open {
+  &:is([data-state='open'], [data-open]:not([data-open='false'])) {
+    @slot;
+  }
+}
+@custom-variant data-closed {
+  &:is([data-state='closed'], [data-closed]:not([data-closed='false'])) {
+    @slot;
+  }
+}
+@custom-variant data-checked {
+  &:is([data-state='checked'], [data-checked]:not([data-checked='false'])) {
+    @slot;
+  }
+}
+@custom-variant data-unchecked {
+  &:is(
+    [data-state='unchecked'],
+    [data-unchecked]:not([data-unchecked='false'])
+  ) {
+    @slot;
+  }
+}
+@custom-variant data-selected (&[data-selected='true']);
+@custom-variant data-disabled {
+  &:is([data-disabled='true'], [data-disabled]:not([data-disabled='false'])) {
+    @slot;
+  }
+}
+@custom-variant data-active {
+  &:is([data-state='active'], [data-active]:not([data-active='false'])) {
+    @slot;
+  }
+}
+@custom-variant data-horizontal (&[data-orientation='horizontal']);
+@custom-variant data-vertical (&[data-orientation='vertical']);
+
+:root {
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   * BRAND PALETTE
+   * Source of truth for all colors. Theme support:
+   * override these variables in a .theme-X class.
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+  /* Brand solids */
+  --brand-primary: #1a1f4e;
+  --brand-primary-dark: #141936;
+  --brand-primary-light: #eef0f8;
+  --brand-accent: #d99b24;
+  --brand-accent-text: #8a5f0a;
+  --brand-navy: #1a1f4e;
+  --brand-beige: #f7f7f5;
+  --brand-canvas: #fafaf8;
+
+  /* Primary actions — executive navy. Amber remains a semantic accent. */
+  --color-cta: #1a1f4e;
+  --color-cta-hover: #243070;
+  --color-cta-text: #ffffff;
+
+  /* RGB channels — needed for Tailwind opacity modifiers (bg-brand-primary/10 etc.) */
+  --brand-primary-rgb: 26 31 78;
+  --brand-accent-rgb: 217 155 36;
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   * COMPOSABLE ACCENT VARIANTS
+   * Derived from --brand-accent via color-mix().
+   * Use these instead of hard-coding tinted hex per state.
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  --accent-strong: color-mix(
+    in srgb,
+    var(--brand-accent) 86%,
+    var(--foreground)
+  );
+  --accent-soft: color-mix(in srgb, var(--brand-accent) 22%, var(--card));
+  --accent-tint: color-mix(in srgb, var(--brand-accent) 12%, var(--card));
+  --accent-hover: color-mix(
+    in srgb,
+    var(--brand-accent) 90%,
+    var(--foreground)
+  );
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   * SELECTION STATE — distinct from brand accent
+   * --brand-accent is for CTAs (Create, Save).
+   * --color-selected is for "this option is currently picked".
+   * They should never compete visually on the same screen.
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  --color-selected: #1a1f4e;
+  --color-selected-soft: color-mix(
+    in srgb,
+    var(--color-selected) 9%,
+    var(--muted)
+  );
+  --color-selected-text: #1a1f4e;
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   * SEMANTIC TOKENS (light mode)
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+  /* Backgrounds — surface hierarchy (warm) */
+  --background: #fafaf8; /* warm paper canvas */
+  --card: #ffffff; /* cards, modals, panels — pure white lifts off canvas */
+  --muted: #f3f4f6;
+  --accent: #e9eaee;
+
+  /* Text hierarchy — 3 levels (warm brown, matches onboarding palette).
+     foreground-secondary/muted-foreground darkened from #73757c/#767880 —
+     those measured 4.0-4.6:1 against white/--muted, under the 4.5:1 AA
+     floor for small text. Both new values clear 4.5:1 against white and
+     --muted/--surface-field; relative ordering (secondary darker than
+     muted) preserved. */
+  --foreground: #26272b;
+  --foreground-secondary: #63666e;
+  --muted-foreground: #686b73;
+
+  /* Borders — warm hairlines */
+  --border: #e3e4e8;
+  --border-soft: #ececef;
+
+  /* Desktop app surface tokens */
+  --surface-canvas: #fafaf8;
+  --surface-canvas-top: #fafaf8;
+  --surface-panel: rgba(255, 255, 255, 0.88);
+  --surface-panel-solid: #ffffff;
+  --surface-panel-soft: rgba(250, 250, 249, 0.72);
+  --surface-raised: rgba(250, 250, 249, 0.92);
+
+  /* Sidebar tokens — copied verbatim from dori-portal/app/space-shell.css */
+  --space-sidebar-bg: var(--surface-canvas);
+  --space-sidebar-field: rgba(26, 31, 78, 0.07);
+  --space-sidebar-border: rgba(26, 31, 78, 0.08);
+  --space-sidebar-muted: var(--muted-foreground);
+  --space-nav-hover: rgba(26, 31, 78, 0.045);
+  --space-nav-active: rgba(26, 31, 78, 0.075);
+  --surface-field: #f3f4f6;
+  --surface-field-hover: #f7f7f9;
+  --surface-tint: rgba(26, 31, 78, 0.075);
+  --hairline: rgba(26, 31, 78, 0.06);
+  --hairline-strong: rgba(26, 31, 78, 0.1);
+  --focus-ring: rgba(217, 155, 36, 0.24);
+  /* Solid focus-visible outline for sidebar nav/icon controls — needs
+     real contrast against --space-sidebar-bg, unlike --focus-ring's
+     translucent glow (24% gold), which measures ~2.3:1 and fails the
+     3:1 non-text minimum. --brand-primary already flips per-theme and
+     clears 3:1 against every surface in both themes. */
+  --focus-outline: var(--brand-primary);
+  --icon-muted: rgba(69, 72, 84, 0.64);
+  --icon-active: #1a1f4e;
+  --radius-xs: 4px;
+  --radius-app-sm: 6px;
+  /* Canonical radius for shadcn/Base UI components (Button, Input, Select,
+   * Dialog, Popover) — matches the control radius already used by hand-built
+   * buttons/inputs, so new components land on-brand with no per-component
+   * override. Unused by any hand-rolled class before this. */
+  --radius: 13px;
+  --radius-app-md: 10px;
+  --radius-app-lg: 12px;
+  --radius-app-xl: 16px;
+  --radius-control: 13px;
+  --radius-panel: 18px;
+  --radius-sheet: 24px;
+  --radius-pill: 9999px;
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   * MOTION — canonical product curves
+   * Enter reads gentle, exit reads decisive.
+   * ease-in is banned for UI. Use --ease-out.
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --dur-quick: 120ms;
+  --dur-enter: 200ms;
+  --dur-exit: 140ms;
+  --motion-soft: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-slow: 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-enter: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   * STACKING — z-index scale
+   * Reach for these instead of z-[N] literals. Tier values align with the
+   * existing layering so migrations are value-preserving. Use z-max only for
+   * UI injected into pages you don't control.
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-docked: 30;
+  --z-dropdown: 50;
+  --z-overlay: 60;
+  --z-modal: 100;
+  --z-popover: 200;
+  --z-toast: 1000;
+  --z-max: 2147483647;
+
+  --app-sidebar-width: 16.5rem;
+  --shadow-xs:
+    0 1px 3px rgba(14, 22, 38, 0.06), 0 1px 2px rgba(14, 22, 38, 0.035);
+  --shadow-sm:
+    0 4px 12px rgba(14, 22, 38, 0.06), 0 1px 3px rgba(14, 22, 38, 0.04);
+  --shadow-md:
+    0 8px 24px rgba(14, 22, 38, 0.08), 0 2px 6px rgba(14, 22, 38, 0.04);
+  --shadow-lg:
+    0 20px 60px rgba(14, 22, 38, 0.12), 0 4px 16px rgba(14, 22, 38, 0.06);
+
+  /* Component tokens */
+  --card-foreground: #26272b;
+  --accent-foreground: #26272b;
+  --primary: var(--color-cta);
+  --primary-foreground: var(--color-cta-text);
+  --secondary: var(--brand-accent);
+  --secondary-foreground: #26272b;
+
+  /* Fonts — Figtree for both display and body, both loaded as variable fonts
+   * (single file, full weight axis) via next/font/local rather than static
+   * per-weight cuts. */
+  --font-display: 'Figtree', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
+  --font-mono:
+    var(--font-mono-jetbrains), 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Easing curves for punchier UI motion — steeper deceleration than the
+   * CSS `ease-out` keyword, for transitions that should feel snappy rather
+   * than gentle (hover states, panel opens, button presses). */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   * DESKTOP-NATIVE DENSITY
+   * Dori runs in Tauri — desktop density is appropriate.
+   * On web/mobile the browser default (16px) is retained.
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  --app-base-size: 1rem;
+  --traffic-light-top: 0px;
+  --traffic-light-left: 0px;
+
+  /* Radius — see :root token scale above (xs/sm/md/lg/xl/pill) */
+
+  /* Font weight scale — restrained hierarchy for the editorial canvas. */
+  --fw-display: 400;
+  --fw-heading: 450;
+  --fw-title: 500;
+  --fw-label: 500;
+  --fw-nav: 500;
+  --fw-strong: 600;
+  --fw-body: 400;
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   * TYPOGRAPHY SCALE
+   * Named levels — use these, not inline clamp math.
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  --text-display: clamp(2.5rem, 5vw, 4rem);
+  --text-heading-lg: clamp(1.75rem, 3vw, 2.25rem);
+  --text-heading: clamp(1.375rem, 2vw, 1.75rem);
+  --text-title: 1rem;
+  --text-control-lg: 0.875rem;
+  --text-body: 0.9375rem;
+  --text-control: 0.8125rem;
+  --text-label: 0.75rem;
+  --text-caption: 0.6875rem;
+  --text-micro: 0.625rem;
+
+  --leading-display: 1.02;
+  --leading-heading: 1.18;
+  --leading-title: 1.3;
+  --leading-body: 1.55;
+  --leading-control: 1.25;
+  --leading-label: 1.3;
+  --leading-caption: 1.35;
+  --leading-micro: 1.4;
+
+  --tracking-display: -0.035em;
+  --tracking-heading: -0.02em;
+  --tracking-title: -0.01em;
+  --tracking-label: 0.04em;
+
+  /* Shared route rhythm — compact enough for Tauri, fluid on narrow screens. */
+  --space-page-x: clamp(1rem, 2.5vw, 2rem);
+  --space-page-top: clamp(1.5rem, 4vh, 2.5rem);
+  --space-page-bottom: 3rem;
+  --space-header-to-content: 2rem;
+  --space-section: 2.5rem;
+  --space-subsection: 1.5rem;
+  --space-stack: 1rem;
+  --space-compact: 0.5rem;
+  /* Mobile touch geometry (4px scale). Desktop control heights stay denser. */
+  --space-touch: 2.75rem; /* 44px minimum interactive target */
+  --space-touch-primary: 3rem; /* 48px preferred for primary / clustered actions */
+  --space-control-mobile: 2.75rem; /* standard mobile input/button visible height */
+  /* Shared compact horizontal gutter — menu bar, page-frame, home share this. */
+  --space-mobile-gutter: 1rem;
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   * LEGACY COLOR ALIASES
+   * Resolves all --color-* references used across
+   * component and module CSS. Do not remove.
+   * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  --color-white: #ffffff;
+  --color-ink: #26272b;
+  --color-muted: var(--muted-foreground);
+  --color-surface: var(--muted);
+  --color-surface-2: var(--accent);
+  --color-surface-alt: var(--muted);
+  --color-surface-mid: var(--accent);
+  --color-surface-dark: var(--brand-navy);
+  --color-accent-dark: var(--brand-accent-text);
+  --color-accent-faint: color-mix(
+    in srgb,
+    var(--brand-accent),
+    transparent 92%
+  );
+  --color-accent-10: color-mix(in srgb, var(--brand-accent), transparent 90%);
+  --color-accent-30: color-mix(in srgb, var(--brand-accent), transparent 70%);
+  --color-accent-50: color-mix(in srgb, var(--brand-accent), transparent 50%);
+  --color-accent-70: color-mix(in srgb, var(--brand-accent), transparent 30%);
+  --color-primary-20: color-mix(in srgb, var(--brand-primary), transparent 80%);
+  --color-primary-40: color-mix(in srgb, var(--brand-primary), transparent 60%);
+  --color-primary-60: color-mix(in srgb, var(--brand-primary), transparent 40%);
+  --color-primary-80: color-mix(in srgb, var(--brand-primary), transparent 20%);
+  --color-success: #15803d;
+  --color-success-faint: color-mix(in srgb, #15803d, transparent 90%);
+  --color-danger: #dc2626;
+  --color-error: #dc2626;
+  --color-error-faint: color-mix(in srgb, #dc2626, transparent 90%);
+  --color-warning: #d97706;
+  --color-warning-faint: color-mix(in srgb, #d97706, transparent 90%);
+  --color-info: #2563eb;
+  --color-info-faint: color-mix(in srgb, #2563eb, transparent 90%);
+
+  /* Mapping legacy variables for compatibility */
+  --color-primary: var(--brand-primary);
+  --color-accent: var(--brand-accent);
+  --color-canvas: var(--brand-beige);
+  --color-text: var(--foreground);
+  --color-text-secondary: var(--foreground-secondary);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+}
+
+.dark {
+  color-scheme: dark;
+  /* Brand solids (dark mode inversions) */
+  --brand-primary: #91a0e8;
+  --brand-primary-dark: #6f7fd0;
+  --brand-primary-light: #1b203f;
+  --brand-accent: #e7b95a;
+  --brand-accent-text: #e7b95a;
+  --brand-navy: #f2f4fb;
+  --brand-beige: #17181c;
+  --brand-canvas: #0e0f13;
+
+  /* RGB channels — dark mode */
+  --brand-primary-rgb: 145 160 232;
+  --brand-accent-rgb: 231 185 90;
+
+  /* Composable accent variants (dark) */
+  --accent-strong: color-mix(
+    in srgb,
+    var(--brand-accent) 86%,
+    var(--foreground)
+  );
+  --accent-soft: color-mix(in srgb, var(--brand-accent) 22%, var(--card));
+  --accent-tint: color-mix(in srgb, var(--brand-accent) 12%, var(--card));
+  --accent-hover: color-mix(
+    in srgb,
+    var(--brand-accent) 90%,
+    var(--foreground)
+  );
+
+  /* Selection state (dark) */
+  --color-selected: #60a5fa;
+  --color-selected-soft: color-mix(
+    in srgb,
+    var(--color-selected) 12%,
+    var(--muted)
+  );
+  --color-selected-text: #93c5fd;
+
+  /* Backgrounds — surface hierarchy (warm dark) */
+  --background: #0e0f13;
+  --card: #17181c;
+  --muted: #202126;
+  --accent: #292b32;
+
+  /* Text hierarchy (warm dark) */
+  --foreground: #f3f4f6;
+  --foreground-secondary: #b0b3bb;
+  --muted-foreground: #92959e;
+
+  /* Borders (warm dark) */
+  --border: #2b2d34;
+  --border-soft: #202126;
+
+  --surface-canvas: #0e0f13;
+  --surface-canvas-top: #0e0f13;
+  --surface-panel: rgba(23, 24, 28, 0.88);
+  --surface-panel-solid: #17181c;
+  --surface-panel-soft: rgba(32, 33, 38, 0.72);
+  --surface-raised: rgba(32, 33, 38, 0.92);
+  --surface-field: #202126;
+  --surface-field-hover: #292b32;
+
+  --space-sidebar-bg: var(--surface-canvas);
+  --space-sidebar-field: rgba(255, 255, 255, 0.09);
+  --space-sidebar-border: rgba(255, 255, 255, 0.09);
+  --space-sidebar-muted: var(--muted-foreground);
+  --space-nav-hover: rgba(255, 255, 255, 0.06);
+  --space-nav-active: rgba(255, 255, 255, 0.1);
+  --surface-tint: rgba(66, 85, 166, 0.16);
+  --hairline: rgba(232, 235, 245, 0.06);
+  --hairline-strong: rgba(232, 235, 245, 0.1);
+  --focus-ring: rgba(231, 185, 90, 0.28);
+  --icon-muted: rgba(188, 192, 204, 0.62);
+  --icon-active: #91a0e8;
+
+  /* Component tokens */
+  --card-foreground: #f3f4f6;
+  --accent-foreground: #f3f4f6;
+  --color-cta: #35458f;
+  --color-cta-hover: #4255a6;
+  --color-cta-text: #ffffff;
+  --primary: var(--color-cta);
+  --primary-foreground: var(--color-cta-text);
+  --secondary: var(--brand-accent);
+  --secondary-foreground: #17181c;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.26), 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+
+  --color-ink: #f3f4f6;
+  --color-surface-dark: #000000;
+  --color-success: #22c55e;
+  --color-success-faint: color-mix(in srgb, #22c55e, transparent 88%);
+  --color-danger: #f87171;
+  --color-error: #f87171;
+  --color-error-faint: color-mix(in srgb, #f87171, transparent 88%);
+  --color-warning: #fbbf24;
+  --color-warning-faint: color-mix(in srgb, #fbbf24, transparent 88%);
+  --color-info: #60a5fa;
+  --color-info-faint: color-mix(in srgb, #60a5fa, transparent 88%);
+
+  --color-primary: var(--brand-primary);
+  --color-accent: var(--brand-accent);
+  --color-canvas: var(--brand-canvas);
+  --color-text: var(--foreground);
+  --color-text-secondary: var(--foreground-secondary);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * MOTION UTILITIES
+ * Entrances read gentle (--motion-enter); lists stagger their first
+ * few children. All of it collapses under prefers-reduced-motion.
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.anim-rise {
+  animation: rise-in var(--motion-enter) both;
+}
+
+.anim-bubble {
+  animation: bubble-in var(--motion-enter) both;
+  transform-origin: bottom;
+}
+
+/* Stagger the first eight children of a list entrance */
+.anim-stagger > * {
+  animation: rise-in var(--motion-enter) both;
+}
+.anim-stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.anim-stagger > *:nth-child(2) {
+  animation-delay: 25ms;
+}
+.anim-stagger > *:nth-child(3) {
+  animation-delay: 50ms;
+}
+.anim-stagger > *:nth-child(4) {
+  animation-delay: 75ms;
+}
+.anim-stagger > *:nth-child(5) {
+  animation-delay: 100ms;
+}
+.anim-stagger > *:nth-child(6) {
+  animation-delay: 125ms;
+}
+.anim-stagger > *:nth-child(7) {
+  animation-delay: 150ms;
+}
+.anim-stagger > *:nth-child(8) {
+  animation-delay: 175ms;
+}
+
+/* Real Dori loads Figtree via next/font/local in app/layout.tsx, which
+ * generates this @font-face and the --font-figtree variable at build time —
+ * there's no literal CSS for it to copy. We don't have Next's font loader,
+ * so this registers the same file (public/fonts/figtree-latin-variable.woff2,
+ * copied verbatim from dori-portal) by hand, and --font-display/--font-body
+ * above were pointed at 'Figtree' directly instead of the generated variable. */
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/figtree-latin-variable.woff2') format('woff2');
+  font-weight: 300 900;
+  font-display: swap;
+}
+
+/* Real Dori's base body rule (app/globals.css) — sets the page canvas
+ * background/text/font that individual screens rely on via cascade instead
+ * of setting bg/text classes on every top-level wrapper themselves. */
+body {
+  min-height: 100%;
+  margin: 0;
+  color: var(--color-text);
+  background: var(--surface-canvas);
+  font-family: var(--font-body);
+}
+
+/* Lifted verbatim from dori-portal/app/globals.css — real Dori's Markdown
+ * renderer targets these two class names, and this is the vault-document
+ * reading typography (not the Tailwind Typography plugin, which isn't
+ * installed here or in dori-portal — a hand-written .prose). */
+.prose {
+  color: var(--color-text);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  margin-top: 1.75rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.18;
+}
+
+.prose h1 {
+  font-size: clamp(1.8rem, 3vw, 2.45rem);
+}
+
+.prose h2 {
+  font-size: clamp(1.45rem, 2.35vw, 2rem);
+}
+
+.prose h3 {
+  font-size: clamp(1.2rem, 1.8vw, 1.55rem);
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose blockquote {
+  margin: 1rem 0;
+}
+
+.prose a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose a:hover {
+  color: var(--color-accent-dark);
+}
+
+.prose blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding: 0.5rem 0 0.5rem 1.25rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.prose code {
+  border-radius: 4px;
+  padding: 0.1rem 0.28rem;
+  background: var(--color-surface-mid);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.prose pre {
+  overflow-x: auto;
+  border-radius: var(--radius-app-md);
+  padding: 18px;
+  background: var(--color-surface-2, #e8e4da);
+  color: var(--color-ink);
+}
+
+.markdown-table-wrap {
+  max-width: 100%;
+  margin: 1.25rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-app-md);
+}
+
+.markdown-table-wrap table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  line-height: 1.45;
+}
+
+.markdown-table-wrap th,
+.markdown-table-wrap td {
+  min-width: 8rem;
+  padding: 0.65rem 0.8rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-table-wrap th {
+  background: var(--muted);
+  color: var(--foreground);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * SCROLLBARS — subtle Mac desktop scrollbars
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 10px;
+  transition: background var(--dur-quick) var(--ease-out);
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * PAGE FRAME & ROUTE HEADERS
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.page-frame {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding-block: 2rem 3rem;
+  padding-inline: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.route-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.route-header__copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.route-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.route-header__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-heading-lg);
+  font-weight: var(--fw-heading);
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-heading);
+  color: var(--foreground);
+}
+
+.route-header__description {
+  max-width: 56rem;
+  margin-top: 0.35rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-body);
+  font-weight: var(--fw-body);
+  line-height: var(--leading-body);
+}
+
+.route-header__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * COMPOSER & CHAT SHELL
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.home-focus {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  background: var(--surface-canvas);
+}
+
+.home-focus-inner {
+  width: min(100% - 2.5rem, 52rem);
+  margin: 0 auto;
+  padding: 2.5rem 0 3rem;
+  box-sizing: border-box;
+}
+
+.home-focus.is-chatting .home-focus-inner {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  padding-block: 1.25rem;
+}
+
+.home-focus:not(.is-chatting) .home-focus-inner {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.home-hero-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.home-hero-logo {
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 1rem;
+  border-radius: 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.home-focus-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--foreground-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.home-hero-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.85rem, 3.5vw, 2.6rem);
+  font-weight: 450;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  color: var(--foreground);
+}
+
+.chat-dock-composer {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow:
+    0 16px 42px rgba(18, 20, 32, 0.07),
+    0 2px 7px rgba(18, 20, 32, 0.04);
+  transition: border-color var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out);
+}
+
+.chat-dock-composer:focus-within {
+  border-color: var(--hairline-strong);
+  box-shadow:
+    0 18px 48px rgba(18, 20, 32, 0.10),
+    0 4px 12px rgba(18, 20, 32, 0.06);
+}
+
+.quick-capture-input {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+  min-height: 24px;
+  max-height: 180px;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.25rem 0.2rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--foreground);
+  line-height: 1.45;
+}
+
+.quick-capture-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.quick-capture-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--icon-muted);
+  cursor: pointer;
+  transition: background var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
+}
+
+.quick-capture-icon-button:hover {
+  background: var(--surface-field);
+  color: var(--foreground);
+}
+
+.quick-capture-send-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform var(--dur-quick) var(--ease-out), opacity var(--dur-quick) var(--ease-out);
+}
+
+.quick-capture-send-button:hover:not(:disabled) {
+  transform: scale(1.04);
+}
+
+.quick-capture-send-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.chat-runtime-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface-field);
+  color: var(--foreground-secondary);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--dur-quick) var(--ease-out);
+}
+
+.chat-runtime-trigger:hover {
+  background: var(--surface-field-hover);
+  color: var(--foreground);
+}
+
+.chat-starter-chip {
+  padding: 8px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  color: var(--foreground-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition:
+    color var(--dur-quick) var(--ease-out),
+    border-color var(--dur-quick) var(--ease-out),
+    background var(--dur-quick) var(--ease-out),
+    transform var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out);
+}
+
+.chat-starter-chip:hover {
+  color: var(--foreground);
+  border-color: var(--hairline-strong);
+  background: var(--surface-field);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * CARDS & SURFACES
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.universal-card {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-panel);
+  background: var(--card);
+  box-shadow: var(--shadow-xs);
+  transition:
+    background var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out),
+    border-color var(--dur-quick) var(--ease-out),
+    transform var(--dur-quick) var(--ease-out);
+}
+
+.universal-card:hover {
+  border-color: var(--hairline-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+

@@ -65,7 +65,7 @@ function pendingClarifications() {
     title: r.prompt,
     clarificationId: r.id,
     domain: r.domain,
-    candidates: r.candidates.map((c) => c.label),
+    candidates: r.candidates.map((c) => ({ id: c.id, label: c.label, detail: c.detail })),
     createdAt: r.createdAt,
   }));
 }
