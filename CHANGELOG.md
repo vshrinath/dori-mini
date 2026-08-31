@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-08-31] — Enrich Sidebar Typography, Contrast, and Brand Personality
+
+**Branch**: `main`
+
+### What changed
+- Brand Header: styled `Dori` brand in `20px font-bold text-foreground` (`#1a1f4e`) with executive navy `+` create button (`bg-[var(--brand-primary)] text-white`).
+- Search Bar: elevated to a crisp pure-white card (`bg-card border border-[var(--space-sidebar-border)] shadow-2xs`) with `14.5px font-medium` text and refined `/` keycap.
+- Spaces Navigation: upgraded nav links to `15px font-bold text-foreground` on active and `15px font-medium` on idle, with active tint `bg-[var(--space-sidebar-field)]` and tinted icons.
+- Projects Tree: upgraded project titles to `14.5px font-medium text-foreground`, added warm amber gold folder icons (`text-[var(--brand-accent)]`) matching Dori's signature brand style, and indented active subprojects.
+- Profile Footer: wrapped in an elevated card (`bg-card border shadow-2xs rounded-panel p-3`) with 40px executive navy initials avatar, `15px font-semibold` name, and clean settings gear icon.
+
+### Why
+Eliminate washed-out, diminutive appearance and achieve full 1:1 visual richness, contrast, and elegance matching Dori Portal.
+
+### Files touched
+- `electron-app/src/components/Sidebar.jsx` — Enriched sidebar typography, amber folder accents, elevated profile card, and navy CTA.
+
 ## [2026-08-31] — Widen Sidebar and Polish Navigation Item Sizing
 
 **Branch**: `main`
