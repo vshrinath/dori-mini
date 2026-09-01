@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-09-01] — New "dori" Wordmark Brand: Animated Splash, Hero, and App Icon
+
+**Branch**: `main`
+
+### What changed
+- New brand assets (`electron-app/public/assets/`):
+  - `dori-wordmark.png` / `dori-wordmark.webm` — SignPainter cursive wordmark, navy `#1a1f4e` with a gold `#d99b24` i-dot; the WebM is a 1.9s alpha-transparent handwriting reveal.
+  - `icon.png` — dock/Cmd-Tab/favicon replaced with a white squircle carrying the full wordmark (was the gold "∞" tile).
+- Splash screen (`index.html`): the pulsing icon + "Dori" text replaced by the animated wordmark video; bare on the canvas in light mode, on a white card in dark mode (the navy wordmark needs it there). React mount (`src/main.jsx`) now waits for the video's `ended` event, capped at 2.4s, so the reveal is never cut off and a stalled video can never block startup.
+- Home hero (`ChatView.jsx`, `tokens.css`): icon tile swapped for the bare wordmark at 3.5rem on the warm-gray canvas.
+- Generator scripts committed under `scripts/brand/` (geometry, frame renderer, icon builder, mask-coverage QA) with a regeneration README; deps are one-off (`npm i --no-save`), not in package.json.
+
+### Notes
+- The `.dark` class in `tokens.css` is defined but never toggled by the app; the hero always renders on the light canvas. If dark mode is ever wired up, the hero and splash need the periwinkle/gold dark wordmark variant (generator supports it: `PALETTES.dark`).
+
 ## [2026-08-31] — Extract Markdown Action Items Attributed to People and Sync Task Status
 
 **Branch**: `main`

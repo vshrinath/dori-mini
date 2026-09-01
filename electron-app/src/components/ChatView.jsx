@@ -220,7 +220,7 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
         {!isChatting && (
           <div className="home-hero-stage anim-rise">
             <img
-              src="./assets/icon.png"
+              src="./assets/dori-wordmark.png"
               alt="Dori"
               className="home-hero-logo"
             />

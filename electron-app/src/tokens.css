@@ -957,11 +957,9 @@ body.is-resizing-sidebar {
 }
 
 .home-hero-logo {
-  width: 4.25rem;
-  height: 4.25rem;
+  width: auto;
+  height: 3.5rem;
   margin-bottom: 1.25rem;
-  border-radius: 1.15rem;
-  box-shadow: 0 8px 24px rgba(26, 31, 78, 0.12);
 }
 
 .home-focus-kicker {
