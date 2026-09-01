@@ -44,7 +44,7 @@ import { buildPackage, rewriteStatus } from './close-trip.mjs';
 import { listAllMeetings, findFiledRecordingIds, fathomFetch, formatTranscript } from './fetch-fathom.mjs';
 import { routeMeeting } from './route-meeting.mjs';
 import { meetingPrep } from './meeting-prep.mjs';
-import { loadOrgs, ensureOrg } from './org-store.mjs';
+import { loadOrgs, ensureOrg, loadAccounts, loadPeople } from './org-store.mjs';
 import { loadBrands, getBrand, getBrandContext, setBrand } from './brand-store.mjs';
 import { researchPerson } from './research-person.mjs';
 import { researchAndRecommend } from './research-and-recommend.mjs';
@@ -709,6 +709,36 @@ ${projectPath ? `project: "${projectPath}"\n` : ''}---
     handler: () => {
       try {
         return loadOrgs();
+      } catch (err) {
+        if (err.code === 'EPERM' || err.code === 'ENOENT') return [];
+        throw err;
+      }
+    },
+  },
+  {
+    id: 'list_accounts',
+    description: 'List all client, prospect, and partner accounts in the vault with relationship details',
+    inputSchema: z.object({}),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: () => {
+      try {
+        return loadAccounts();
+      } catch (err) {
+        if (err.code === 'EPERM' || err.code === 'ENOENT') return [];
+        throw err;
+      }
+    },
+  },
+  {
+    id: 'list_people',
+    description: 'List all people entities with organization affiliations and contact roles',
+    inputSchema: z.object({}),
+    scope: 'read',
+    exposeToMcp: true,
+    handler: () => {
+      try {
+        return loadPeople();
       } catch (err) {
         if (err.code === 'EPERM' || err.code === 'ENOENT') return [];
         throw err;

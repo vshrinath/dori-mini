@@ -1,5 +1,27 @@
 # Changelog
 
+## [2026-09-01] — Real Vault Accounts Discovery & Desktop UI Alignment in Entities
+
+**Branch**: `main`
+
+### What changed
+- Enhanced `org-store.mjs` to discover and load all client and prospect accounts directly from `accounts/<slug>/` in addition to `entities/organizations/`, and to parse people entities from `entities/people/`.
+- Exposed `list_accounts` and `list_people` in `actions.mjs`.
+- Redesigned `electron-app/src/components/EntitiesView.jsx`:
+  - Upgraded font and button sizing to standard desktop scale (`text-sm` base body font, `text-lg` headings, `h-9`/`h-10` inputs and buttons).
+  - Implemented rich Accounts & Organizations cards with relationship status badges (`Client`, `Proposal Sent`, `Active`, `Discovery`), kind badges, summaries, domains, and interactive linked contacts rosters.
+  - Added full People Directory tab displaying all 33+ contacts from `entities/people/` with quick research triggers.
+  - Standardized layout, filters, search bars, and card styles to match `ProjectsIndexView.jsx` and `FinanceView.jsx`.
+
+### Why
+Fix missing organizations and accounts by connecting to the real `accounts/` directory in the vault, and align UI sizing, typography, and presentation density with the rest of the Dori product screens.
+
+### Files touched
+- `org-store.mjs` — Added `loadAccounts` and `loadPeople` discovery logic
+- `actions.mjs` — Registered `list_accounts` and `list_people`
+- `electron-app/src/components/EntitiesView.jsx` — Redesigned UI with desktop typography, rich accounts cards, and people directory
+
+
 ## [2026-09-01] — Milestone 5: Entities, Organizations, Brands & Credentials Interface (R4, R7)
 
 **Branch**: `main`

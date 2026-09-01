@@ -21,7 +21,9 @@ import { homedir } from 'node:os';
 
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
 const ORGS_DIR = join(VAULT_ROOT, 'entities/organizations');
-const ROLES = ['client', 'vendor', 'partner', 'employer', 'none'];
+const ACCOUNTS_DIR = join(VAULT_ROOT, 'accounts');
+const PEOPLE_DIR = join(VAULT_ROOT, 'entities/people');
+const ROLES = ['client', 'vendor', 'partner', 'employer', 'none', 'prospect', 'collaborator', 'founder-advisory'];
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -64,20 +66,129 @@ function slugify(name) {
 
 import { parseFrontmatter, asList } from './frontmatter.mjs';
 
-export function loadOrgs() {
-  if (!existsSync(ORGS_DIR)) return [];
-  return readdirSync(ORGS_DIR)
-    .filter((f) => f.endsWith('.md'))
+export function loadPeople() {
+  if (!existsSync(PEOPLE_DIR)) return [];
+  return readdirSync(PEOPLE_DIR)
+    .filter((f) => f.endsWith('.md') && f !== 'PEOPLE.md')
     .map((f) => {
-      const fm = parseFrontmatter(readFileSync(join(ORGS_DIR, f), 'utf-8')).fm;
-      return {
-        slug: f.replace(/\.md$/, ''),
-        name: (fm.name || f.replace(/\.md$/, '')).replace(/^["']|["']$/g, ''),
-        role: fm.role || 'none',
-        people: asList(fm.people),
-        file: f,
-      };
+      try {
+        const raw = readFileSync(join(PEOPLE_DIR, f), 'utf-8');
+        const { fm, body } = parseFrontmatter(raw);
+        return {
+          slug: f.replace(/\.md$/, ''),
+          name: (fm.name || f.replace(/\.md$/, '').replace(/-/g, ' ')).replace(/^["']|["']$/g, ''),
+          role: fm.role || '',
+          org: fm.org || '',
+          relationship: fm.relationship || 'contact',
+          lastContact: fm['last-contact'] || '',
+          projects: asList(fm.projects),
+          summary: body?.trim()?.slice(0, 300) || '',
+          relPath: `entities/people/${f}`,
+          file: f,
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
+export function loadAccounts() {
+  if (!existsSync(ACCOUNTS_DIR)) return [];
+  const dirs = readdirSync(ACCOUNTS_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
+
+  const people = loadPeople();
+
+  return dirs.map((slug) => {
+    const dirPath = join(ACCOUNTS_DIR, slug);
+    const readmePath = join(dirPath, 'README.md');
+    const relDocPath = join(dirPath, '.relationship.md');
+    
+    let raw = '';
+    let usedFile = 'README.md';
+    if (existsSync(readmePath)) {
+      raw = readFileSync(readmePath, 'utf-8');
+    } else if (existsSync(relDocPath)) {
+      raw = readFileSync(relDocPath, 'utf-8');
+      usedFile = '.relationship.md';
+    }
+
+    const { fm, body } = raw ? parseFrontmatter(raw) : { fm: {}, body: '' };
+    const title = (fm.title || slug.replace(/[-_]/g, ' ')).replace(/^["']|["']$/g, '');
+    const accountKind = fm.account_kind || fm.kind || (fm.type === 'account' ? 'client' : 'none');
+    const relationshipStatus = fm.relationship_status || fm.status || 'active';
+    const domain = fm.domain || '';
+    const summary = fm.summary || body?.trim()?.slice(0, 300) || '';
+    const website = fm.website || '';
+
+    // Find linked people who belong to this org / account
+    const normName = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normSlug = slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const linkedPeople = people.filter((p) => {
+      const pOrg = (p.org || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      return pOrg.includes(normSlug) || (normName.length > 2 && pOrg.includes(normName));
     });
+
+    return {
+      slug,
+      name: title,
+      role: accountKind,
+      accountKind,
+      relationshipStatus,
+      domain,
+      summary,
+      website,
+      isAccount: true,
+      people: linkedPeople.map((p) => p.slug),
+      peopleDetails: linkedPeople,
+      relPath: `accounts/${slug}/${usedFile}`,
+      file: usedFile,
+    };
+  });
+}
+
+export function loadOrgs() {
+  const accounts = loadAccounts();
+  const orgFiles = existsSync(ORGS_DIR)
+    ? readdirSync(ORGS_DIR)
+        .filter((f) => f.endsWith('.md'))
+        .map((f) => {
+          try {
+            const raw = readFileSync(join(ORGS_DIR, f), 'utf-8');
+            const { fm, body } = parseFrontmatter(raw);
+            const slug = f.replace(/\.md$/, '');
+            return {
+              slug,
+              name: (fm.name || slug.replace(/-/g, ' ')).replace(/^["']|["']$/g, ''),
+              role: fm.role || 'none',
+              accountKind: fm.role || 'none',
+              relationshipStatus: fm.status || 'active',
+              domain: fm.domain || '',
+              summary: fm.summary || body?.trim()?.slice(0, 300) || '',
+              website: fm.website || '',
+              isAccount: false,
+              people: asList(fm.people),
+              peopleDetails: [],
+              relPath: `entities/organizations/${f}`,
+              file: f,
+            };
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean)
+    : [];
+
+  const existingSlugs = new Set(accounts.map((a) => a.slug.toLowerCase()));
+  const merged = [...accounts];
+  for (const org of orgFiles) {
+    if (!existingSlugs.has(org.slug.toLowerCase())) {
+      merged.push(org);
+    }
+  }
+  return merged;
 }
 
 // Inline-array frontmatter (`people: ["a", "b"]`), matching the format entities/people/*.md
