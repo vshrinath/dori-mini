@@ -59,12 +59,35 @@ Rule of thumb: if the message could *only* be about capture (a link, a file, a
 transcript), act on it directly. If it's a sentence that could plausibly be about
 anything else going on in this session, wait for the "Dori" prefix.
 
-<!-- dori-build:start -->
-Build-system process (features, reverse-engineering, brainstorm-to-requirement) lives
-in the repo in `.dori-build.json` → `processRoot`. Product features live in
-`docs/features/` here. Run `node scripts/dori-build-check.mjs`. Do not put PHI
-in feature files. For as-built inventory see that repo's `docs/reverse-engineering.md`.
-<!-- dori-build:end -->
+## Process: no formal spec scaffolding here
+
+This repo does not use `dori-build-system`'s `requirements.yaml` /
+`tech-constraints.yaml` / `verification-record.yaml` process (dropped
+2026-09-01). That scaffolding earns its cost on the real Dori product — large,
+multi-repo, years of decisions worth not losing. `dori-mini` is small and
+greenfield; the same ceremony was pure overhead and didn't even catch the bugs
+that shipped (chat not working, missing icons) — those needed someone to
+actually run the app, not another YAML field. Old `docs/features/*/*.yaml`
+files are left in place as historical record only; nothing enforces or
+updates them. Track conventions directly in this file. Before calling any
+`dori-go-*` UI work done, run the app and look at the screen — see
+"electron-app checks" below.
+
+## Cross-tool coordination (Claude Code ↔ Antigravity)
+
+Both tools may work this repo in the same session or back-to-back. Don't make
+the user relay context between us by hand:
+- Before asking the user what Antigravity did, grep the root workspace's
+  `memory/logs/sessions.md` (`/Users/shri/proto-space/dori/memory/logs/`) for
+  `tool: antigravity` entries with `cwd: /Users/shri/proto-space/dori-mini`
+  (or a matching `transcript:` path) — sessions log there automatically via a
+  Stop hook. Read the linked transcript directly instead of asking for it.
+- To hand Antigravity a task without the user relaying it, use its headless
+  CLI: `agy -p "<prompt>" --project proto-space --add-dir
+  /Users/shri/proto-space/dori-mini [--continue]`. It runs one prompt
+  non-interactively and prints the result.
+- Put durable conventions/decisions in this file (both tools read it at
+  session start) rather than re-explaining them in chat each time.
 
 ## electron-app checks
 
