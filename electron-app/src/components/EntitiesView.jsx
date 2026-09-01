@@ -408,8 +408,8 @@ export function EntitiesView({ onSelectDocument }) {
         />
 
         {/* Unified Tab Selector Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--space-sidebar-border)] pb-4">
-          <div className="flex items-center gap-1.5 rounded-panel border border-[var(--space-sidebar-border)] bg-[var(--surface-field)] p-1 text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+          <div className="inline-flex items-center gap-1.5 rounded-xl border border-border/70 bg-muted/80 p-1.5 text-muted-foreground">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isSelected = activeTab === tab.id;
@@ -419,13 +419,13 @@ export function EntitiesView({ onSelectDocument }) {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    'flex items-center gap-2 rounded-control px-4 py-2 text-sm font-medium transition-all cursor-pointer',
+                    'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all cursor-pointer',
                     isSelected
-                      ? 'bg-card text-foreground font-semibold shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-card text-foreground font-bold shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
                   )}
                 >
-                  <Icon size={16} strokeWidth={isSelected ? 2.2 : 1.8} className={isSelected ? 'text-[var(--brand-primary)]' : ''} />
+                  <Icon size={16} strokeWidth={isSelected ? 2.4 : 2} className={isSelected ? 'text-[var(--brand-primary)]' : ''} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -445,10 +445,10 @@ export function EntitiesView({ onSelectDocument }) {
                     type="button"
                     onClick={() => setAccountKindFilter(chip.id)}
                     className={cn(
-                      'rounded-control px-3.5 py-1.5 text-xs font-medium transition-all border cursor-pointer',
+                      'rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all border cursor-pointer',
                       accountKindFilter === chip.id
-                        ? 'bg-[var(--brand-primary)] text-white border-[var(--brand-primary)] font-semibold shadow-xs'
-                        : 'bg-card text-foreground-secondary border-border-soft hover:bg-[var(--space-nav-hover)] hover:text-foreground'
+                        ? 'bg-[var(--brand-primary)] text-white border-[var(--brand-primary)] font-bold shadow-xs'
+                        : 'bg-card text-foreground-secondary border-border hover:bg-[var(--space-nav-hover)] hover:text-foreground'
                     )}
                   >
                     {chip.label}
@@ -465,7 +465,7 @@ export function EntitiesView({ onSelectDocument }) {
                   value={accountQuery}
                   onChange={(e) => setAccountQuery(e.target.value)}
                   placeholder="Search accounts, domains, contacts…"
-                  className="h-10 pl-9 text-sm bg-card border-border-soft rounded-control"
+                  className="h-10 pl-9 text-sm bg-card border-border rounded-lg font-medium"
                 />
               </div>
             </div>
@@ -473,9 +473,9 @@ export function EntitiesView({ onSelectDocument }) {
             {/* Skeleton Loading */}
             {loading && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <Skeleton className="h-48 w-full rounded-panel" />
-                <Skeleton className="h-48 w-full rounded-panel" />
-                <Skeleton className="h-48 w-full rounded-panel" />
+                <Skeleton className="h-48 w-full rounded-xl" />
+                <Skeleton className="h-48 w-full rounded-xl" />
+                <Skeleton className="h-48 w-full rounded-xl" />
               </div>
             )}
 
@@ -503,19 +503,19 @@ export function EntitiesView({ onSelectDocument }) {
                     <div
                       key={account.slug}
                       onClick={() => onSelectDocument?.(account.relPath)}
-                      className="group flex flex-col justify-between rounded-panel border border-[var(--space-sidebar-border)] bg-card p-5 shadow-2xs transition-all hover:border-[var(--hairline-strong)] hover:shadow-sm cursor-pointer"
+                      className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-xs transition-all hover:border-foreground/25 hover:shadow-md cursor-pointer"
                     >
                       <div className="space-y-3.5">
                         {/* Card Top Row */}
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-[var(--surface-tint)] text-[var(--brand-accent)] shadow-2xs group-hover:bg-[var(--brand-primary)] group-hover:text-white transition-colors">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-tint)] text-[var(--brand-accent)] shadow-2xs group-hover:bg-[var(--brand-primary)] group-hover:text-white transition-colors">
                             <Building2 size={22} strokeWidth={2} />
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                            <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold border', kindBadge.color)}>
+                            <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-bold border', kindBadge.color)}>
                               {kindBadge.label}
                             </span>
-                            <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium border', statusBadge.color)}>
+                            <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold border', statusBadge.color)}>
                               {statusBadge.label}
                             </span>
                           </div>
@@ -523,11 +523,11 @@ export function EntitiesView({ onSelectDocument }) {
 
                         {/* Account Title & Domain */}
                         <div>
-                          <h3 className="text-lg font-semibold text-foreground group-hover:text-[var(--brand-primary)] transition-colors leading-snug">
+                          <h3 className="text-[17px] font-bold text-foreground group-hover:text-[var(--brand-primary)] transition-colors leading-snug tracking-tight">
                             {account.name}
                           </h3>
                           {account.domain && (
-                            <p className="mt-0.5 text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                            <p className="mt-0.5 text-[12px] font-mono text-muted-foreground uppercase tracking-wider font-semibold">
                               {account.domain}
                             </p>
                           )}
@@ -535,15 +535,15 @@ export function EntitiesView({ onSelectDocument }) {
 
                         {/* Summary */}
                         {account.summary && (
-                          <p className="text-sm text-foreground-secondary line-clamp-3 leading-relaxed">
+                          <p className="text-[14px] text-foreground-secondary line-clamp-3 leading-relaxed font-normal">
                             {account.summary}
                           </p>
                         )}
 
                         {/* Linked People Contacts Roster */}
                         {account.peopleDetails && account.peopleDetails.length > 0 && (
-                          <div className="pt-2 border-t border-[var(--space-sidebar-border)] space-y-1.5">
-                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          <div className="pt-2.5 border-t border-border/80 space-y-1.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                               Key Contacts ({account.peopleDetails.length})
                             </span>
                             <div className="flex flex-wrap gap-1.5">
@@ -554,12 +554,12 @@ export function EntitiesView({ onSelectDocument }) {
                                     e.stopPropagation();
                                     onSelectDocument?.(person.relPath);
                                   }}
-                                  className="inline-flex items-center gap-1.5 rounded-control bg-[var(--surface-field)] px-2.5 py-1 text-xs font-medium text-foreground hover:bg-[var(--space-nav-hover)] border border-border-soft transition-colors"
+                                  className="inline-flex items-center gap-1.5 rounded-md bg-muted/80 px-2.5 py-1 text-[13px] font-medium text-foreground hover:bg-muted border border-border transition-colors"
                                 >
-                                  <User size={12} className="text-muted-foreground" />
+                                  <User size={13} className="text-muted-foreground" />
                                   <span>{person.name}</span>
                                   {person.role && (
-                                    <span className="text-muted-foreground text-[11px]">({person.role})</span>
+                                    <span className="text-muted-foreground text-[12px]">({person.role})</span>
                                   )}
                                 </span>
                               ))}
@@ -569,11 +569,11 @@ export function EntitiesView({ onSelectDocument }) {
                       </div>
 
                       {/* Card Footer */}
-                      <div className="mt-5 pt-3.5 border-t border-[var(--space-sidebar-border)] flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="font-mono truncate max-w-[200px]">
+                      <div className="mt-5 pt-3.5 border-t border-border flex items-center justify-between text-[13px] text-foreground-secondary font-medium">
+                        <span className="font-mono text-xs truncate max-w-[200px] text-muted-foreground">
                           {account.relPath}
                         </span>
-                        <div className="flex items-center gap-1 text-[var(--brand-primary)] font-medium group-hover:translate-x-0.5 transition-transform">
+                        <div className="flex items-center gap-1 text-[var(--brand-primary)] font-bold group-hover:translate-x-0.5 transition-transform">
                           <span>Inspect</span>
                           <ArrowRight size={14} />
                         </div>
@@ -639,30 +639,30 @@ export function EntitiesView({ onSelectDocument }) {
                     <div
                       key={person.slug}
                       onClick={() => onSelectDocument?.(person.relPath)}
-                      className="group flex flex-col justify-between rounded-panel border border-[var(--space-sidebar-border)] bg-card p-5 shadow-2xs transition-all hover:border-[var(--hairline-strong)] hover:shadow-sm cursor-pointer"
+                      className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-xs transition-all hover:border-foreground/25 hover:shadow-md cursor-pointer"
                     >
                       <div className="space-y-3.5">
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--surface-tint)] text-[var(--brand-accent)] font-semibold text-sm shadow-2xs group-hover:bg-[var(--brand-primary)] group-hover:text-white transition-colors">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--surface-tint)] text-[var(--brand-primary)] font-bold text-sm shadow-2xs group-hover:bg-[var(--brand-primary)] group-hover:text-white transition-colors">
                             {initials}
                           </div>
                           {person.relationship && (
-                            <Badge variant="muted" size="compact" className="text-xs">
+                            <Badge variant="muted" size="compact" className="text-xs font-semibold">
                               {person.relationship}
                             </Badge>
                           )}
                         </div>
 
                         <div>
-                          <h3 className="text-lg font-semibold text-foreground group-hover:text-[var(--brand-primary)] transition-colors leading-snug">
+                          <h3 className="text-[17px] font-bold text-foreground group-hover:text-[var(--brand-primary)] transition-colors leading-snug tracking-tight">
                             {person.name}
                           </h3>
-                          <div className="mt-1 flex items-center gap-2 flex-wrap text-sm text-foreground-secondary">
-                            {person.role && <span className="font-medium">{person.role}</span>}
+                          <div className="mt-1 flex items-center gap-2 flex-wrap text-[13.5px] text-foreground-secondary">
+                            {person.role && <span className="font-semibold text-foreground">{person.role}</span>}
                             {person.role && person.org && <span className="text-muted-foreground">•</span>}
                             {person.org && (
-                              <span className="inline-flex items-center gap-1 font-medium text-[var(--brand-primary)]">
-                                <Building2 size={13} />
+                              <span className="inline-flex items-center gap-1 font-semibold text-[var(--brand-primary)]">
+                                <Building2 size={14} />
                                 {person.org}
                               </span>
                             )}
@@ -670,13 +670,13 @@ export function EntitiesView({ onSelectDocument }) {
                         </div>
 
                         {person.summary && (
-                          <p className="text-sm text-foreground-secondary line-clamp-3 leading-relaxed">
+                          <p className="text-[14px] text-foreground-secondary line-clamp-3 leading-relaxed font-normal">
                             {person.summary}
                           </p>
                         )}
                       </div>
 
-                      <div className="mt-5 pt-3.5 border-t border-[var(--space-sidebar-border)] flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="mt-5 pt-3.5 border-t border-border flex items-center justify-between text-[13px] text-muted-foreground">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -690,13 +690,13 @@ export function EntitiesView({ onSelectDocument }) {
                             });
                             setActiveTab('research');
                           }}
-                          className="h-7 px-2 text-xs font-medium text-[var(--brand-primary)] hover:bg-[var(--surface-tint)]"
+                          className="h-8 px-2.5 text-[13px] font-bold text-[var(--brand-primary)] hover:bg-[var(--surface-tint)]"
                         >
-                          <Search size={12} className="mr-1" />
-                          Research Person
+                          <Search size={13} className="mr-1.5" />
+                          Research
                         </Button>
 
-                        <div className="flex items-center gap-1 text-[var(--brand-primary)] font-medium group-hover:translate-x-0.5 transition-transform">
+                        <div className="flex items-center gap-1 text-[var(--brand-primary)] font-bold group-hover:translate-x-0.5 transition-transform">
                           <span>Inspect</span>
                           <ArrowRight size={14} />
                         </div>
@@ -722,7 +722,7 @@ export function EntitiesView({ onSelectDocument }) {
                   value={brandQuery}
                   onChange={(e) => setBrandQuery(e.target.value)}
                   placeholder="Search brands, companies, owners…"
-                  className="h-10 pl-9 text-sm bg-card border-border-soft rounded-control"
+                  className="h-10 pl-9 text-sm bg-card border-border rounded-lg font-medium"
                 />
               </div>
 
@@ -756,66 +756,66 @@ export function EntitiesView({ onSelectDocument }) {
                 {filteredBrands.map((brand) => (
                   <div
                     key={brand.slug}
-                    className="group flex flex-col justify-between rounded-panel border border-[var(--space-sidebar-border)] bg-card p-5 shadow-2xs transition-all hover:border-[var(--hairline-strong)] hover:shadow-sm"
+                    className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-xs transition-all hover:border-foreground/25 hover:shadow-md"
                   >
                     <div className="space-y-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-[var(--surface-tint)] text-[var(--brand-accent)] shadow-2xs">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-tint)] text-[var(--brand-accent)] shadow-2xs">
                           <Sparkles size={22} strokeWidth={2} />
                         </div>
-                        <Badge variant="muted" size="compact" className="text-xs">
+                        <Badge variant="muted" size="compact" className="text-xs font-semibold">
                           Brand Theme
                         </Badge>
                       </div>
 
                       <div>
-                        <h3 className="text-lg font-semibold text-foreground leading-snug">
+                        <h3 className="text-[17px] font-bold text-foreground leading-snug tracking-tight">
                           {brand.name}
                         </h3>
                         {brand.company && (
-                          <p className="mt-0.5 text-sm text-muted-foreground font-medium">
+                          <p className="mt-0.5 text-[13.5px] text-muted-foreground font-semibold">
                             {brand.company}
                           </p>
                         )}
                       </div>
 
                       {/* Color Palette Swatches */}
-                      <div className="space-y-1.5 pt-2 border-t border-[var(--space-sidebar-border)]">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <div className="space-y-1.5 pt-2.5 border-t border-border">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                           Theme Tokens
                         </span>
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2 rounded-control bg-[var(--surface-field)] px-3 py-1.5 border border-border-soft">
+                          <div className="flex items-center gap-2 rounded-lg bg-muted/80 px-3 py-1.5 border border-border">
                             <span className="h-4 w-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: brand.primary || '#0ea5e9' }} />
-                            <span className="text-xs font-mono font-medium text-foreground">{brand.primary || '#0ea5e9'}</span>
+                            <span className="text-xs font-mono font-bold text-foreground">{brand.primary || '#0ea5e9'}</span>
                           </div>
-                          <div className="flex items-center gap-2 rounded-control bg-[var(--surface-field)] px-3 py-1.5 border border-border-soft">
+                          <div className="flex items-center gap-2 rounded-lg bg-muted/80 px-3 py-1.5 border border-border">
                             <span className="h-4 w-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: brand.accent || '#f59e0b' }} />
-                            <span className="text-xs font-mono font-medium text-foreground">{brand.accent || '#f59e0b'}</span>
+                            <span className="text-xs font-mono font-bold text-foreground">{brand.accent || '#f59e0b'}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Typography */}
-                      <div className="flex items-center gap-4 text-xs text-foreground-secondary">
-                        <span className="flex items-center gap-1.5 font-medium">
+                      <div className="flex items-center gap-4 text-[13px] text-foreground-secondary font-medium">
+                        <span className="flex items-center gap-1.5 font-semibold">
                           <Type size={14} className="text-muted-foreground" />
                           Display: {brand.fontDisplay || 'Figtree'}
                         </span>
-                        <span className="flex items-center gap-1.5 font-medium">
+                        <span className="flex items-center gap-1.5 font-semibold">
                           Body: {brand.fontBody || 'Figtree'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="mt-5 pt-3.5 border-t border-[var(--space-sidebar-border)] flex items-center justify-between">
+                    <div className="mt-5 pt-3.5 border-t border-border flex items-center justify-between">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenGuidelines(brand.name)}
-                        className="h-8 px-3 text-xs font-medium border-border-soft hover:bg-[var(--space-nav-hover)]"
+                        className="h-8 px-3 text-[13px] font-bold border-border hover:bg-[var(--space-nav-hover)]"
                       >
-                        <FileText size={13} className="mr-1.5 text-[var(--brand-primary)]" />
+                        <FileText size={14} className="mr-1.5 text-[var(--brand-primary)]" />
                         Guidelines & Voice
                       </Button>
 
@@ -836,7 +836,7 @@ export function EntitiesView({ onSelectDocument }) {
                           });
                           setIsBrandModalOpen(true);
                         }}
-                        className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground"
+                        className="h-8 px-3 text-[13px] font-bold text-muted-foreground hover:text-foreground"
                       >
                         Edit
                       </Button>

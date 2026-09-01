@@ -1,5 +1,31 @@
 # Changelog
 
+## [2026-09-01] — Shadcn/Base UI Layout Polish, High Contrast, and Typography Scaling
+
+**Branch**: `main`
+
+### What changed
+- **Design Tokens & High Contrast**:
+  - Darkened and sharpened semantic light-mode text hierarchy in `tokens.css`: `--foreground` (`#0f172a`, deep slate-900), `--foreground-secondary` (`#334155`, slate-700), `--muted-foreground` (`#475569`, slate-600) with crisp structural borders (`--border` `#cbd5e1`).
+  - Increased font weight hierarchy across headings (`font-bold` / `font-semibold`), metadata chips, and body text for effortless legibility.
+- **Sidebar Project Tree Tuning**:
+  - Replaced busy nested folder icons with clean root folder glyphs and minimalist indented hierarchy dots with active rings.
+- **Shadcn/Base UI Card & Tab Layouts**:
+  - Elevated cards across `EntitiesView.jsx`, `ProjectsIndexView.jsx`, and `TimelineView.jsx` with `rounded-xl border border-border bg-card p-5 shadow-xs hover:border-foreground/25 hover:shadow-md`.
+  - Replaced small filter chips with Shadcn-style Segmented Tabs and Pill Buttons with bold active states and badge counters.
+  - Scaled up minimum text sizes across cards, summaries, and metadata chips (`text-sm` base body, `text-[17px]` card titles, `text-[13px]` metadata).
+
+### Why
+Refine cards, tabs, and sidebar layout to match modern Shadcn/Base UI design patterns, improve text contrast and weight, and eliminate cramped micro-typography.
+
+### Files touched
+- `electron-app/src/tokens.css` — High contrast text and border tokens, enhanced font weights
+- `electron-app/src/components/Sidebar.jsx` — Cleaned up project tree icons and active states
+- `electron-app/src/components/EntitiesView.jsx` — Shadcn-style cards, tab lists, and bold typography
+- `electron-app/src/components/ProjectsIndexView.jsx` — Elevated project cards, borders, and typography
+- `electron-app/src/components/TimelineView.jsx` — Elevated timeline cards, filter tabs, and search bar
+
+
 ## [2026-09-01] — Real Vault Accounts Discovery & Desktop UI Alignment in Entities
 
 **Branch**: `main`

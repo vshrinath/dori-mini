@@ -59,7 +59,6 @@ function buildProjectTree(projects) {
 function ProjectRow({ node, selected, onSelect, depth = 0 }) {
   const isSelected = selected === node.projectPath;
   const hasChildren = node.children && node.children.length > 0;
-  const Icon = isSelected ? FolderOpen : Folder;
 
   return (
     <div>
@@ -67,27 +66,38 @@ function ProjectRow({ node, selected, onSelect, depth = 0 }) {
         type="button"
         onClick={() => onSelect(node.projectPath)}
         className={cn(
-          "flex min-h-[2.4rem] w-full items-center gap-2.5 rounded-control px-3 py-1.5 text-left text-[14px] font-medium transition-all",
+          "group flex min-h-[2.35rem] w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[14px] transition-all cursor-pointer",
           isSelected
-            ? "bg-[var(--space-sidebar-field)] text-foreground font-semibold shadow-2xs"
-            : "text-foreground-secondary hover:bg-[var(--space-nav-hover)] hover:text-foreground"
+            ? "bg-[var(--space-sidebar-field)] text-foreground font-semibold shadow-2xs ring-1 ring-border/40"
+            : "text-foreground-secondary font-medium hover:bg-[var(--space-nav-hover)] hover:text-foreground"
         )}
       >
-        <Icon
-          size={17}
-          className={cn(
-            "shrink-0 transition-colors",
-            isSelected
-              ? "text-[var(--brand-primary)]"
-              : "text-[var(--brand-accent)]"
-          )}
-          strokeWidth={1.8}
-        />
+        {depth === 0 ? (
+          <Folder
+            size={16}
+            className={cn(
+              "shrink-0 transition-colors",
+              isSelected ? "text-[var(--brand-primary)]" : "text-muted-foreground group-hover:text-foreground"
+            )}
+            strokeWidth={2}
+          />
+        ) : (
+          <div className="flex items-center justify-center shrink-0 w-4 h-4">
+            <span
+              className={cn(
+                "w-1.5 h-1.5 rounded-full transition-all",
+                isSelected
+                  ? "bg-[var(--brand-primary)] scale-125"
+                  : "bg-muted-foreground/60 group-hover:bg-foreground"
+              )}
+            />
+          </div>
+        )}
         <span className="min-w-0 flex-1 truncate">{node.title}</span>
       </button>
 
       {hasChildren && (
-        <div className="mt-0.5 flex flex-col gap-0.5 pl-3 border-l border-[var(--space-sidebar-border)] ml-3.5">
+        <div className="mt-0.5 flex flex-col gap-0.5 pl-2.5 border-l-2 border-border/60 ml-3.5">
           {node.children.map((child) => (
             <ProjectRow
               key={child.projectPath}

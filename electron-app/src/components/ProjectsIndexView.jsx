@@ -155,7 +155,7 @@ export function ProjectsIndexView({ onSelectProject, onSelectDocument }) {
 
         {/* Projects Grid */}
         {filteredProjects.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredProjects.map((p) => {
               const stat = projectStats.get(p.projectPath) || {
                 fileCount: 0,
@@ -167,42 +167,42 @@ export function ProjectsIndexView({ onSelectProject, onSelectDocument }) {
                 <div
                   key={p.projectPath}
                   onClick={() => onSelectProject?.(p.projectPath)}
-                  className="group flex flex-col justify-between rounded-panel border border-[var(--space-sidebar-border)] bg-card p-5 shadow-2xs transition-all hover:border-[var(--hairline-strong)] hover:shadow-sm cursor-pointer"
+                  className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-xs transition-all hover:border-foreground/25 hover:shadow-md cursor-pointer"
                 >
-                  <div className="space-y-3">
+                  <div className="space-y-3.5">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-[var(--surface-tint)] text-[var(--brand-accent)] shadow-2xs group-hover:bg-[var(--brand-primary)] group-hover:text-white transition-colors">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-tint)] text-[var(--brand-accent)] shadow-2xs group-hover:bg-[var(--brand-primary)] group-hover:text-white transition-colors">
                         <Folder size={20} strokeWidth={2} />
                       </div>
-                      <Badge variant="muted" size="compact">
+                      <Badge variant="muted" size="compact" className="text-xs font-semibold">
                         {p.status || 'Active'}
                       </Badge>
                     </div>
 
                     <div>
-                      <h3 className="text-[16px] font-semibold text-foreground group-hover:text-[var(--brand-primary)] transition-colors">
+                      <h3 className="text-[17px] font-semibold text-foreground group-hover:text-[var(--brand-primary)] transition-colors tracking-tight leading-snug">
                         {p.title}
                       </h3>
-                      <p className="mt-0.5 text-xs font-mono text-muted-foreground truncate">
+                      <p className="mt-1 text-[13px] font-mono text-muted-foreground truncate">
                         projects/{p.projectPath}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-5 pt-4 border-t border-[var(--space-sidebar-border)] flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="mt-5 pt-4 border-t border-border flex items-center justify-between text-[13px] text-foreground-secondary font-medium">
                     <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1">
-                        <FileText size={13} />
+                      <span className="flex items-center gap-1.5">
+                        <FileText size={14} className="text-muted-foreground" />
                         {stat.fileCount} file{stat.fileCount === 1 ? '' : 's'}
                       </span>
                       {stat.taskCount > 0 && (
-                        <span className="flex items-center gap-1 text-amber-600 font-medium">
-                          <CheckCircle2 size={13} />
+                        <span className="flex items-center gap-1.5 text-amber-700 font-semibold">
+                          <CheckCircle2 size={14} />
                           {stat.taskCount} task{stat.taskCount === 1 ? '' : 's'}
                         </span>
                       )}
                     </div>
-                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[var(--brand-primary)]" />
+                    <ArrowRight size={15} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[var(--brand-primary)]" />
                   </div>
                 </div>
               );

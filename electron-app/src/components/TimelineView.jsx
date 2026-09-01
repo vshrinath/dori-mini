@@ -287,48 +287,53 @@ export function TimelineView({ onOpenFile, onSelectDocument }) {
         />
 
         {/* Filter Chips & Text Search Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-border pb-4">
           {/* Filter Chips */}
           <div className="flex flex-wrap items-center gap-2">
             {KIND_FILTERS.map((f) => {
               const count = counts[f.id] || 0;
               const isSelected = kindFilter === f.id;
               return (
-                <FilterChip
+                <button
                   key={f.id}
-                  selected={isSelected}
+                  type="button"
                   onClick={() => setKindFilter(f.id)}
-                  className="text-xs font-semibold px-3 py-1.5 transition-all flex items-center gap-1.5"
+                  className={cn(
+                    "rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all border flex items-center gap-2 cursor-pointer",
+                    isSelected
+                      ? "bg-[var(--brand-primary)] text-white border-[var(--brand-primary)] font-bold shadow-xs"
+                      : "bg-card text-foreground-secondary border-border hover:bg-[var(--space-nav-hover)] hover:text-foreground"
+                  )}
                 >
                   <span>{f.label}</span>
                   {events && (
                     <span
                       className={cn(
-                        "rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none transition-colors",
+                        "rounded-full px-2 py-0.5 text-[11px] font-mono leading-none transition-colors",
                         isSelected
-                          ? "bg-background/25 text-background"
-                          : "bg-muted-foreground/15 text-muted-foreground"
+                          ? "bg-white/25 text-white"
+                          : "bg-muted text-muted-foreground"
                       )}
                     >
                       {count}
                     </span>
                   )}
-                </FilterChip>
+                </button>
               );
             })}
           </div>
 
           {/* Text Search Input */}
-          <div className="relative w-full sm:w-64 shrink-0">
+          <div className="relative w-full sm:w-72 shrink-0">
             <Search
-              size={14}
+              size={15}
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search timeline or ref…"
-              className="h-8.5 pl-8.5 pr-8 text-xs bg-card border-border-soft rounded-control transition-all focus:border-[var(--brand-primary)]"
+              className="h-10 pl-9 pr-8 text-sm bg-card border-border rounded-lg transition-all focus:border-[var(--brand-primary)] font-medium"
             />
             {searchQuery && (
               <button
@@ -337,7 +342,7 @@ export function TimelineView({ onOpenFile, onSelectDocument }) {
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full transition-colors"
                 aria-label="Clear search"
               >
-                <X size={13} />
+                <X size={14} />
               </button>
             )}
           </div>
@@ -454,32 +459,32 @@ export function TimelineView({ onOpenFile, onSelectDocument }) {
                           }
                         }}
                         className={cn(
-                          "universal-card p-4 sm:p-4.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 transition-all group",
+                          "rounded-xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all group shadow-xs",
                           canNavigate &&
-                            "cursor-pointer hover:border-[var(--hairline-strong)] hover:shadow-sm active:scale-[0.995]"
+                            "cursor-pointer hover:border-foreground/25 hover:shadow-md active:scale-[0.995]"
                         )}
                       >
                         {/* Left: Icon & Details */}
-                        <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
+                        <div className="flex items-start sm:items-center gap-4 min-w-0 flex-1">
                           <div
                             className={cn(
-                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border shadow-xs transition-transform group-hover:scale-105",
+                              "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border shadow-xs transition-transform group-hover:scale-105",
                               cfg.bgTint,
                               cfg.borderTint
                             )}
                           >
                             <Icon
                               className={cn("h-5 w-5", cfg.color)}
-                              strokeWidth={1.9}
+                              strokeWidth={2.2}
                             />
                           </div>
 
-                          <div className="min-w-0 flex-1 space-y-1">
+                          <div className="min-w-0 flex-1 space-y-1.5">
                             {/* Metadata Badges Row */}
                             <div className="flex flex-wrap items-center gap-2">
                               <span
                                 className={cn(
-                                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border shadow-2xs",
+                                  "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider border shadow-2xs",
                                   cfg.badgeClasses
                                 )}
                               >
@@ -487,23 +492,23 @@ export function TimelineView({ onOpenFile, onSelectDocument }) {
                               </span>
 
                               {item.date && (
-                                <span className="text-xs text-muted-foreground font-medium">
+                                <span className="text-[13px] text-muted-foreground font-semibold">
                                   {formatDisplayDate(item.date)}
                                 </span>
                               )}
                             </div>
 
                             {/* Label / Activity Summary */}
-                            <p className="font-display text-[14.5px] font-semibold text-foreground leading-snug group-hover:text-[var(--brand-primary)] transition-colors">
+                            <p className="text-[15.5px] font-bold text-foreground leading-snug group-hover:text-[var(--brand-primary)] transition-colors tracking-tight">
                               {item.label || "Activity Event"}
                             </p>
 
                             {/* Document / File Reference */}
                             {item.ref && (
                               <div className="flex items-center gap-1.5 pt-0.5">
-                                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-muted-foreground/90 bg-muted/60 px-2 py-0.5 rounded-md max-w-full truncate">
+                                <span className="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-foreground bg-muted/80 border border-border px-2.5 py-1 rounded-md max-w-full truncate">
                                   <FileText
-                                    size={11}
+                                    size={13}
                                     className="shrink-0 text-muted-foreground"
                                   />
                                   <span className="truncate">{item.ref}</span>
@@ -514,56 +519,45 @@ export function TimelineView({ onOpenFile, onSelectDocument }) {
                         </div>
 
                         {/* Right: Actions */}
-                        {item.ref && (
-                          <div
-                            className="shrink-0 flex items-center justify-end gap-1.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-border-soft/60"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {/* Copy Reference Button */}
+                        <div className="flex items-center justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border">
+                          {item.ref && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={(e) => handleCopyRef(e, item.ref)}
-                              title="Copy reference path"
-                              className="h-7.5 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                              className="h-8 px-2.5 text-xs font-bold text-muted-foreground hover:text-foreground"
+                              title="Copy File Reference"
                             >
                               {isCopied ? (
-                                <>
-                                  <Check
-                                    size={12}
-                                    className="text-emerald-500"
-                                  />
-                                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                    Copied
-                                  </span>
-                                </>
+                                <span className="flex items-center gap-1 text-emerald-600">
+                                  <Check size={14} />
+                                  <span>Copied</span>
+                                </span>
                               ) : (
-                                <>
-                                  <Copy size={12} />
-                                  <span className="text-[11px] hidden sm:inline">
-                                    Copy
-                                  </span>
-                                </>
+                                <span className="flex items-center gap-1">
+                                  <Copy size={14} />
+                                  <span className="hidden sm:inline">Copy Ref</span>
+                                </span>
                               )}
                             </Button>
+                          )}
 
-                            {/* Open Document Button */}
-                            {canNavigate && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleOpenTarget(item.ref)}
-                                className="h-7.5 px-2.5 text-xs gap-1 font-medium bg-card hover:bg-muted"
-                              >
-                                <span>Open</span>
-                                <ChevronRight
-                                  size={12}
-                                  className="text-muted-foreground"
-                                />
-                              </Button>
-                            )}
-                          </div>
-                        )}
+                          {/* Open Document Button */}
+                          {canNavigate && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenTarget(item.ref)}
+                              className="h-8 px-3 text-xs gap-1 font-bold bg-card hover:bg-muted border-border"
+                            >
+                              <span>Open</span>
+                              <ChevronRight
+                                size={14}
+                                className="text-muted-foreground"
+                              />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}

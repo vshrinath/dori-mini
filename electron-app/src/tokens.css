@@ -245,25 +245,20 @@
    * SEMANTIC TOKENS (light mode)
    * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-  /* Backgrounds — surface hierarchy (warm) */
-  --background: #fafaf8; /* warm paper canvas */
-  --card: #ffffff; /* cards, modals, panels — pure white lifts off canvas */
-  --muted: #f3f4f6;
-  --accent: #e9eaee;
+  /* Backgrounds — surface hierarchy (crisp, modern) */
+  --background: #f8fafc;
+  --card: #ffffff;
+  --muted: #f1f5f9;
+  --accent: #e2e8f0;
 
-  /* Text hierarchy — 3 levels (warm brown, matches onboarding palette).
-     foreground-secondary/muted-foreground darkened from #73757c/#767880 —
-     those measured 4.0-4.6:1 against white/--muted, under the 4.5:1 AA
-     floor for small text. Both new values clear 4.5:1 against white and
-     --muted/--surface-field; relative ordering (secondary darker than
-     muted) preserved. */
-  --foreground: #26272b;
-  --foreground-secondary: #63666e;
-  --muted-foreground: #686b73;
+  /* High-contrast text hierarchy */
+  --foreground: #0f172a;
+  --foreground-secondary: #334155;
+  --muted-foreground: #475569;
 
-  /* Borders — warm hairlines */
-  --border: #e3e4e8;
-  --border-soft: #ececef;
+  /* Crisp structural borders */
+  --border: #cbd5e1;
+  --border-soft: #e2e8f0;
 
   /* Desktop app surface tokens */
   --surface-canvas: #fafaf8;
