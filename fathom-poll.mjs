@@ -14,6 +14,7 @@ import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { fathomFetch, listAllMeetings, findFiledRecordingIds, formatTranscript } from './fetch-fathom.mjs';
 import { routeMeeting } from './route-meeting.mjs';
+import { processMeetingMinutes } from './process-meeting-minutes.mjs';
 
 const SKILL_DIR = dirname(fileURLToPath(import.meta.url));
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
@@ -126,6 +127,14 @@ async function main() {
 
     writeFileSync(fullPath, frontmatter);
     console.log(`filed [${decision.action}]: ${relPath}`);
+
+    try {
+      console.log(`processing structured MOM for: ${relPath}`);
+      await processMeetingMinutes({ relPath });
+    } catch (err) {
+      console.warn(`[fathom-poll] automated MOM processing deferred: ${err.message}`);
+    }
+
     await new Promise((r) => setTimeout(r, 300)); // be polite to the Fathom API
   }
 

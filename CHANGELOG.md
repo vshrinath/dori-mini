@@ -1,5 +1,29 @@
 # Changelog
 
+## [2026-09-02] — Two-Phase Automated Background Meeting Minutes Processing Pipeline
+
+**Branch**: `main`
+
+### What changed
+- **Two-Phase Meeting Minutes Processor (`process-meeting-minutes.mjs`)**:
+  - Implemented hybrid two-phase processing pipeline mirroring `dori-engine` (`src/workflows/meeting-document.ts`).
+  - **Phase 1 (Fast Tier / Compression)**: Transcripts >= 6,000 characters (~1,500 tokens threshold) undergo a fast lossless-for-facts compression pass to eliminate conversational filler while preserving all dates, numbers, attributions, and decisions verbatim.
+  - **Phase 2 (Reasoning Tier / Extraction)**: Runs `mom-prompt.md` over the structured agenda to produce complete, high-fidelity Executive Summaries, Topics Discussed, Decisions Log, and Action Items.
+  - **Phase 3 (Task Extraction & SQLite Reindexing)**: Automatically pushes self-assigned action items to `.dori/tasks/records/` via `task-store.mjs` and re-indexes SQLite `portal.db`.
+- **Automated Background Polling Integration (`fathom-poll.mjs`)**:
+  - Wired `processMeetingMinutes` into `fathom-poll.mjs` so newly fetched Fathom recordings are automatically summarized into structured MOMs and indexed on arrival with graceful fallback if the AI engine is offline.
+- **Action Registry (`actions.mjs`)**:
+  - Registered `process_meeting` action exposing the two-phase processor via IPC and MCP.
+
+### Why
+Ensure all incoming meeting recordings are automatically processed into executive minutes and tasks on arrival without requiring manual user intervention or choking LLM context windows on long transcripts.
+
+### Files touched
+- `process-meeting-minutes.mjs` — Created two-phase meeting processor
+- `fathom-poll.mjs` — Automated MOM extraction on new recordings
+- `actions.mjs` — Registered `process_meeting` action
+- `CHANGELOG.md` — Documented changes
+
 ## [2026-09-02] — Clean Timeline & Processed Notes Indexing Pipeline
 
 **Branch**: `main`

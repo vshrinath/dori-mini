@@ -52,6 +52,7 @@ import { mergeEntity } from './entity-merge.mjs';
 import { loadDecisions, createDecision } from './decision-store.mjs';
 import { convertDocument } from './convert-document.mjs';
 import { db as getCredentialsDb } from './credentials-lib.mjs';
+import { processMeetingMinutes } from './process-meeting-minutes.mjs';
 
 /** @typedef {{ id: string, description: string, inputSchema: import('zod').ZodType, scope: 'read'|'write', exposeToMcp?: boolean, handler: (input: any) => Promise<any> | any }} ActionDefinition */
 
@@ -699,6 +700,17 @@ ${projectPath ? `project: "${projectPath}"\n` : ''}---
 
       return { success: true, relPath, title };
     },
+  },
+  {
+    id: 'process_meeting',
+    description: 'Process a raw meeting transcript into structured Minutes of Meeting (MOM), extract tasks, and reindex vault',
+    inputSchema: z.object({
+      relPath: z.string().min(1),
+      force: z.boolean().default(false),
+    }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ relPath, force }) => processMeetingMinutes({ relPath, force }),
   },
   {
     id: 'list_orgs',
