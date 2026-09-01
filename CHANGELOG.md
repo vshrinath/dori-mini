@@ -1,5 +1,26 @@
 # Changelog
 
+## [2026-09-02] — Clean Timeline & Processed Notes Indexing Pipeline
+
+**Branch**: `main`
+
+### What changed
+- **Restored Canonical SQLite Data Pipeline (`timeline.mjs`)**:
+  - Removed ad-hoc filesystem scanning and mtime guessing from `timeline.mjs`. All timeline meetings are sourced directly through canonical `listDocs()` from `query-vault.mjs`, preserving authentic meeting dates from frontmatter/filenames.
+- **Processed Notes Search & Recall Indexing (`reindex-vault.mjs`)**:
+  - Excluded raw verbatim transcript bodies (`## Transcript`) from search index (FTS) and default note content, indexing only the processed note/MOM portion so search and recall index real decisions, actions, and insights.
+- **Meeting Slide-Over Tabs (`FileSlideover.jsx`)**:
+  - For meeting documents containing transcripts, separated the processed MOM notes and the raw transcript into clean segmented tabs (`[ Minutes of Meeting (MOM) ]` and `[ Full Transcript ]`).
+
+### Why
+Maintain the simple, deterministic pipeline without file tampering or fallback date guesswork, keeping processed notes front-and-center.
+
+### Files touched
+- `timeline.mjs` — Restored clean canonical `listDocs()` sourcing
+- `reindex-vault.mjs` — Index only processed note portion into FTS and rendered HTML
+- `electron-app/src/components/FileSlideover.jsx` — Clean MOM vs Transcript tab separation
+
+
 ## [2026-09-01] — Full Vault Meeting Timeline Aggregation & Distinct Card Themes
 
 **Branch**: `main`

@@ -16,7 +16,7 @@
 // Dori Mini has no equivalent on the other end to plug into; porting the
 // gate without anything to gate would be complexity with nothing to hold up.
 import { z } from 'zod';
-import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdirSync, existsSync, statSync } from 'node:fs';
 import { dirname, join, posix as pathPosix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync, spawn } from 'node:child_process';

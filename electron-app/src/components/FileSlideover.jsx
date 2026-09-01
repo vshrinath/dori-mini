@@ -17,6 +17,8 @@ import {
   Copy,
   RefreshCw,
   Play,
+  MessageSquare,
+  CheckSquare,
 } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -25,6 +27,7 @@ import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
 import { TRANSITION } from '../lib/motion.js';
+import { cn } from '../lib/utils.js';
 
 const CONVERTIBLE_EXTENSIONS = ['.pdf', '.docx', '.pptx', '.xlsx', '.csv', '.epub', '.rtf', '.odt'];
 
@@ -34,6 +37,49 @@ function isConvertibleDocument(relPath, doc) {
   const hasExt = CONVERTIBLE_EXTENSIONS.some((ext) => target.endsWith(ext));
   const hasType = ['pdf', 'docx', 'pptx', 'xlsx', 'csv', 'document'].includes(doc?.type?.toLowerCase());
   return hasExt || hasType;
+}
+
+function extractMeetingDocParts(content, doc, relPath) {
+  if (!content) return { isMeeting: false, mom: '', transcript: '', hasMom: false, hasTranscript: false };
+
+  const isMeeting =
+    doc?.type === 'meeting' ||
+    doc?.frontmatter?.type === 'meeting' ||
+    (relPath || '').includes('/meetings/') ||
+    (relPath || '').startsWith('meetings/') ||
+    content.includes('## Transcript') ||
+    content.includes('# Transcript');
+
+  if (!isMeeting) return { isMeeting: false, mom: content, transcript: '', hasMom: true, hasTranscript: false };
+
+  const transcriptMatch = content.search(/(?:^|\n)#{1,3}\s+Transcript/i);
+  if (transcriptMatch === -1) {
+    const lines = content.split('\n').filter((l) => l.trim());
+    const dialogueLines = lines.filter((l) => /^[A-Z][a-zA-Z\s.'-]{1,30}\s*:\s*.+/.test(l));
+    if (dialogueLines.length > 5 && dialogueLines.length / lines.length > 0.4) {
+      return { isMeeting: true, mom: '', transcript: content, hasMom: false, hasTranscript: true };
+    }
+    return { isMeeting: true, mom: content, transcript: '', hasMom: true, hasTranscript: false };
+  }
+
+  const mom = content.slice(0, transcriptMatch).trim();
+  const transcript = content.slice(transcriptMatch).trim();
+
+  const momLines = mom.split('\n').filter((l) => {
+    const t = l.trim();
+    return (
+      t &&
+      !t.startsWith('#') &&
+      !t.startsWith('**Date:**') &&
+      !t.startsWith('**Attendees:**') &&
+      !t.startsWith('**Duration:**') &&
+      !t.startsWith('Date:') &&
+      !t.startsWith('Attendees:')
+    );
+  });
+  const hasMom = momLines.length > 0;
+
+  return { isMeeting: true, mom, transcript, hasMom, hasTranscript: true };
 }
 
 function extractYoutubeMetadata(doc, relPath) {
@@ -167,6 +213,9 @@ export function FileSlideover({ relPath, onClose, onSaved }) {
   const [isConverted, setIsConverted] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  // Meeting & MOM State
+  const [meetingTab, setMeetingTab] = useState('mom');
+
   // Load document content
   useEffect(() => {
     if (!relPath) return;
@@ -178,6 +227,7 @@ export function FileSlideover({ relPath, onClose, onSaved }) {
     setIsConverting(false);
     setConversionError(null);
     setIsConverted(false);
+    setMeetingTab('mom');
 
     window.dori
       .call('get_document', { path: relPath })
@@ -664,23 +714,96 @@ export function FileSlideover({ relPath, onClose, onSaved }) {
                 </div>
               )}
 
-              {/* Document Prose Content */}
-              {doc?.html ? (
-                <div
-                  className="prose dark:prose-invert max-w-none text-[17px] leading-[1.8] font-normal prose-headings:font-semibold prose-headings:text-foreground prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-[17px] prose-p:leading-[1.8] prose-p:text-foreground prose-li:text-[17px] prose-strong:font-semibold prose-strong:text-foreground"
-                  dangerouslySetInnerHTML={{ __html: doc.html }}
-                />
-              ) : isConverted || doc?.content ? (
-                <TiptapEditor
-                  key={`${relPath}-converted`}
-                  initialContent={doc?.content || draftContent || ''}
-                  editable={false}
-                />
-              ) : (
-                <div className="text-center py-12 text-muted-foreground text-sm">
-                  This document cannot be previewed natively. Use "Preview as Markdown" above to convert it.
-                </div>
-              )}
+              {/* Meeting View with Separate MOM vs Transcript Tabs */}
+              {(() => {
+                const meetingData = extractMeetingDocParts(doc?.content || draftContent || '', doc, relPath);
+
+                if (meetingData.isMeeting && meetingData.hasTranscript) {
+                  return (
+                    <div className="space-y-6">
+                      {/* Meeting Section Tab Switcher */}
+                      <div className="flex items-center justify-between border-b border-border pb-3">
+                        <div className="inline-flex items-center gap-1.5 rounded-xl border border-border/70 bg-muted/80 p-1 text-muted-foreground">
+                          {meetingData.hasMom && (
+                            <button
+                              type="button"
+                              onClick={() => setMeetingTab('mom')}
+                              className={cn(
+                                'flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+                                meetingTab === 'mom'
+                                  ? 'bg-card text-foreground font-bold shadow-xs'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
+                              )}
+                            >
+                              <FileText size={14} className="text-indigo-600 dark:text-indigo-400" />
+                              <span>Minutes of Meeting (MOM)</span>
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => setMeetingTab('transcript')}
+                            className={cn(
+                              'flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+                              meetingTab === 'transcript' || !meetingData.hasMom
+                                ? 'bg-card text-foreground font-bold shadow-xs'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
+                            )}
+                          >
+                            <MessageSquare size={14} />
+                            <span>Full Transcript</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* MOM Tab View */}
+                      {meetingTab === 'mom' && meetingData.hasMom && (
+                        <div>
+                          <TiptapEditor
+                            key={`${relPath}-mom`}
+                            initialContent={meetingData.mom}
+                            editable={false}
+                          />
+                        </div>
+                      )}
+
+                      {/* Full Transcript Tab View */}
+                      {(meetingTab === 'transcript' || !meetingData.hasMom) && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40 border border-border text-xs text-muted-foreground">
+                            <span>Verbatim conversation transcript</span>
+                            <span className="font-mono">
+                              {meetingData.transcript.split('\n').filter(Boolean).length} dialogue turns
+                            </span>
+                          </div>
+                          <TiptapEditor
+                            key={`${relPath}-transcript`}
+                            initialContent={meetingData.transcript}
+                            editable={false}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                return doc?.html ? (
+                  <div
+                    className="prose dark:prose-invert max-w-none text-[17px] leading-[1.8] font-normal prose-headings:font-semibold prose-headings:text-foreground prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-[17px] prose-p:leading-[1.8] prose-p:text-foreground prose-li:text-[17px] prose-strong:font-semibold prose-strong:text-foreground"
+                    dangerouslySetInnerHTML={{ __html: doc.html }}
+                  />
+                ) : isConverted || doc?.content ? (
+                  <TiptapEditor
+                    key={`${relPath}-converted`}
+                    initialContent={doc?.content || draftContent || ''}
+                    editable={false}
+                  />
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground text-sm">
+                    This document cannot be previewed natively. Use "Preview as Markdown" above to convert it.
+                  </div>
+                );
+              })()}
             </article>
           )}
         </div>

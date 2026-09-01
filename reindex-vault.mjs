@@ -240,18 +240,28 @@ for (const file of target) {
   // Matches dori-portal/lib/vault-indexer.ts titleFrom/summary semantics: summary comes
   // only from an explicit frontmatter field — Dori never auto-truncates the body for it.
   const summary = fm.summary || null;
+  // Extract processed note portion (exclude raw transcript tail if present)
+  let processedNote = body;
+  const transcriptIdx = body.search(/(?:^|\n)#{1,3}\s+Transcript/i);
+  if (transcriptIdx !== -1) {
+    const beforeTranscript = body.slice(0, transcriptIdx).trim();
+    if (beforeTranscript.length > 30) {
+      processedNote = beforeTranscript;
+    }
+  }
+
   // See MIN_DEDUP_BODY_CHARS's comment above the dedupe block — empty/near-empty bodies
   // all hash the same and must never be treated as duplicates of each other.
-  const hash = body.trim().length >= MIN_DEDUP_BODY_CHARS ? contentHash(body) : '';
+  const hash = processedNote.trim().length >= MIN_DEDUP_BODY_CHARS ? contentHash(processedNote) : '';
   const canonical = hash ? findCanonicalPath.get(VAULT_ID, hash, relPath) : null;
 
-  const renderedHtml = renderMarkdownToHtml(body);
-  upsertDoc.run(VAULT_ID, relPath, title, summary, JSON.stringify(fm), body, raw, renderedHtml, mtimeMs, new Date().toISOString(), hash, canonical?.rel_path ?? null);
+  const renderedHtml = renderMarkdownToHtml(processedNote);
+  upsertDoc.run(VAULT_ID, relPath, title, summary, JSON.stringify(fm), processedNote, raw, renderedHtml, mtimeMs, new Date().toISOString(), hash, canonical?.rel_path ?? null);
   deleteFts.run(VAULT_ID, relPath);
   if (canonical) {
     duplicates++;
   } else {
-    insertFts.run(VAULT_ID, relPath, title, summary, body);
+    insertFts.run(VAULT_ID, relPath, title, summary, processedNote);
   }
   indexed++;
 }
