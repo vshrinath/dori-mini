@@ -265,6 +265,10 @@ export const actions = [
         )
         .optional(),
       projectContext: z.string().optional(),
+      // Only meaningful over IPC (main.js uses it to route stream chunks
+      // back to the right chat bubble) -- unused by the plain handler below,
+      // which non-Electron callers (CLI, MCP) still get.
+      requestId: z.string().optional(),
     }),
     // 'write', not 'read': the model behind this can (once sandboxed
     // correctly) invoke any of the write actions in this same registry via

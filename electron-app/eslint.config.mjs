@@ -24,6 +24,7 @@ export default [
         URL: 'readonly',
         FormData: 'readonly',
         Blob: 'readonly',
+        crypto: 'readonly',
         process: 'readonly',
         __dirname: 'readonly',
         require: 'readonly',

@@ -2,10 +2,13 @@
 // Backend chat runner for Dori Go composer & chat.
 // Follows constraint.chat.cli-spawn-happens-in-main-process-only,
 // constraint.chat.reuse-answer-whatsapp-cli-invocation,
-// constraint.chat.action-invocation-is-existing-actions-only,
-// constraint.chat.no-token-streaming-for-v1, and
+// constraint.chat.action-invocation-is-existing-actions-only, and
 // constraint.chat.no-persistent-message-store-for-v1.
-import { execFile } from 'node:child_process';
+// (token streaming added 2026-09-01 -- superseded no-token-streaming-for-v1:
+// claude -p was blocking the whole UI for the entire CLI cold-start +
+// generation with no feedback. See dori/AGENTS.md 2026-09-01 discussion.)
+import { execFile, spawn } from 'node:child_process';
+import { createInterface } from 'node:readline';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
@@ -88,20 +91,65 @@ function buildPrompt(message, history = [], projectContext = null) {
 // what made this feature unsandboxed. See PLAN-REVIEW notes, 2026-08-31.
 const ACTIONS_DISPATCH_CMD = `node ${join(HERE, 'actions.mjs')} run`;
 
-export function runClaude(prompt) {
-  const args = ['-p', prompt, '--allowedTools', `Bash(${ACTIONS_DISPATCH_CMD}:*)`];
+// Streams --output-format stream-json (verified shape, 2026-09-01): each
+// line is one JSON event; a `{"type":"stream_event","event":{"type":
+// "content_block_delta","delta":{"type":"text_delta","text":"..."}}}` line
+// is one chunk of the reply as the model generates it, and the final
+// `{"type":"result","result":"<full text>"}` line is the authoritative
+// complete text (used over concatenated deltas in case any were missed).
+export function runClaude(prompt, onDelta) {
+  const args = [
+    '-p', prompt,
+    '--allowedTools', `Bash(${ACTIONS_DISPATCH_CMD}:*)`,
+    '--output-format', 'stream-json',
+    '--include-partial-messages',
+    '--verbose',
+  ];
   return new Promise((resolve, reject) => {
-    execFile('claude', args, { cwd: HERE, timeout: TIMEOUT_MS, env: execEnv() }, (err, stdout, stderr) => {
-      if (err) {
-        reject(new Error(`Claude Code execution failed: ${err.message}${stderr ? ' - ' + stderr : ''}`));
+    const child = spawn('claude', args, { cwd: HERE, env: execEnv() });
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(new Error('Claude Code execution timed out'));
+    }, TIMEOUT_MS);
+
+    let finalText = '';
+    let stderr = '';
+    createInterface({ input: child.stdout }).on('line', (line) => {
+      if (!line.trim()) return;
+      let event;
+      try {
+        event = JSON.parse(line);
+      } catch {
+        return; // non-JSON noise on stdout -- ignore rather than crash the stream
+      }
+      if (event.type === 'stream_event' && event.event?.type === 'content_block_delta' && event.event.delta?.type === 'text_delta') {
+        onDelta?.(event.event.delta.text);
+      } else if (event.type === 'result' && typeof event.result === 'string') {
+        finalText = event.result;
+      }
+    });
+    child.stderr.on('data', (d) => { stderr += d; });
+    child.on('error', (err) => {
+      clearTimeout(timer);
+      reject(new Error(`Claude Code execution failed: ${err.message}`));
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (!finalText && code !== 0) {
+        reject(new Error(`Claude Code execution failed${stderr ? ' - ' + stderr : ''}`));
       } else {
-        resolve(stdout.trim());
+        resolve(finalText.trim());
       }
     });
   });
 }
 
-export function runCodex(prompt) {
+// Codex's --json event shape wasn't confirmed to include token-level deltas
+// (a short test reply came back as one item.completed, not incremental
+// text) -- left on the prior blocking execFile call rather than guess at an
+// unverified streaming format. onDelta is still called once at the end so
+// callers don't need to branch on which CLI is configured.
+export function runCodex(prompt, onDelta) {
   // Codex's --sandbox is coarser than Claude's --allowedTools: it has no
   // per-command allowlist, only read-only/workspace-write/danger-full-access.
   // workspace-write permits ANY command that only touches files under cwd
@@ -112,17 +160,23 @@ export function runCodex(prompt) {
   // narrowing Codex further than the sandbox flag alone would.
   const args = ['exec', '--sandbox', 'workspace-write', prompt];
   return new Promise((resolve, reject) => {
-    execFile('codex', args, { cwd: HERE, timeout: TIMEOUT_MS, env: execEnv() }, (err, stdout, stderr) => {
+    // stdio: 'ignore' on stdin -- codex checks whether stdin is readable and
+    // waits on it ("Reading additional input from stdin...") if left open,
+    // which execFile does by default (an unclosed pipe, never written to).
+    // Left unfixed, that wait can run out most of TIMEOUT_MS on every message.
+    execFile('codex', args, { cwd: HERE, timeout: TIMEOUT_MS, env: execEnv(), stdio: ['ignore', 'pipe', 'pipe'] }, (err, stdout, stderr) => {
       if (err) {
         reject(new Error(`Codex execution failed: ${err.message}${stderr ? ' - ' + stderr : ''}`));
       } else {
-        resolve(stdout.trim());
+        const text = stdout.trim();
+        onDelta?.(text);
+        resolve(text);
       }
     });
   });
 }
 
-export async function sendChatMessage({ message, history = [], projectContext = null }) {
+export async function sendChatMessage({ message, history = [], projectContext = null, onDelta = null }) {
   if (!message || typeof message !== 'string' || !message.trim()) {
     throw new Error('Message must be a non-empty string');
   }
@@ -137,7 +191,7 @@ export async function sendChatMessage({ message, history = [], projectContext = 
   const prompt = buildPrompt(message.trim(), history, projectContext);
 
   try {
-    const reply = replyCli === 'claude' ? await runClaude(prompt) : await runCodex(prompt);
+    const reply = replyCli === 'claude' ? await runClaude(prompt, onDelta) : await runCodex(prompt, onDelta);
     return {
       reply,
       replyHtml: renderMarkdownToHtml(reply),

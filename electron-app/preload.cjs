@@ -17,4 +17,11 @@ contextBridge.exposeInMainWorld('dori', {
     ipcRenderer.on('open-settings', handler);
     return () => ipcRenderer.removeListener('open-settings', handler);
   },
+  // Streamed chat_send chunks, keyed by requestId -- see main.js's
+  // ipcMain.handle('dori:call', ...) chat_send special case.
+  onChatDelta: (callback) => {
+    const handler = (_event, payload) => callback(payload);
+    ipcRenderer.on('chat:delta', handler);
+    return () => ipcRenderer.removeListener('chat:delta', handler);
+  },
 });

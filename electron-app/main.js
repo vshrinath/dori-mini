@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { getAction } from '../actions.mjs';
+import { sendChatMessage } from '../chat-runner.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -103,10 +104,21 @@ function getAppIconPath() {
   return null;
 }
 
-ipcMain.handle('dori:call', async (_event, actionId, input) => {
+ipcMain.handle('dori:call', async (event, actionId, input) => {
   const action = getAction(actionId);
   const parsed = action.inputSchema.parse(input ?? {});
-  const result = await action.handler(parsed);
+  // chat_send bypasses the generic handler here (but keeps it for CLI/MCP
+  // callers) so it can stream chunks back over 'chat:delta' as they arrive,
+  // instead of the renderer blocking on the whole CLI call with no feedback.
+  const result =
+    actionId === 'chat_send'
+      ? await sendChatMessage({
+          ...parsed,
+          onDelta: parsed.requestId
+            ? (text) => event.sender.send('chat:delta', { requestId: parsed.requestId, text })
+            : undefined,
+        })
+      : await action.handler(parsed);
   console.log(`[ipc] ${actionId} ->`, Array.isArray(result) ? `${result.length} items` : result);
   return result;
 });

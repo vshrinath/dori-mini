@@ -31,6 +31,7 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingReply, setStreamingReply] = useState('');
   const [engine, setEngine] = useState('none');
   const [errorMessage, setErrorMessage] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -39,6 +40,7 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const menuRef = useRef(null);
+  const streamRequestIdRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -46,7 +48,16 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
 
   useEffect(() => {
     if (messages.length > 0) scrollToBottom();
-  }, [messages, isLoading]);
+  }, [messages, isLoading, streamingReply]);
+
+  // Chunks for the in-flight request only -- a stale delta from a request
+  // that already finished (or a message the user didn't send) is dropped.
+  useEffect(() => {
+    return window.dori?.onChatDelta?.(({ requestId, text }) => {
+      if (requestId !== streamRequestIdRef.current) return;
+      setStreamingReply((prev) => prev + text);
+    });
+  }, []);
 
   useEffect(() => {
     window.dori?.call('get_engine_config', {})
@@ -83,7 +94,11 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
     setMessages(nextHistory);
     setInput('');
     setIsLoading(true);
+    setStreamingReply('');
     setErrorMessage(null);
+
+    const requestId = crypto.randomUUID();
+    streamRequestIdRef.current = requestId;
 
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -94,6 +109,7 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
         message: text,
         history: messages.map((m) => ({ role: m.role, text: m.text })),
         projectContext: projectContext || undefined,
+        requestId,
       });
 
       const doriTurn = {
@@ -111,7 +127,9 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
         setErrorMessage(err.message || 'Failed to get a reply from the CLI.');
       }
     } finally {
+      streamRequestIdRef.current = null;
       setIsLoading(false);
+      setStreamingReply('');
     }
   };
 
@@ -258,14 +276,24 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
                 <span className="text-xs font-semibold text-muted-foreground mb-1 px-1 uppercase tracking-wider">
                   Dori
                 </span>
-                <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-card border border-[var(--border-soft)] px-4 py-3 text-sm text-muted-foreground shadow-xs">
-                  <div className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.15s]" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.3s]" />
+                {streamingReply ? (
+                  // Raw text while streaming -- partial markdown (an unclosed
+                  // ``` or | table row) can render as broken HTML, so this
+                  // waits for the complete reply (rendered via m.html above)
+                  // rather than re-parsing markdown on every chunk.
+                  <div className="w-full max-w-2xl whitespace-pre-wrap rounded-2xl rounded-tl-sm border border-[var(--border-soft)] bg-card px-6 py-4.5 text-[15.5px] leading-relaxed text-foreground shadow-xs">
+                    {streamingReply}
                   </div>
-                  <span className="ml-1 font-medium text-xs">Thinking…</span>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-card border border-[var(--border-soft)] px-4 py-3 text-sm text-muted-foreground shadow-xs">
+                    <div className="flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.15s]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.3s]" />
+                    </div>
+                    <span className="ml-1 font-medium text-xs">Thinking…</span>
+                  </div>
+                )}
               </div>
             )}
 
