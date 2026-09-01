@@ -62,15 +62,19 @@ Full video download (only if explicitly requested):
 yt-dlp -o "%(title)s.%(ext)s" "<url>"
 ```
 
-## 2. Document (PDF, DOCX, PPTX, XLSX, HTML, or a local file path)
+## 2. Document (PDF, DOCX, PPTX, XLSX, or a local file path)
 
 ```bash
-markitdown "<path>" > "<output>.md"
+node ~/.claude/skills/dori/convert-document.mjs "<path>" -o "<output>.md"
 ```
+
+On-device only (`@firecrawl/pdf-inspector` for PDF, `@firecrawl/anydoc` for everything else) — no Python venv, no document content leaves the machine. A scanned/image PDF needs `PDFIUM_LIB_PATH`/`ORT_DYLIB_PATH` set (see dori-mini's `data/README.md`-equivalent setup notes); without them it throws rather than silently skipping OCR.
+
+**A pasted URL/link is a different capture path, not a local file** — fetch and extract it via `https://markdown.new/<url>` (same service the rest of Dori uses for link capture). This also covers local `.html` files in practice, since HTML capture here is almost always "a link was pasted," not a saved `.html` file on disk; `anydoc` does not support HTML at all.
 
 Don't assume a project-specific convention (e.g. `references/<deck>/` + frontmatter catalog) unless the current directory already has one — check for an existing `references/` dir or import script first.
 
-**A receipt or invoice photo/PDF is different** — it's not converted to prose, it's read for a few fields and filed as a ledger row. `markitdown` can't OCR a photo, so read the image yourself (you're multimodal) and pull out the date, vendor/description, and total amount — this mirrors `finance-attach-trip-receipt.ts`'s real vision-extraction step, just done by you instead of a model call inside the action. Then:
+**A receipt or invoice photo/PDF is different** — it's not converted to prose, it's read for a few fields and filed as a ledger row. Read the image yourself (you're multimodal) and pull out the date, vendor/description, and total amount — this mirrors `finance-attach-trip-receipt.ts`'s real vision-extraction step, just done by you instead of a model call inside the action. Then:
 ```bash
 node ~/.claude/skills/dori/attach-receipt.mjs "<path-to-receipt-file>" --date <YYYY-MM-DD> --desc "<vendor/description>" --amount <n> --thread <threadId>
 ```

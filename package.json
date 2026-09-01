@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@firecrawl/anydoc": "^0.2.4",
     "@firecrawl/pdf-inspector": "^1.17.0",
     "@huggingface/transformers": "^4.2.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
