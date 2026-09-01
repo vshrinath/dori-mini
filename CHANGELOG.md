@@ -1,5 +1,30 @@
 # Changelog
 
+## [2026-09-01] — Full Vault Meeting Timeline Aggregation & Distinct Card Themes
+
+**Branch**: `main`
+
+### What changed
+- **Vault Meeting Discovery (`timeline.mjs`)**:
+  - Replaced SQLite-only meeting queries with automatic scanning of real meeting markdown files across `accounts/*/meetings/`, `projects/*/meetings/`, `meetings/`, and `captures/` in the vault ($VAULT_ROOT).
+  - Dynamically parses meeting dates from frontmatter, filename patterns (`YYYY-MM-DD`), and file timestamps, and extracts titles and associated organizations.
+- **Visual Differentiation of Timeline Event Cards (`TimelineView.jsx`)**:
+  - **Distinct Left Border Accents**:
+    - **Meetings**: Rich indigo accent (`border-l-4 border-l-indigo-600`), indigo icon bubble, and Organization / Attendee count chips.
+    - **Decisions**: Amber accent (`border-l-4 border-l-amber-500`), compass icon bubble, and decision status badge.
+    - **Expenses**: Emerald accent (`border-l-4 border-l-emerald-600`), receipt icon bubble, and green amount pill with trip name.
+    - **Tasks**: Blue accent (`border-l-4 border-l-blue-600`), check icon bubble, and task status chip.
+    - **Notes / Clippings**: Purple accent (`border-l-4 border-l-purple-600`).
+  - Added kind-specific metadata chips and high-contrast typography across all chronological groups.
+
+### Why
+Ensure all 480+ meetings in the vault appear in the timeline chronologically, and give each activity type an immediate, distinct visual identity so the user can scan the timeline effortlessly.
+
+### Files touched
+- `timeline.mjs` — Added vault filesystem scanner for meetings
+- `electron-app/src/components/TimelineView.jsx` — Themed left border accents, distinct icon bubbles, and kind-specific metadata chips
+
+
 ## [2026-09-01] — Base Font Sizing & Finance Screen Typography Upgrade
 
 **Branch**: `main`

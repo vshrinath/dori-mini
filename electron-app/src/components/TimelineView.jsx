@@ -13,6 +13,9 @@ import {
   Clock,
   Filter,
   ChevronRight,
+  Video,
+  Building2,
+  Users,
 } from "lucide-react";
 import { RouteHeader } from "./ui/RouteHeader.jsx";
 import { Badge } from "./ui/badge.jsx";
@@ -35,42 +38,57 @@ const KIND_CONFIG = {
   meeting: {
     label: "Meeting",
     pluralLabel: "Meetings",
-    icon: Calendar,
-    color: "text-blue-600 dark:text-blue-400",
-    bgTint: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-    borderTint: "border-blue-500/20 dark:border-blue-500/30",
+    icon: Video,
+    color: "text-indigo-700 dark:text-indigo-300",
+    bgTint: "bg-indigo-50 dark:bg-indigo-950/50",
+    borderTint: "border-indigo-200 dark:border-indigo-800",
     badgeClasses:
-      "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200/60 dark:border-blue-800/40",
+      "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/60 dark:text-indigo-200 dark:border-indigo-700",
+    cardAccent: "border-l-4 border-l-indigo-600",
   },
   decision: {
     label: "Decision",
     pluralLabel: "Decisions",
     icon: Compass,
-    color: "text-purple-600 dark:text-purple-400",
-    bgTint: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-    borderTint: "border-purple-500/20 dark:border-purple-500/30",
+    color: "text-amber-700 dark:text-amber-300",
+    bgTint: "bg-amber-50 dark:bg-amber-950/50",
+    borderTint: "border-amber-200 dark:border-amber-800",
     badgeClasses:
-      "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-200/60 dark:border-purple-800/40",
+      "bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700",
+    cardAccent: "border-l-4 border-l-amber-500",
   },
   task: {
     label: "Task",
     pluralLabel: "Tasks",
     icon: CheckCircle2,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bgTint: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    borderTint: "border-emerald-500/20 dark:border-emerald-500/30",
+    color: "text-blue-700 dark:text-blue-300",
+    bgTint: "bg-blue-50 dark:bg-blue-950/50",
+    borderTint: "border-blue-200 dark:border-blue-800",
     badgeClasses:
-      "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/40",
+      "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/60 dark:text-blue-200 dark:border-blue-700",
+    cardAccent: "border-l-4 border-l-blue-600",
   },
   expense: {
     label: "Expense",
     pluralLabel: "Expenses",
     icon: Receipt,
-    color: "text-amber-600 dark:text-amber-400",
-    bgTint: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    borderTint: "border-amber-500/20 dark:border-amber-500/30",
+    color: "text-emerald-700 dark:text-emerald-300",
+    bgTint: "bg-emerald-50 dark:bg-emerald-950/50",
+    borderTint: "border-emerald-200 dark:border-emerald-800",
     badgeClasses:
-      "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40",
+      "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700",
+    cardAccent: "border-l-4 border-l-emerald-600",
+  },
+  note: {
+    label: "Note",
+    pluralLabel: "Notes",
+    icon: FileText,
+    color: "text-purple-700 dark:text-purple-300",
+    bgTint: "bg-purple-50 dark:bg-purple-950/50",
+    borderTint: "border-purple-200 dark:border-purple-800",
+    badgeClasses:
+      "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/60 dark:text-purple-200 dark:border-purple-700",
+    cardAccent: "border-l-4 border-l-purple-600",
   },
 };
 
@@ -459,7 +477,8 @@ export function TimelineView({ onOpenFile, onSelectDocument }) {
                           }
                         }}
                         className={cn(
-                          "rounded-xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all group shadow-xs",
+                          "rounded-xl border border-border bg-card p-4.5 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all group shadow-xs",
+                          cfg.cardAccent,
                           canNavigate &&
                             "cursor-pointer hover:border-foreground/25 hover:shadow-md active:scale-[0.995]"
                         )}
@@ -494,6 +513,26 @@ export function TimelineView({ onOpenFile, onSelectDocument }) {
                               {item.date && (
                                 <span className="text-[13px] text-muted-foreground font-semibold">
                                   {formatDisplayDate(item.date)}
+                                </span>
+                              )}
+
+                              {item.org && (
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-md bg-muted text-foreground border border-border">
+                                  <Building2 size={12} className="text-muted-foreground" />
+                                  <span>{item.org}</span>
+                                </span>
+                              )}
+
+                              {item.amount && (
+                                <span className="inline-flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  ${item.amount}
+                                </span>
+                              )}
+
+                              {item.attendees && item.attendees.length > 0 && (
+                                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-semibold">
+                                  <Users size={12} />
+                                  <span>{item.attendees.length} attendee{item.attendees.length === 1 ? '' : 's'}</span>
                                 </span>
                               )}
                             </div>
