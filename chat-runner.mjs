@@ -104,6 +104,14 @@ export function runClaude(prompt, onDelta) {
     '--output-format', 'stream-json',
     '--include-partial-messages',
     '--verbose',
+    // Trims real seconds off a one-shot chat call: --strict-mcp-config skips
+    // connecting to the user's full (mostly needs-auth) MCP server list, and
+    // the SessionEnd override skips the ~/.claude/hooks/log-session-end.sh
+    // dlog write -- useful for a real coding session, pure overhead for a
+    // single chat reply. Neither touches the user's actual interactive
+    // Claude Code sessions or their logging -- scoped to just this process.
+    '--strict-mcp-config',
+    '--settings', JSON.stringify({ hooks: { SessionEnd: [] } }),
   ];
   return new Promise((resolve, reject) => {
     const child = spawn('claude', args, { cwd: HERE, env: execEnv() });
