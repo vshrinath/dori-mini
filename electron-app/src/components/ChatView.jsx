@@ -99,6 +99,7 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
       const doriTurn = {
         role: 'dori',
         text: response.reply,
+        html: response.replyHtml,
         timestamp: response.timestamp || new Date().toISOString(),
       };
       setMessages([...nextHistory, doriTurn]);
@@ -243,7 +244,11 @@ export function ChatView({ projectContext = null, className = '', onOpenSearch }
                       : 'w-full max-w-2xl bg-card border border-[var(--border-soft)] px-6 py-4.5 rounded-tl-sm shadow-xs prose dark:prose-invert text-foreground'
                   )}
                 >
-                  {m.text}
+                  {m.role === 'user' || !m.html ? (
+                    m.text
+                  ) : (
+                    <div dangerouslySetInnerHTML={{ __html: m.html }} />
+                  )}
                 </div>
               </div>
             ))}

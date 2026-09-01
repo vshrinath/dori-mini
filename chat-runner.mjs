@@ -11,6 +11,8 @@ import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { getEngineConfig } from './engine-config.mjs';
 import { actions, getAction } from './actions.mjs';
+import { getProjectDetails } from './query-vault.mjs';
+import { renderMarkdownToHtml } from './render-html.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TIMEOUT_MS = 60000;
@@ -20,10 +22,39 @@ function execEnv() {
   return { ...process.env, PATH: `${process.env.PATH || ''}:${extra.join(':')}` };
 }
 
+// Bounded to keep the prompt small — enough for the model to answer "what's
+// going on with this project" without pulling in a project's entire history.
+const GROUNDING_LIST_LIMIT = 8;
+
+function formatProjectGrounding(projectContext) {
+  let details;
+  try {
+    details = getProjectDetails(projectContext);
+  } catch {
+    return '';
+  }
+  if (!details) return '';
+
+  const section = (label, items, render) => {
+    if (!items?.length) return '';
+    const shown = items.slice(0, GROUNDING_LIST_LIMIT).map(render).join('\n');
+    const more = items.length > GROUNDING_LIST_LIMIT ? `\n  ... and ${items.length - GROUNDING_LIST_LIMIT} more` : '';
+    return `\n${label}:\n${shown}${more}`;
+  };
+
+  const grounding =
+    section('Files', details.files, (f) => `  - ${f.title || f.name} (${f.relPath})`) +
+    section('Meetings', details.meetings, (m) => `  - ${m.title} (${m.date || 'undated'})`) +
+    section('People', details.people, (p) => `  - ${p.name}${p.role ? `, ${p.role}` : ''}`) +
+    section('Open tasks', details.tasks, (t) => `  - ${t.text || t.title}`);
+
+  return grounding ? `\n\nProject context for "${projectContext}":${grounding}` : '';
+}
+
 function buildSystemPrompt(projectContext) {
   const actionList = actions.map((a) => `- ${a.id}: ${a.description}`).join('\n');
   const scopeMsg = projectContext
-    ? `You are currently scoped to the project "${projectContext}". Keep your focus on this project unless asked otherwise.`
+    ? `You are currently scoped to the project "${projectContext}". Keep your focus on this project unless asked otherwise.${formatProjectGrounding(projectContext)}`
     : `You are in global conversation mode.`;
 
   return `You are Dori, the executive personal AI assistant. ${scopeMsg}
@@ -109,6 +140,7 @@ export async function sendChatMessage({ message, history = [], projectContext = 
     const reply = replyCli === 'claude' ? await runClaude(prompt) : await runCodex(prompt);
     return {
       reply,
+      replyHtml: renderMarkdownToHtml(reply),
       replyCli,
       projectContext,
       timestamp: new Date().toISOString(),
