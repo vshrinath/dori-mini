@@ -195,39 +195,39 @@ export function FinanceView({ onSelectDocument }) {
         />
 
         {/* Aggregated Overview Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 anim-stagger">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 anim-stagger">
           {/* Total Spent */}
-          <div className="universal-card p-4 space-y-1.5">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-2 shadow-xs">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-medium uppercase tracking-wider">Total Spent</span>
-              <DollarSign size={16} className="text-foreground/70" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Spent</span>
+              <DollarSign size={18} className="text-foreground" />
             </div>
-            <div className="text-xl font-bold font-mono text-foreground tracking-tight">
+            <div className="text-2xl font-bold font-mono text-foreground tracking-tight">
               {loading && !ledgers ? (
-                <Skeleton className="h-7 w-28" />
+                <Skeleton className="h-8 w-32" />
               ) : (
                 formatCurrency(metrics.totalSpent)
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground font-medium">
               Across {ledgers?.length || 0} recorded ledgers
             </p>
           </div>
 
           {/* Reimbursable Total */}
-          <div className="universal-card p-4 space-y-1.5">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-2 shadow-xs">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-medium uppercase tracking-wider">Reimbursable</span>
-              <TrendingUp size={16} className="text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Reimbursable</span>
+              <TrendingUp size={18} className="text-emerald-600" />
             </div>
-            <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
+            <div className="text-2xl font-bold font-mono text-emerald-600 tracking-tight">
               {loading && !ledgers ? (
-                <Skeleton className="h-7 w-28" />
+                <Skeleton className="h-8 w-32" />
               ) : (
                 formatCurrency(metrics.reimbursableTotal)
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground font-medium">
               {metrics.totalSpent > 0
                 ? `${Math.round((metrics.reimbursableTotal / metrics.totalSpent) * 100)}% of total spend`
                 : "Eligible claim total"}
@@ -235,49 +235,49 @@ export function FinanceView({ onSelectDocument }) {
           </div>
 
           {/* Active Trips */}
-          <div className="universal-card p-4 space-y-1.5">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-2 shadow-xs">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-medium uppercase tracking-wider">Active Trips</span>
-              <Layers size={16} className="text-foreground/70" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active Trips</span>
+              <Layers size={18} className="text-foreground" />
             </div>
-            <div className="text-xl font-bold text-foreground tracking-tight">
+            <div className="text-2xl font-bold text-foreground tracking-tight">
               {loading && !ledgers ? (
-                <Skeleton className="h-7 w-16" />
+                <Skeleton className="h-8 w-20" />
               ) : (
                 `${metrics.activeTrips} Open`
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground font-medium">
               {metrics.paidTrips} closed & paid
             </p>
           </div>
 
           {/* Incomplete Items / Gap Indicator */}
-          <div className="universal-card p-4 space-y-1.5">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-2 shadow-xs">
             <div className="flex items-center justify-between text-muted-foreground">
-              <span className="text-xs font-medium uppercase tracking-wider">Audit Health</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Audit Health</span>
               {metrics.incompleteCount > 0 ? (
-                <ShieldAlert size={16} className="text-amber-600 dark:text-amber-400" />
+                <ShieldAlert size={18} className="text-amber-600" />
               ) : (
-                <ShieldCheck size={16} className="text-emerald-600 dark:text-emerald-400" />
+                <ShieldCheck size={18} className="text-emerald-600" />
               )}
             </div>
             <div className="flex items-center gap-2">
               {loading && !ledgers ? (
-                <Skeleton className="h-7 w-24" />
+                <Skeleton className="h-8 w-28" />
               ) : metrics.incompleteCount > 0 ? (
-                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold text-lg">
-                  <AlertTriangle size={18} />
+                <div className="flex items-center gap-1.5 text-amber-600 font-bold text-xl">
+                  <AlertTriangle size={20} />
                   <span>{metrics.incompleteCount} Missing</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-lg">
-                  <CheckCircle2 size={18} />
+                <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-xl">
+                  <CheckCircle2 size={20} />
                   <span>All Clean</span>
                 </div>
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground font-medium">
               {metrics.incompleteCount > 0
                 ? "Rows missing receipt or date"
                 : "Zero missing evidence gaps"}
@@ -289,36 +289,51 @@ export function FinanceView({ onSelectDocument }) {
         <QuickExpenseRouterCard onExpenseRouted={refresh} onOpenAttach={handleOpenAttach} />
 
         {/* Filters & Search Control Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 pt-2 border-b border-border pb-4">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="inline-flex items-center gap-1.5 rounded-xl border border-border/70 bg-muted/80 p-1.5 text-muted-foreground flex-wrap">
             {STATUS_TABS.map((t) => {
               const count =
                 ledgers &&
                 (t.id === "all"
                   ? ledgers.length
                   : ledgers.filter((l) => (l.status || "draft") === t.id).length);
+              const isSelected = statusFilter === t.id;
 
               return (
-                <FilterChip
+                <button
                   key={t.id}
-                  selected={statusFilter === t.id}
+                  type="button"
                   onClick={() => setStatusFilter(t.id)}
-                  className="gap-1.5"
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all cursor-pointer",
+                    isSelected
+                      ? "bg-card text-foreground font-bold shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-card/40"
+                  )}
                 >
                   <span>{t.label}</span>
                   {count != null && (
-                    <span className="text-[10px] opacity-70 font-mono">({count})</span>
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[11px] font-mono leading-none transition-colors",
+                        isSelected
+                          ? "bg-[var(--brand-primary)] text-white"
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {count}
+                    </span>
                   )}
-                </FilterChip>
+                </button>
               );
             })}
           </div>
 
           {/* Search Box */}
-          <div className="relative min-w-[220px] sm:w-64">
+          <div className="relative w-full sm:w-72">
             <Search
-              size={14}
+              size={15}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
             />
             <input
@@ -326,7 +341,7 @@ export function FinanceView({ onSelectDocument }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Filter by trip, account..."
-              className="w-full h-8 pl-8 pr-3 text-xs rounded-control border border-border bg-[var(--surface-field)] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+              className="w-full h-10 pl-9 pr-3 text-sm rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors font-medium"
             />
             {searchQuery && (
               <button
@@ -530,15 +545,15 @@ function QuickExpenseRouterCard({ onExpenseRouted, onOpenAttach }) {
   };
 
   return (
-    <div className="universal-card p-4 space-y-3 border border-border/80 bg-card">
+    <div className="rounded-xl border border-border bg-card p-5 space-y-3.5 shadow-xs">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-            <Sparkles size={15} />
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-[var(--surface-tint)] text-[var(--brand-primary)]">
+            <Sparkles size={18} />
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-foreground">Natural-Language Expense Router</h3>
-            <p className="text-[11px] text-muted-foreground">
+            <h3 className="text-sm font-bold text-foreground">Natural-Language Expense Router</h3>
+            <p className="text-[13px] text-muted-foreground">
               Type or paste plain-text expense statements to automatically parse and route into trip ledgers.
             </p>
           </div>
@@ -546,16 +561,16 @@ function QuickExpenseRouterCard({ onExpenseRouted, onOpenAttach }) {
 
         <Button
           variant="ghost"
-          size="xs"
+          size="sm"
           onClick={() => onOpenAttach?.()}
-          className="text-muted-foreground hover:text-foreground gap-1 text-[11px]"
+          className="text-foreground-secondary hover:text-foreground gap-1.5 text-xs font-semibold"
         >
-          <UploadCloud size={13} />
+          <UploadCloud size={15} />
           <span>Upload Receipt Image</span>
         </Button>
       </div>
 
-      <form onSubmit={handleRoute} className="flex gap-2">
+      <form onSubmit={handleRoute} className="flex gap-2.5">
         <div className="relative flex-1">
           <input
             type="text"
@@ -563,19 +578,18 @@ function QuickExpenseRouterCard({ onExpenseRouted, onOpenAttach }) {
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="e.g. Spent $45 on dinner in Tokyo, Uber ₹520 from airport to hotel, Spent $180 for SF hotel..."
             disabled={routing}
-            className="w-full h-9 px-3 text-xs rounded-control border border-border bg-[var(--surface-field)] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+            className="w-full h-11 px-4 text-sm rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors font-medium"
           />
         </div>
         <Button
           type="submit"
-          size="sm"
           disabled={routing || !inputMessage.trim()}
-          className="gap-1.5 px-4"
+          className="h-11 px-5 gap-2 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-2xs"
         >
           {routing ? (
-            <RefreshCw size={13} className="animate-spin" />
+            <RefreshCw size={15} className="animate-spin" />
           ) : (
-            <Send size={13} />
+            <Send size={15} />
           )}
           <span>Route</span>
         </Button>
@@ -583,8 +597,8 @@ function QuickExpenseRouterCard({ onExpenseRouted, onOpenAttach }) {
 
       {/* Suggested Quick Examples */}
       {!routeResult && (
-        <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground pt-0.5">
-          <span className="font-medium text-foreground/70">Try:</span>
+        <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground pt-1">
+          <span className="font-bold text-foreground">Try:</span>
           {[
             "Spent $55 on dinner in Tokyo",
             "Uber $38 from airport to hotel",
@@ -594,7 +608,7 @@ function QuickExpenseRouterCard({ onExpenseRouted, onOpenAttach }) {
               key={idx}
               type="button"
               onClick={() => handleExampleClick(eg)}
-              className="px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
+              className="px-3 py-1 rounded-lg bg-muted/80 hover:bg-muted border border-border text-foreground font-medium transition-colors cursor-pointer"
             >
               &ldquo;{eg}&rdquo;
             </button>
@@ -717,15 +731,15 @@ function LedgerCard({
   const isSubmitted = status === "submitted";
 
   return (
-    <div className="universal-card p-5 flex flex-col justify-between space-y-4 hover:border-primary/30 transition-all">
+    <div className="rounded-xl border border-border bg-card p-5.5 flex flex-col justify-between space-y-4.5 shadow-xs hover:border-foreground/25 hover:shadow-md transition-all">
       {/* Top Section */}
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1 space-y-0.5">
             <div className="flex items-center gap-2 flex-wrap">
               <h3
                 onClick={onViewDetails}
-                className="font-display text-base font-semibold text-foreground hover:text-primary transition-colors cursor-pointer truncate"
+                className="text-[17px] font-bold text-foreground hover:text-[var(--brand-primary)] transition-colors cursor-pointer truncate tracking-tight"
               >
                 {ledger.trip || ledger.threadId || "Trip Ledger"}
               </h3>
@@ -735,6 +749,7 @@ function LedgerCard({
                 variant={isPaid ? "outline" : isSubmitted ? "secondary" : "default"}
                 size="compact"
                 className={cn(
+                  "text-xs font-bold px-2.5 py-0.5",
                   isPaid && "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10",
                   isSubmitted && "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
                 )}
@@ -743,13 +758,13 @@ function LedgerCard({
               </Badge>
 
               {ledger.account && (
-                <Badge variant="muted" size="compact" className="text-[10px]">
+                <Badge variant="muted" size="compact" className="text-xs font-semibold">
                   {ledger.account}
                 </Badge>
               )}
             </div>
 
-            <p className="text-xs text-muted-foreground font-mono truncate">
+            <p className="text-xs text-foreground-secondary font-mono truncate">
               {ledger.relPath}
             </p>
           </div>
@@ -759,93 +774,93 @@ function LedgerCard({
             <button
               onClick={() => onSelectDocument(ledger.relPath)}
               title="Open source markdown ledger"
-              className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors shrink-0"
+              className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors shrink-0"
             >
-              <FileText size={15} />
+              <FileText size={16} />
             </button>
           )}
         </div>
 
         {/* Incomplete items alert badge */}
         {ledger.incompleteCount > 0 ? (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium">
-            <AlertTriangle size={13} />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold">
+            <AlertTriangle size={14} />
             <span>{ledger.incompleteCount} item{ledger.incompleteCount > 1 ? "s" : ""} missing receipt or date</span>
           </div>
         ) : (
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs text-muted-foreground">
-            <CheckCheck size={13} className="text-emerald-500" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+            <CheckCheck size={14} className="text-emerald-600" />
             <span>All entries verified</span>
           </div>
         )}
       </div>
 
       {/* Financial Metrics Strip */}
-      <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-lg bg-[var(--surface-field)] text-xs">
+      <div className="grid grid-cols-3 gap-3 py-3 px-4 rounded-xl bg-muted/70 border border-border/80 text-xs">
         <div>
-          <span className="block text-[10px] text-muted-foreground uppercase font-medium">Total Spend</span>
-          <span className="font-mono font-bold text-foreground">
+          <span className="block text-[11px] text-muted-foreground uppercase font-bold tracking-wider">Total Spend</span>
+          <span className="font-mono text-[16px] font-bold text-foreground">
             {formatCurrency(ledger.total)}
           </span>
         </div>
         <div>
-          <span className="block text-[10px] text-muted-foreground uppercase font-medium">Reimbursable</span>
-          <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+          <span className="block text-[11px] text-muted-foreground uppercase font-bold tracking-wider">Reimbursable</span>
+          <span className="font-mono text-[16px] font-bold text-emerald-600 dark:text-emerald-400">
             {formatCurrency(ledger.reimbursableTotal)}
           </span>
         </div>
         <div>
-          <span className="block text-[10px] text-muted-foreground uppercase font-medium">Rows</span>
-          <span className="font-mono font-medium text-foreground">
+          <span className="block text-[11px] text-muted-foreground uppercase font-bold tracking-wider">Rows</span>
+          <span className="font-mono text-[14.5px] font-semibold text-foreground">
             {ledger.rowCount ?? 0} entries
           </span>
         </div>
       </div>
 
       {/* Card Action Footer */}
-      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/60">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="xs"
+            size="sm"
             onClick={onViewDetails}
-            className="gap-1 text-[11px]"
+            className="h-8.5 px-3 text-xs font-bold border-border"
           >
-            <Eye size={12} />
+            <Eye size={13} className="mr-1" />
             <span>View Ledger</span>
           </Button>
 
           <Button
             variant="ghost"
-            size="xs"
+            size="sm"
             onClick={onAuditGaps}
-            className="gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+            className="h-8.5 px-3 text-xs font-bold text-muted-foreground hover:text-foreground"
           >
-            <ShieldAlert size={12} />
+            <ShieldAlert size={13} className="mr-1" />
             <span>Audit Gaps</span>
           </Button>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
-            size="xs"
+            size="sm"
             onClick={onAttachReceipt}
             title="Attach receipt to this trip"
-            className="gap-1 text-[11px]"
+            className="h-8.5 px-3 text-xs font-bold text-foreground"
           >
-            <Plus size={12} />
+            <Plus size={13} className="mr-1" />
             <span>Receipt</span>
           </Button>
 
           {!isPaid && (
             <Button
               variant="secondary"
-              size="xs"
+              size="sm"
               onClick={onCloseTrip}
-              className="gap-1 text-[11px]"
+              className="h-8.5 px-3.5 text-xs font-bold bg-amber-500 text-white hover:bg-amber-600 shadow-2xs"
             >
-              <CheckCircle2 size={12} />
+              <CheckCircle2 size={13} className="mr-1" />
               <span>{isSubmitted ? "Mark Paid" : "Submit"}</span>
             </Button>
           )}

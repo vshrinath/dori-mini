@@ -1,5 +1,29 @@
 # Changelog
 
+## [2026-09-01] — Base Font Sizing & Finance Screen Typography Upgrade
+
+**Branch**: `main`
+
+### What changed
+- **Global Base Font Scaling**:
+  - Upgraded root `html, body` font-size in `index.html` from `15px` to standard `16px` (`1rem = 16px`), eliminating the global 6.25% down-scaling across all desktop views.
+- **Finance & Trip Ledgers View Overhaul (`FinanceView.jsx`)**:
+  - **Overview Stat Cards**: Scaled up metrics to `text-2xl font-bold font-mono`, labels to `text-xs font-bold uppercase tracking-wider text-muted-foreground`, and card padding to `p-5 rounded-xl border border-border shadow-xs`.
+  - **Quick Expense Router**: Enlarged input to `h-11 px-4 text-sm font-medium`, route button to `h-11 px-5 text-sm font-semibold`, and suggestion pills to `px-3 py-1 text-xs font-medium`.
+  - **Status Tabs & Search**: Implemented Shadcn-style segmented tabs (`h-9.5 px-4 text-sm font-semibold rounded-lg`) with badge counters and enlarged search box to `h-10 text-sm`.
+  - **Trip Ledger Cards**:
+    - Scaled card titles to `text-[17px] font-bold text-foreground tracking-tight`.
+    - Upgraded financial metric strip to `text-[16px] font-mono font-bold text-foreground` and `text-emerald-600` with `text-[11.5px] font-bold uppercase` headers.
+    - Upgraded action buttons (`View Ledger`, `Audit Gaps`, `+ Receipt`, `Submit` / `Mark Paid`) to `h-8.5 px-3.5 text-xs font-bold`.
+
+### Why
+Resolve difficult-to-read micro-typography and undersized controls on large desktop screens by setting proper 16px root font scaling and upgrading Finance view cards, inputs, and buttons.
+
+### Files touched
+- `electron-app/index.html` — Set root font-size to 16px
+- `electron-app/src/components/FinanceView.jsx` — Overhauled typography, stat cards, tabs, and ledger cards
+
+
 ## [2026-09-01] — Shadcn/Base UI Layout Polish, High Contrast, and Typography Scaling
 
 **Branch**: `main`
