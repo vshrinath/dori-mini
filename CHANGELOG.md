@@ -1,5 +1,217 @@
 # Changelog
 
+## [2026-09-01] — Milestone 5: Entities, Organizations, Brands & Credentials Interface (R4, R7)
+
+**Branch**: `main`
+
+### What changed
+- Implemented complete Entities Directory UI (`electron-app/src/components/EntitiesView.jsx`):
+  - **Organizations Tab**:
+    - Lists organization entities with roles, linked people tags, and affiliation evidence text loaded via `window.dori.call('list_orgs', {})`.
+    - Role badge filtering (`All`, `Client`, `Vendor`, `Partner`, `Employer`, `None`) with semantic badge color coding.
+    - Live search across organization names, roles, linked people, and affiliation evidence.
+    - "Add Organization" modal calling `window.dori.call('ensure_org', payload)` supporting person name/slug linkage, affiliation evidence text validation, and strict evidence gate toggle.
+    - Direct actions for jumping to person research and viewing organization markdown files in vault.
+  - **Brands Tab**:
+    - Lists brand entities loaded via `window.dori.call('list_brands', {})` with company, owner, logo/monogram, and interactive color palette swatches (Primary, Accent) with hex codes.
+    - Typography specification cards showing display font and body font.
+    - "Brand Guidelines & Voice" drawer fetching prompt context via `window.dori.call('get_brand', { name })` with copyable prompt block for AI writing in brand voice.
+    - "Create / Edit Brand" modal calling `window.dori.call('set_brand', payload)` with integrated color pickers and typography configurations.
+  - **People & Research Tab**:
+    - Person research and contextual meeting briefing console supporting both full vault & web synthesis (`research_and_recommend`) and public web search (`research_person` via Tavily).
+    - Multi-stage loading state and structured briefing output featuring:
+      - Existing vault relationship status banner (Known vs Cold company)
+      - Known vault colleagues roster
+      - Related vault documents list with click-to-open slideover navigation
+      - Web research hits with title, link, and content snippets
+      - One-click "Copy Briefing" markdown action
+  - **Entity Merging Tab**:
+    - Non-destructive deduplication and canonicalization interface for Person and Organization entities.
+    - Source entity and canonical target entity selection with live impact preview.
+    - Confirmation dialog warning before execution and non-destructive guarantee (moving source file to `merged/` with redirection, unioning aliases/people, and rewriting cross-references).
+    - Executes `window.dori.call('merge_entity', payload)` with detailed result breakdown card.
+- Implemented Credentials Vault Modal (`electron-app/src/components/CredentialsModal.jsx`):
+  - Searchable service credentials list via `window.dori.call('list_credentials', {})` and `find_credentials` with encryption indicators (AES-256-GCM).
+  - Expandable field breakdown inspecting registered service fields without exposing secret cleartext to the renderer.
+  - "Add Credential Securely" button that invokes `window.dori.call('start_credential_server', {})` to launch ephemeral token intake server and open the intake form in the system browser.
+  - Ephemeral intake server banner displaying active endpoint URL, copy link, and expiration notice.
+- Visual Polish & Token Consistency:
+  - Centralized design tokens with Figtree typography, `--surface-canvas` background, universal card styling (`universal-card`), loading skeletons, and interactive empty states.
+
+### Why
+Provide a comprehensive, native-grade entity management interface in Dori Go, enabling users to organize organizations with affiliation evidence bars, configure brand design themes and voice guidelines, research people and synthesize meeting briefings, safely merge duplicate identities, and manage encrypted credentials.
+
+### Files touched
+- `electron-app/src/components/EntitiesView.jsx` — Implemented 4-tab entity directory (Organizations, Brands, People & Research, Entity Merging).
+- `electron-app/src/components/CredentialsModal.jsx` — Implemented credentials vault modal with search and secure ephemeral intake server launcher.
+
+## [2026-09-01] — Milestone 4: Meetings, Fathom Sync & Ingestion Interface (R3, R6)
+
+**Branch**: `main`
+
+### What changed
+- Created Meetings & Fathom Sync UI (`electron-app/src/components/MeetingsView.jsx`):
+  - Fathom Recordings Sync & Directory:
+    - Lists meeting recordings via `window.dori.call('list_fathom_meetings', { includeFiled: true })` displaying meeting title, date, duration, Fathom URL, and `Filed in Vault` vs `Unfiled` status badges.
+    - Interactive filter chips (`All Recordings`, `Unfiled`, `Filed in Vault`) with live count indicators and live text search across titles, dates, and attendee names.
+    - Graceful error banner and configuration guide when `FATHOM_API_KEY` is not set, with direct link to Fathom API settings.
+  - Meeting Detail & Transcript Viewer:
+    - Detailed drawer/slideout fetching speaker-labeled transcript segments via `window.dori.call('get_fathom_meeting', { recordingId })`.
+    - Segment cards with speaker avatars, formatted timestamps, and speech text.
+    - One-click "Copy Transcript" action with visual confirmation feedback.
+  - Meeting Routing & Minutes of Meeting (MoM) Filing:
+    - Automatically computes project routing recommendation via `window.dori.call('route_meeting', { attendees, key })` with match confidence indicator (`High Confidence`, `Suggested`, `Unbound`).
+    - Destination project selector populated from `list_projects` with custom project entry support.
+    - Integrated structured MoM markdown template editor with summary, key decisions, and action items.
+    - Files meeting notes into vault via `window.dori.call('file_meeting', payload)` with automatic reindexing and direct "View Filed Note" button.
+  - Meeting Prep & Context Briefing:
+    - Generates meeting briefing via `window.dori.call('get_meeting_prep', { attendees, project })`.
+    - Displays attendee classification (`Known`, `Ambiguous`, `Newly seen`), prior related meeting history, and open tasks (Your tasks vs Others' tasks).
+    - One-click "Copy Brief" action.
+  - Visual Polish & Token Consistency:
+    - Styled with Figtree typography, `--surface-canvas` background, universal cards, loading skeletons, and interactive empty states.
+- Enhanced File Slideover Drawer (`electron-app/src/components/FileSlideover.jsx`):
+  - Document Markdown Conversion Preview:
+    - Detects non-markdown document formats (PDF, DOCX, PPTX, XLSX, CSV, EPUB, RTF, ODT).
+    - Provides a prominent "Preview as Markdown" / "Convert Now" action invoking `window.dori.call('convert_document', { filePath })`.
+    - Renders converted markdown in the Tiptap viewer with loading spinner skeleton, error recovery with retry, and full editing/saving support.
+  - YouTube Media Capture Rich Preview:
+    - Detects YouTube capture notes and renders dedicated header card with video title, channel/uploader metadata, published date, duration badge, and direct YouTube video link.
+    - Renders interactive Uploader Chapters list with timestamp badges (`00:00`, `04:12`).
+    - Renders Uploader Description metadata card in monospace format.
+
+### Why
+Provide a complete meeting capture and ingestion workflow in Dori Go, enabling users to sync Fathom recordings, review speaker transcripts, file structured meeting minutes into destination projects, generate attendee prep briefings, preview non-markdown documents as markdown, and inspect YouTube media notes with uploader chapters.
+
+### Files touched
+- `electron-app/src/components/MeetingsView.jsx` — Complete Meetings and Fathom Sync view component.
+- `electron-app/src/components/FileSlideover.jsx` — Enhanced with on-device document markdown conversion preview and rich YouTube media capture cards.
+
+
+## [2026-09-01] — Milestone 3: Finance & Trip Ledgers Interface (R2)
+
+**Branch**: `main`
+
+### What changed
+- Implemented full-featured Finance & Trip Ledgers UI (`electron-app/src/components/FinanceView.jsx`):
+  - Overview Header & Stat Metrics Cards:
+    - Displays Total Spent, Reimbursable Total, Active / Open Trips count, and Audit Health (missing receipts/dates) with real-time aggregation.
+    - Integrated quick actions for Refresh (with spinning state) and Attach Receipt modal trigger.
+  - Quick Expense Natural-Language Router:
+    - Input bar to parse and route natural-language expense statements ("spent $50 on dinner in Tokyo") via `window.dori.call('route_expense', { message })`.
+    - Real-time decision feedback cards with status badges (`moved`, `suggested`, `conflict`, `none`, `not_expense`), candidate selectors, and auto-refresh on route.
+    - Quick example prompt chips for rapid testing.
+  - Ledgers Grid & List Workspace:
+    - Filter chips for status (`All`, `Drafts`, `Submitted`, `Paid`) with live count indicators.
+    - Live text search filtering across trip names, account labels, and paths.
+    - Responsive 2-column ledger cards showing trip title, account badge, status badge (`draft`, `submitted`, `paid`), financial summary (Total, Reimbursable, Rows), incomplete item alert badge, and quick action buttons.
+  - Itemized Ledger Detail Drawer / Modal:
+    - Fetches full ledger breakdown via `window.dori.call('get_trip_ledger', { target })`.
+    - Displays trip overview, key metrics strip, quick action toolbar, and itemized expenses table (Date, Description, Category, Amount, Tax, Paid By, Reimbursable, Attachments with slideover preview links, Incomplete alert flags).
+  - Reimbursement Gap Detection Modal:
+    - Triggers audit check via `window.dori.call('check_reimbursement_gaps', { target })`.
+    - Displays audit health hero banner (Green Check for clean submission readiness vs Amber Alert for missing evidence), claim vs excluded item counts, and line-by-line findings with direct "Attach" remediation buttons.
+  - Attach Receipt Modal:
+    - Modal supporting drag-and-drop or file picker for receipt images (PNG, JPG, WEBP) and PDFs.
+    - Resolves filesystem path via `window.dori.getFilePath(file)`.
+    - Form fields: Trip/Thread selector, Date, Description/Vendor, Amount, Category dropdown, Tax, Paid By, Reimbursable checkbox, Booking Ref, Supersedes ID.
+    - Calls `window.dori.call('attach_receipt', payload)` and displays confirmation with generated ledger path.
+  - Close Trip & Reimbursement Package Modal:
+    - Status transition forward selector (draft -> submitted -> paid).
+    - Pre-flight gap check warning.
+    - Invokes `window.dori.call('close_trip', { target, status })` to generate structured Markdown package (`*-reimbursement-package.md`) and transition status.
+    - Direct action button to open generated reimbursement package in `FileSlideover`.
+  - Visual Polish & Token Consistency:
+    - Figtree typography, semantic surface tokens (`--surface-canvas`, `--surface-panel`, `--surface-field`), card styling (`universal-card`), loading skeletons, and interactive empty states.
+
+### Why
+Provide a complete, native-grade finance management and expense reconciliation interface in Dori Go, empowering users to track trip expenses, route plain-text receipts, audit evidence gaps, and assemble formal reimbursement packages.
+
+### Files touched
+- `electron-app/src/components/FinanceView.jsx` — Complete Finance and Trip Ledgers UI implementation.
+
+## [2026-09-01] — Milestone 6: Timeline & Activity Stream View
+
+**Branch**: `main`
+
+### What changed
+- Implemented full-featured Timeline & Activity Stream view (`electron-app/src/components/TimelineView.jsx`):
+  - Activity Stream Feed: loads chronological events via `window.dori.call('timeline', { limit: 100 })` with refresh action and animated spin indicator.
+  - Event Types & Semantic Badges:
+    - `meeting`: calendar icon (`Calendar`), blue badge styling.
+    - `decision`: compass icon (`Compass`), purple badge styling.
+    - `task`: check-circle icon (`CheckCircle2`), emerald badge styling.
+    - `expense`: receipt icon (`Receipt`), amber badge styling.
+  - Interactive Filter Chips & Search:
+    - Filter chips for `All`, `Meetings`, `Decisions`, `Expenses`, `Tasks` displaying real-time event counts for each category.
+    - Live text search filtering across event titles, document references, event kinds, and dates with clear search button.
+  - Chronological Date Groupings:
+    - Grouped timeline events into chronological buckets (`Today`, `Yesterday`, `This Week`, `Last Week`, `Earlier`) with event count indicators and divider rules.
+  - Navigation & Reference Integration:
+    - Card click and dedicated "Open" action buttons trigger `onOpenFile(event.ref)` / `onSelectDocument(event.ref)` to open documents in `FileSlideover`.
+    - Dedicated "Copy" reference button copying path to clipboard with temporary "Copied" feedback badge.
+  - Visual Polish & Token Consistency:
+    - Styled with Figtree typography, `--surface-canvas` background, universal cards (`.universal-card`) with hover lift, `.anim-stagger` entrance animation, loading skeletons, and interactive empty states with filter reset actions.
+
+### Why
+Provide a unified, chronological activity stream in Dori Go across meetings, architectural decisions, task completions, and expenses with rich filtering, date grouping, and document inspection.
+
+### Files touched
+- `electron-app/src/components/TimelineView.jsx` — Complete Timeline and Activity Stream view component.
+
+## [2026-09-01] — Milestone 1: Backend Actions & IPC Registry Expansion
+
+**Branch**: `main`
+
+### What changed
+- Action Registry Expansion (`actions.mjs`):
+  - Registered 30 new action handlers with validated Zod schemas (`inputSchema`), scope annotations (`read`/`write`), and MCP tool exposure (`exposeToMcp: true`).
+  - Added Finance actions: `list_trip_ledgers` (and `list_ledgers` alias), `get_trip_ledger` (and `get_ledger` alias), `check_reimbursement_gaps`, `route_expense`, `attach_receipt`, `close_trip`.
+  - Added Meetings & Fathom actions: `list_fathom_meetings`, `get_fathom_meeting`, `route_meeting`, `get_meeting_prep` (and `meeting_prep` alias), `file_meeting`.
+  - Added Entities, Organizations & Brands actions: `list_orgs`, `ensure_org`, `list_brands`, `get_brand`, `get_brand_context`, `set_brand`, `research_person`, `research_and_recommend`, `merge_entity`.
+  - Added Decision and Task actions: `list_decisions`, `create_decision`, `add_task`.
+  - Added Document Conversion action: `convert_document`.
+  - Added Credentials store actions: `list_credentials`, `find_credentials`, `start_credential_server`.
+  - Updated action registry self-test count assertion to 52 actions.
+- Timeline Expense Aggregation (`timeline.mjs`):
+  - Imported `loadLedgers` from `./query-ledger.mjs` in `timeline.mjs`.
+  - Aggregated itemized expense rows formatted as `{ date, kind: 'expense', label, ref }` sorted chronologically alongside meetings, decisions, and tasks.
+
+### Why
+Provide a complete, type-safe, IPC-callable action surface in `actions.mjs` and a unified activity stream in `timeline.mjs` powering Dori Go's frontend screens.
+
+### Files touched
+- `actions.mjs` — Registered 30 new actions with Zod schemas mapping to backend scripts.
+- `timeline.mjs` — Integrated `loadLedgers()` to aggregate expenses in `buildTimeline()`.
+
+## [2026-09-01] — Milestone 2: Core Shell, Navigation & Design Tokens Polish
+
+**Branch**: `main`
+
+### What changed
+- Extracted `InboxView` (`electron-app/src/components/InboxView.jsx`):
+  - Modularized `InboxScreen` from `App.jsx` into a dedicated full-featured component.
+  - Implemented Figtree typography, semantic surfaces (`--surface-canvas`, `--surface-panel`), card classes (`universal-card`), loading skeletons, and informative empty states.
+  - Added filter chips with badge counters, live search, destination selector for clarifications, and preview triggers for unrouted captures.
+- Expanded Navigation & Create Menu (`electron-app/src/components/Sidebar.jsx`):
+  - Added primary navigation items: `New chat` (`SquarePen`), `Inbox` (`Inbox`), `Tasks` (`Check`), `Projects` (`FolderKanban`), `Finance` (`Receipt`), `Timeline` (`Clock`), `Entities` (`Users`), and `Library` (`Library`).
+  - Added create-menu action shortcuts: "New Note", "New Task", "New Expense", "New Entity", "New Project".
+  - Integrated live inbox count badge in the sidebar navigation.
+- Clean Application Routing & Shell Fallbacks (`electron-app/src/App.jsx`):
+  - Wired routes across all primary views: `chat`, `inbox`, `tasks`, `projects`, `finance`, `timeline`, `entities`, `library`, `profile`, and `project:<path>`.
+  - Added initial component shells for `FinanceView.jsx`, `TimelineView.jsx`, and `EntitiesView.jsx` so all screens render smoothly and compile without errors.
+
+### Why
+Provide a polished desktop shell, comprehensive navigation across all core capabilities, and modularized inbox experience aligned with real Dori product design tokens.
+
+### Files touched
+- `electron-app/src/components/InboxView.jsx` — Modular inbox view with filter chips, search, skeletons, and approval actions.
+- `electron-app/src/components/Sidebar.jsx` — Expanded navigation items and create-menu action shortcuts.
+- `electron-app/src/App.jsx` — Clean routing across all primary views with modular imports.
+- `electron-app/src/components/FinanceView.jsx` — Initial component shell for finance and trip ledgers.
+- `electron-app/src/components/TimelineView.jsx` — Initial component shell for chronological timeline stream.
+- `electron-app/src/components/EntitiesView.jsx` — Initial component shell for organizations and brands directory.
+
 ## [2026-09-01] — New "dori" Wordmark Brand: Animated Splash, Hero, and App Icon
 
 **Branch**: `main`

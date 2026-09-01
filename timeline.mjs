@@ -8,23 +8,53 @@
 import { listDocs } from './query-vault.mjs';
 import { loadDecisions } from './decision-store.mjs';
 import { listTasks } from './list-tasks.mjs';
+import { loadLedgers } from './query-ledger.mjs';
 
 function unquote(s) {
   return (s || '').replace(/^["']|["']$/g, '');
 }
 
 export function buildTimeline({ limit, since } = {}) {
-  const meetings = listDocs()
-    .filter((d) => d.rel_path.includes('/meetings/') || d.rel_path.startsWith('meetings/'))
-    .map((d) => ({ date: d.date, kind: 'meeting', label: unquote(d.title), ref: d.rel_path }));
+  let meetings = [];
+  try {
+    meetings = listDocs()
+      .filter((d) => d.rel_path.includes('/meetings/') || d.rel_path.startsWith('meetings/'))
+      .map((d) => ({ date: d.date, kind: 'meeting', label: unquote(d.title), ref: d.rel_path }));
+  } catch (err) {
+    if (err.code !== 'EPERM' && err.code !== 'ENOENT' && !/unable to open database/i.test(err.message)) throw err;
+  }
 
-  const decisions = loadDecisions()
-    .map((d) => ({ date: (d.decidedAt || '').slice(0, 10), kind: 'decision', label: d.summary, ref: d.slug }));
+  let decisions = [];
+  try {
+    decisions = loadDecisions()
+      .map((d) => ({ date: (d.decidedAt || '').slice(0, 10), kind: 'decision', label: d.summary, ref: d.slug }));
+  } catch (err) {
+    if (err.code !== 'EPERM' && err.code !== 'ENOENT') throw err;
+  }
 
-  const tasks = listTasks('all', { real: true })
-    .map((t) => ({ date: (t.createdAt || '').slice(0, 10), kind: 'task', label: `${t.title} [${t.status}]`, ref: t.id }));
+  let tasks = [];
+  try {
+    tasks = listTasks('all', { real: true })
+      .map((t) => ({ date: (t.createdAt || '').slice(0, 10), kind: 'task', label: `${t.title} [${t.status}]`, ref: t.id }));
+  } catch (err) {
+    if (err.code !== 'EPERM' && err.code !== 'ENOENT') throw err;
+  }
 
-  let events = [...meetings, ...decisions, ...tasks].filter((e) => e.date);
+  let expenses = [];
+  try {
+    expenses = loadLedgers().flatMap((l) =>
+      (l.ledger?.rows || []).filter((r) => r.date).map((r) => ({
+        date: r.date,
+        kind: 'expense',
+        label: `${r.description || 'Expense'} (${r.amount ? '$' + r.amount : (r.amountRaw || 'unspecified')})${l.ledger?.trip || l.threadId ? ` — ${l.ledger?.trip || l.threadId}` : ''}`,
+        ref: l.relPath,
+      }))
+    );
+  } catch (err) {
+    if (err.code !== 'EPERM' && err.code !== 'ENOENT') throw err;
+  }
+
+  let events = [...meetings, ...decisions, ...tasks, ...expenses].filter((e) => e.date);
   if (since) events = events.filter((e) => e.date >= since);
   events.sort((a, b) => b.date.localeCompare(a.date));
   return limit ? events.slice(0, limit) : events;

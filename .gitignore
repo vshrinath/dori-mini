@@ -9,3 +9,8 @@ import-credentials.mjs
 
 # Personal credential inbox, if one is ever created in-tree.
 credentials-inbox.md
+
+.DS_Store
+.agents/*
+!.agents/skills/
+
