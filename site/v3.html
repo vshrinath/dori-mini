@@ -171,8 +171,12 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .kb{background:var(--paper-2)}
 .two-vids{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:44px}
 .card{background:var(--raise);border-radius:18px;padding:18px;box-shadow:var(--shadow-sm)}
-.card .thumb{height:96px;border-radius:11px;background:linear-gradient(150deg,#2a2f5e,#191d43);position:relative;margin-bottom:14px}
-.card .thumb .dur{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.78);color:#fff;font:500 11px var(--f-mono);padding:2px 6px;border-radius:4px}
+.card .thumb{display:block;aspect-ratio:16/9;border-radius:11px;background:linear-gradient(150deg,#2a2f5e,#191d43);position:relative;margin-bottom:14px;overflow:hidden}
+.card .thumb img{width:100%;height:100%;object-fit:cover;display:block;border:0}
+.card .thumb .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:36px;border-radius:9px;background:rgba(0,0,0,.72);display:grid;place-items:center;transition:background .15s}
+.card .thumb .play::after{content:"";border-left:13px solid #fff;border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px}
+.card .thumb:hover .play{background:#ff0000}
+.card .thumb .dur{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.82);color:#fff;font:500 11px var(--f-mono);padding:2px 6px;border-radius:4px}
 .card h4{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
 .card .meta{font-size:12.5px;color:var(--ink-3);margin-top:5px}
 .jumps{margin-top:13px;display:flex;flex-direction:column;gap:5px;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2)}
@@ -423,7 +427,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 
     <div class="two-vids">
       <div class="card rv">
-        <div class="thumb"><div class="dur">35:43</div></div>
+        <a class="thumb" href="https://www.youtube.com/watch?v=A31tJDSFIvQ" target="_blank" rel="noopener" aria-label="Watch IST 19, Simon Taufel, on YouTube"><img src="https://img.youtube.com/vi/A31tJDSFIvQ/hqdefault.jpg" alt="" loading="lazy" width="480" height="360"><span class="play"></span><span class="dur">35:43</span></a>
         <h4>IST 19 · Simon Taufel · HOWZAT</h4>
         <p class="meta">Inspire Someone Today · 2021</p>
         <div class="jumps">
@@ -434,7 +438,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
         <p class="chapline">Uploader supplied <b>7 chapters</b>. Used as-is.</p>
       </div>
       <div class="card rv">
-        <div class="thumb"><div class="dur">46:08</div></div>
+        <a class="thumb" href="https://www.youtube.com/watch?v=hiYTq9xnkPw" target="_blank" rel="noopener" aria-label="Watch E182, Blind Spots To Big Bets, on YouTube"><img src="https://img.youtube.com/vi/hiYTq9xnkPw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360"><span class="play"></span><span class="dur">46:08</span></a>
         <h4>E182 · Blind Spots To Big Bets · Shrinath V</h4>
         <p class="meta">Inspire Someone Today · 2026</p>
         <div class="jumps">

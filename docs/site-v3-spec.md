@@ -150,6 +150,16 @@ get back into it. Videos, PDFs, links, proposals.
 with the readable transcript underneath. Copy: navigate straight to what was actually
 discussed, with the takeaways already pulled out.
 
+Both cards use **real YouTube stills at 16:9** (`img.youtube.com/vi/<id>/hqdefault.jpg`,
+`object-fit: cover` to crop the 4:3 letterboxing), with a play button, the real duration
+badge, and a link out to the video. Deliberately **not** an iframe embed: two YouTube
+players cost ~1MB of script on load, and more importantly this section's whole argument is
+that you don't have 45 minutes — inviting the reader to press play undercuts it. The
+gradient stays as the background so a blocked or failed image still reads as a video.
+
+Note for previews: the Artifact sandbox blocks images from any non-approved host, so the
+stills only appear on the real site, not in an Artifact preview of this page.
+
 Free visual proof, using the two real vault captures:
 
 | Episode | Uploader chapters | What the capture produced |
