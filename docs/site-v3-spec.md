@@ -114,8 +114,8 @@ Full-width alternating bands. Each states **how**, and carries a real `Dori, …
    is which, and only the business ones land on the claim.
    → *"Dori, close out the Denver trip."*
 3. **Projects and people.** Say you're starting something new and it builds the whole
-   project structure. Paste a transcript and it identifies who was in the room, creates each
-   as a real person, and maps every future meeting to them.
+   project structure. Paste a transcript and it identifies who was in the room, creates a
+   profile for each of them, and maps every future meeting to them.
    → *"Dori, start a project for the Acme rebrand."*
 4. **Your knowledge base.** Drop in a talk, a proposal, a framework, a set of brand
    guidelines. It indexes each one and answers from them, showing the passage it came from.
