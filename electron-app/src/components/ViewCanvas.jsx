@@ -34,6 +34,7 @@ import { Markdown } from 'tiptap-markdown';
 import { Button } from './ui/button.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
+import { api } from '../lib/api.js';
 import { cn } from '../lib/utils.js';
 
 const WIDTH_STORAGE_KEY = 'dori-view-canvas-width-v6';
@@ -226,7 +227,7 @@ export function ViewCanvas({
     setConvertResult(null);
     setConvertError(null);
     try {
-      const res = await window.dori?.call('get_document', { path, relPath: path });
+      const res = await api.getDocument(path);
       setDoc(res);
       if (editor && res?.content) {
         editor.commands.setContent(res.content);
@@ -288,7 +289,7 @@ export function ViewCanvas({
     setIsSaving(true);
     try {
       const content = editor.storage.markdown.getMarkdown();
-      await window.dori?.call('save_document', { path: relPath, content });
+      await api.saveDocument(relPath, content);
       setIsEditing(false);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
@@ -312,7 +313,7 @@ export function ViewCanvas({
     setIsConverting(true);
     setConvertError(null);
     try {
-      const res = await window.dori?.call('convert_document', { filePath: relPath });
+      const res = await api.convertDocument(relPath);
       setConvertResult(res);
       fetchDoc(relPath);
     } catch (err) {

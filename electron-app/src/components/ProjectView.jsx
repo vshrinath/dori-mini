@@ -40,6 +40,7 @@ import {
   BreadcrumbSeparator,
 } from './ui/breadcrumbs.jsx';
 import { EnginePicker } from './EnginePicker.jsx';
+import { api } from '../lib/api.js';
 import { cn } from '../lib/utils.js';
 
 function getFileIcon(filename) {
@@ -96,8 +97,7 @@ export function ProjectView({
     setMessages([]);
 
     // 1. Fetch project list & hierarchy
-    window.dori
-      ?.call('list_projects', {})
+    api.listProjects()
       .then((all) => {
         const found = all?.find((p) => p.projectPath === projectPath);
         setProject(found || null);
@@ -113,16 +113,14 @@ export function ProjectView({
       .catch(() => setProject(null));
 
     // 2. Fetch project details (files, meetings, people, tasks)
-    window.dori
-      ?.call('get_project_details', { projectPath })
+    api.getProjectDetails(projectPath)
       .then((det) => {
         setDetails(det || { files: [], meetings: [], people: [], tasks: [] });
       })
       .catch(() => setDetails({ files: [], meetings: [], people: [], tasks: [] }));
 
     // 3. Fetch open tasks
-    window.dori
-      ?.call('list_tasks', { status: 'open' })
+    api.listTasks('open')
       .then((tasks) => {
         const projTasks = (tasks || []).filter(
           (t) =>
@@ -144,7 +142,7 @@ export function ProjectView({
     const tryFetchContext = async () => {
       for (const cand of contextCandidates) {
         try {
-          const doc = await window.dori?.call('get_document', { path: cand, relPath: cand });
+          const doc = await api.getDocument(cand);
           if (doc?.content) {
             setContextDoc({ path: cand, ...doc });
             break;
@@ -155,8 +153,7 @@ export function ProjectView({
     tryFetchContext();
 
     // 5. Engine config
-    window.dori
-      ?.call('get_engine_config', {})
+    api.getEngineConfig()
       .then((cfg) => setEngine(cfg?.replyCli || 'none'))
       .catch(() => setEngine('none'));
   }, [projectPath]);
@@ -176,7 +173,7 @@ export function ProjectView({
 
   const handleToggleTask = async (taskId) => {
     try {
-      await window.dori?.call('mark_task_done', { id: taskId });
+      await api.markTaskDone(taskId);
       setOpenTasks((prev) => prev.filter((t) => t.id !== taskId));
     } catch (err) {
       window.alert(`Failed to complete task: ${err.message}`);
@@ -189,10 +186,7 @@ export function ProjectView({
     setIsCreatingSub(true);
     const newSlug = `${projectPath}/${quickAddName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
     try {
-      await window.dori?.call('apply_template', {
-        template: 'client',
-        project: newSlug,
-      });
+      await api.applyTemplate('client', newSlug);
       setQuickAddName('');
       setIsSubProjectsOpen(false);
       onSelectProject?.(newSlug);
@@ -214,7 +208,7 @@ export function ProjectView({
     setIsLoading(true);
 
     try {
-      const res = await window.dori?.call('chat_send', {
+      const res = await api.chatSend({
         message: userText,
         history: messages,
         projectContext: projectPath,

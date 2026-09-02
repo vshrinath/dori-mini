@@ -22,6 +22,7 @@ import {
   Sparkles,
   Layers,
 } from "lucide-react";
+import { api } from "../lib/api.js";
 import { cn } from "../lib/utils.js";
 
 const SIDEBAR_MIN_WIDTH = 240;
@@ -147,8 +148,7 @@ function ProfileFooter({ onOpenSettings, onSelectProfile, profileVersion }) {
   const [profile, setProfile] = useState(undefined);
 
   useEffect(() => {
-    window.dori
-      ?.call("get_profile", {})
+    api.getProfile()
       .then((p) => setProfile(p))
       .catch(() => setProfile(null));
   }, [profileVersion]);
@@ -211,20 +211,17 @@ export function Sidebar({
   const addMenuRef = useRef(null);
 
   useEffect(() => {
-    window.dori
-      ?.call("list_projects", {})
+    api.listProjects()
       .then((p) => setProjects(p || []))
       .catch(() => setProjects([]));
 
-    window.dori
-      ?.call("list_tasks", { status: "open" })
+    api.listTasks('open')
       .then((t) => setOpenTasksCount(t?.length || 0))
       .catch(() => setOpenTasksCount(0));
   }, [active]);
 
   useEffect(() => {
-    window.dori
-      ?.call("list_inbox", {})
+    api.listInbox()
       .then((items) => setInboxCount(items?.length || 0))
       .catch(() => setInboxCount(0));
   }, [active]);

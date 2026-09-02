@@ -24,6 +24,7 @@ import { EmptyState } from "./ui/empty-state.jsx";
 import { FilterChip } from "./ui/filter-chip.jsx";
 import { Input } from "./ui/input.jsx";
 import { Skeleton } from "./ui/skeleton.jsx";
+import { api } from "../lib/api.js";
 import { cn } from "../lib/utils.js";
 
 const KIND_FILTERS = [
@@ -190,8 +191,7 @@ export function TimelineView({ onOpenFile, onSelectDocument }) {
 
   const refresh = useCallback(() => {
     setLoading(true);
-    window.dori
-      ?.call("timeline", { limit: 100 })
+    api.getTimeline({ limit: 100 })
       .then((items) => {
         setEvents(items || []);
         setError(null);

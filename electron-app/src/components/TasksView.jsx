@@ -6,6 +6,7 @@ import { EmptyState } from './ui/empty-state.jsx';
 import { FilterChip } from './ui/filter-chip.jsx';
 import { Input } from './ui/input.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
+import { api } from '../lib/api.js';
 import { cn } from '../lib/utils.js';
 
 const STATUSES = [
@@ -41,8 +42,7 @@ export function TasksView() {
 
   const refresh = useCallback(() => {
     setTasks(null);
-    window.dori
-      ?.call('list_tasks', { status })
+    api.listTasks(status)
       .then(setTasks)
       .catch((e) => setError(e.message));
   }, [status]);
@@ -51,8 +51,7 @@ export function TasksView() {
 
   const markDone = useCallback(
     (id) => {
-      window.dori
-        ?.call('mark_task_done', { id })
+      api.markTaskDone(id)
         .then(refresh)
         .catch((e) => setError(e.message));
     },

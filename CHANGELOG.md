@@ -1,5 +1,26 @@
 # Changelog
 
+## [2026-09-02] — Decouple UI Components via Dedicated Dori Client API Layer (`api.js`)
+
+**Branch**: `main`
+
+### What changed
+- Created `electron-app/src/lib/api.js` client adapter exposing typed methods (`api.getDocument`, `api.listProjects`, `api.listTasks`, `api.getTimeline`, `api.saveDocument`, etc.).
+- Refactored `ViewCanvas.jsx`, `Sidebar.jsx`, `ProjectView.jsx`, `LibraryView.jsx`, `TasksView.jsx`, and `TimelineView.jsx` to consume the API adapter rather than coupling directly to raw `window.dori.call` IPC strings.
+- Decoupled UI presentation from the transport layer, ensuring views remain portable across Electron IPC, HTTP REST endpoints, and test fixtures.
+
+### Why
+Isolate React presentation views from transport-specific details and stringly-typed IPC calls, preventing schema mismatches and enabling clean client-side testing and multi-surface portability.
+
+### Files touched
+- `electron-app/src/lib/api.js` — Created typed Dori client API adapter
+- `electron-app/src/components/ViewCanvas.jsx` — Swapped raw IPC for `api.getDocument`/`saveDocument`
+- `electron-app/src/components/Sidebar.jsx` — Swapped raw IPC for `api.listProjects`/`listTasks`/`getProfile`
+- `electron-app/src/components/ProjectView.jsx` — Swapped raw IPC for `api.getProjectDetails`/`chatSend`
+- `electron-app/src/components/LibraryView.jsx` — Swapped raw IPC for `api.listDocuments`
+- `electron-app/src/components/TasksView.jsx` — Swapped raw IPC for `api.listTasks`/`markTaskDone`
+- `electron-app/src/components/TimelineView.jsx` — Swapped raw IPC for `api.getTimeline`
+
 ## [2026-09-02] — Fix `get_document` Action Schema to Accept `path` and `relPath` Aliases
 
 **Branch**: `main`

@@ -6,6 +6,7 @@ import { EmptyState } from './ui/empty-state.jsx';
 import { Input } from './ui/input.jsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
+import { api } from '../lib/api.js';
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -19,8 +20,7 @@ export function LibraryView({ onSelectDocument }) {
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    window.dori
-      ?.call('list_documents', {})
+    api.listDocuments()
       .then(setDocs)
       .catch((e) => setError(e.message));
   }, []);
