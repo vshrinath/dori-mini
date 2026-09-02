@@ -4,353 +4,301 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-/* Same system as the homepage — token names included. See docs/site-v3-spec.md. */
+/* Shares the homepage's language (palette, type, chrome) but not its
+   composition — docs are scanned, not led. See docs/site-v3-spec.md. */
 :root{
   --paper:#fdfcf9; --paper-2:#f5f3ec; --raise:#ffffff;
   --ink:#171c45; --ink-2:#525878; --ink-3:#666b88;
   --hair:#e6e3d9;
   --amber:#d99a1f; --amber-deep:#b87d14; --amber-ink:#8a6210; --green:#3fae5a; --green-ink:#2b7a42;
   --shadow-sm:0 1px 2px rgba(23,28,69,.04),0 6px 16px rgba(23,28,69,.06);
-  --shadow-lg:0 2px 4px rgba(23,28,69,.04),0 24px 60px rgba(23,28,69,.10);
   --f-sans:"Schibsted Grotesk",-apple-system,"Helvetica Neue",sans-serif;
   --f-serif:"Instrument Serif",Georgia,serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-  --max:1080px;
   color-scheme:light;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 var(--f-sans);-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--f-sans);-webkit-font-smoothing:antialiased}
 ::selection{background:var(--amber);color:var(--ink)}
 a{color:var(--amber-ink);text-decoration:none}
 a.u{text-decoration:underline;text-underline-offset:3px}
 h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.025em;font-weight:600}
+code{font-family:var(--f-mono)}
 
-.wrap{max-width:var(--max);margin:0 auto;padding:0 28px}
-section{padding:104px 0}
+.wide{max-width:1080px;margin:0 auto;padding:0 28px}
+.doc{max-width:760px;margin:0 auto;padding:0 28px}
 
-/* chrome */
-header{border-bottom:1px solid var(--hair);background:rgba(253,252,249,.88);backdrop-filter:blur(10px);position:sticky;top:0;z-index:20}
-header .wrap{height:56px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+/* chrome — the homepage's header, plus a tab strip the homepage doesn't have */
+header{border-bottom:1px solid var(--hair);background:var(--paper)}
+header .wide{height:56px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .wordmark{display:flex;align-items:baseline;gap:7px;color:var(--ink);flex:none}
 .wordmark svg{height:21px;width:auto;display:block;transform:translateY(3px)}
 .wordmark span{font-size:1rem;font-weight:500;letter-spacing:-.01em;color:var(--ink-3)}
-header .nx{font-size:14px;font-weight:600;color:var(--ink-2)}
+header .gh{font-family:var(--f-mono);font-size:12px;color:var(--ink-3)}
 
-/* type scale */
-h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
-.sechead{text-align:center;margin-bottom:48px}
-.sub{color:var(--ink-2);font-size:1.06rem;margin:14px auto 0;max-width:56ch}
-.serif-pop{font-family:var(--f-serif);font-style:italic;font-weight:400;color:var(--amber-deep);letter-spacing:-.01em}
+.tabs{border-bottom:1px solid var(--hair);background:rgba(253,252,249,.92);backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:20}
+.tabs .wide{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
+.tabs .wide::-webkit-scrollbar{display:none}
+.tabs a{font-size:14px;font-weight:600;color:var(--ink-3);padding:13px 0;white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+.tabs a:hover{color:var(--ink)}
+.tabs a[aria-current]{color:var(--ink);border-bottom-color:var(--amber)}
+
+/* the one centred block on the page */
+.opener{text-align:center;padding:72px 0 56px}
+.opener h1{font-size:clamp(2.1rem,5vw,3.3rem);line-height:1.06}
+.opener p{color:var(--ink-2);font-size:1.1rem;margin:16px auto 0;max-width:46ch}
 .eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-ink);
-  display:inline-flex;align-items:center;gap:8px;margin-bottom:20px}
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:18px}
 .eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--green);display:block}
+.serif-pop{font-family:var(--f-serif);font-style:italic;font-weight:400;color:var(--amber-deep);letter-spacing:-.01em}
 
-/* hero */
-.hero{padding:76px 0 0;text-align:center}
-.hero h1{font-size:clamp(2.3rem,5.6vw,4rem);line-height:1.04}
-.hero .sub{font-size:1.14rem;max-width:52ch}
+/* everything below runs left */
+section{padding:0 0 60px}
+h2{font-size:1.5rem;line-height:1.2;margin:0 0 6px}
+.h2sub{color:var(--ink-3);font-size:15px;margin:0 0 26px}
+.k{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:0 0 11px}
+.fn{font-size:15px;color:var(--ink-3);margin:14px 0 0}
+.fn code{font-size:13px;color:var(--amber-ink)}
 
-/* install strip */
-.install{max-width:660px;margin:44px auto 0;background:var(--paper-2);border-radius:18px;padding:20px 22px;text-align:left}
-.install .lbl{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px}
-.cmd{display:flex;align-items:center;gap:12px;background:var(--raise);border-radius:11px;padding:11px 13px;box-shadow:var(--shadow-sm)}
-.cmd+.cmd{margin-top:9px}
-.cmd code{font-family:var(--f-mono);font-size:12.5px;color:var(--ink);flex:1;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+/* install — small, for whoever isn't set up yet */
+.install{background:var(--paper-2);border-radius:16px;padding:18px 20px;margin-bottom:52px}
+.cmd{display:flex;align-items:center;gap:12px;background:var(--raise);border-radius:10px;padding:10px 12px;box-shadow:var(--shadow-sm)}
+.cmd+.cmd{margin-top:8px}
+.cmd em{font-family:var(--f-mono);font-style:normal;font-size:10.5px;color:var(--ink-3);flex:none;width:74px}
+.cmd code{font-size:12.5px;color:var(--ink);flex:1;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
 .cmd code::-webkit-scrollbar{display:none}
-.cmd em{font-family:var(--f-mono);font-style:normal;font-size:11px;color:var(--ink-3);flex:none}
 .copy{font:700 11.5px var(--f-sans);color:var(--ink-2);background:transparent;border:1px solid var(--hair);
   border-radius:999px;padding:5px 11px;cursor:pointer;flex:none;transition:border-color .15s,color .15s}
 .copy:hover{border-color:var(--amber-ink);color:var(--amber-ink)}
 .copy.done{border-color:var(--green);color:var(--green-ink)}
 
-/* the loud moment — two rules */
-.rules{background:var(--paper-2);border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
-.rulegrid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:46px}
-.rule{background:var(--raise);border-radius:20px;padding:32px 30px 30px;box-shadow:var(--shadow-sm)}
-.rule b.n{display:block;font-family:var(--f-mono);font-size:13px;color:var(--amber-ink);letter-spacing:.06em;margin-bottom:16px}
-.rule h3{font-size:clamp(1.35rem,2.5vw,1.85rem);line-height:1.15}
-.rule p{color:var(--ink-2);font-size:1rem;margin:12px 0 20px;max-width:34ch}
-.rule .say{font-family:var(--f-mono);font-size:12.5px;color:var(--amber-ink);background:var(--paper-2);border-radius:9px;padding:10px 12px}
-.rule .say.none{color:var(--ink-3)}
+/* the rule */
+.rule{border-left:3px solid var(--amber);padding:2px 0 2px 20px;margin-bottom:56px}
+.rule p{margin:0;font-size:1.06rem;color:var(--ink-2)}
+.rule p+p{margin-top:10px}
+.rule b{color:var(--ink)}
 
-/* cards with art — same device as the homepage frames */
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-.card{background:var(--raise);border-radius:20px;padding:20px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:15px}
-.card .art{background:var(--paper-2);border-radius:13px;aspect-ratio:16/9;padding:14px;overflow:hidden;position:relative}
-.card .lbl{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--amber-ink)}
-.card .line{display:flex;align-items:flex-start;gap:10px;background:var(--paper-2);border-radius:9px;padding:10px 11px;margin-top:-6px}
-.card .line code{font-family:var(--f-mono);font-size:12.5px;line-height:1.55;color:var(--amber-ink);flex:1;word-break:break-word}
-.card .why{font-size:14.5px;color:var(--ink-3);margin:-4px 0 0}
+/* the anchor: one thing to do, then what it produced */
+.bigline{display:flex;align-items:flex-start;gap:14px;background:var(--paper-2);border-radius:14px;padding:18px 20px}
+.bigline code{font-size:15px;line-height:1.55;color:var(--amber-ink);flex:1;word-break:break-word}
+.arrowdown{display:block;margin:22px 0 22px 22px;width:2px;height:32px;background:var(--hair);position:relative}
+.arrowdown::after{content:"";position:absolute;left:-4px;bottom:-1px;width:10px;height:10px;
+  border-right:2px solid var(--hair);border-bottom:2px solid var(--hair);transform:rotate(45deg)}
+.out{border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:var(--raise)}
+.out .path{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);background:var(--paper-2);
+  padding:11px 16px;border-bottom:1px solid var(--hair);overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.out .path::-webkit-scrollbar{display:none}
+.out .path b{color:var(--ink);font-weight:500}
+.out .md{padding:16px 18px;font-family:var(--f-mono);font-size:12.5px;line-height:1.95}
+.out .md b{display:block;color:var(--ink);font-weight:500}
+.out .md b.t{font-size:14.5px;margin-bottom:2px}
+.out .md i{font-style:normal;color:var(--ink-3);display:block;margin-bottom:6px}
 
-/* art primitives, borrowed from the homepage */
-.files{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:7px}
-.files div{display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden}
-.files div::before{content:"";width:9px;height:11px;background:var(--ink-3);opacity:.45;border-radius:1.5px;flex:none}
-.files div.dir::before{border-radius:1.5px;background:var(--amber);opacity:.7}
-.art-vid{padding:0;background:none}
-.vid{display:block;position:relative;width:100%;height:100%;border-radius:13px;overflow:hidden;background:linear-gradient(150deg,#2a2f5e,#191d43)}
-.vid img{width:100%;height:100%;object-fit:cover;display:block}
-.vid .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center}
-.vid .play::after{content:"";border-left:11px solid #191d43;border-top:7px solid transparent;border-bottom:7px solid transparent;margin-left:3px}
-.vid .dur{position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.78);color:#fff;font:500 11px var(--f-mono);padding:2px 6px;border-radius:4px}
-.pc{height:100%;background:var(--raise);border-radius:9px;padding:13px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;justify-content:center;gap:9px}
-.pc .hd{display:flex;align-items:center;gap:9px}
-.pc .av{width:24px;height:24px;border-radius:50%;background:var(--amber);opacity:.85;flex:none}
-.pc .l{height:7px;border-radius:4px;background:var(--ink-3);opacity:.24;display:block}
-.pc .fr{display:flex;align-items:center;gap:9px}
-.pc .fr em{font-style:normal;font-family:var(--f-mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);width:50px;flex:none}
-.pc .q{font-family:var(--f-mono);font-size:10px;line-height:1.4;color:var(--amber-ink);background:var(--paper-2);border-radius:6px;padding:6px 8px}
-.sw{height:100%;display:flex;flex-direction:column;justify-content:center;gap:10px}
-.sw .row{display:flex;gap:7px}
-.sw .row i{flex:1;height:26px;border-radius:7px;display:block}
-.sw .hex{display:flex;gap:7px;font-family:var(--f-mono);font-size:8.5px;color:var(--ink-3)}
-.sw .hex span{flex:1;text-align:center}
-.sw .tx{font-family:var(--f-serif);font-size:19px;color:var(--ink);line-height:1;margin:0}
-.sw .tx small{font-family:var(--f-sans);font-size:10px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;display:block;margin-top:5px}
-.wa{height:100%;background:#efeae2;border-radius:9px;padding:11px;display:flex;flex-direction:column;justify-content:center;gap:7px}
-.wa div{font-size:11.5px;line-height:1.4;padding:7px 9px;border-radius:8px;max-width:84%;color:#111b21;box-shadow:0 1px 1px rgba(0,0,0,.09)}
-.wa .out{background:#d9fdd3;align-self:flex-end}
-.wa .in{background:#fff;align-self:flex-start;display:flex;align-items:center;gap:9px;font-size:11px}
-.wa .in svg{display:block;flex:none;border-radius:2px}
-
-/* the lighter, denser second list */
-.more{display:grid;grid-template-columns:1fr 1fr;gap:16px 26px}
-.ask{padding:18px 0 0;border-top:1px solid var(--hair)}
-.ask .lbl{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:9px}
-.ask .line{display:flex;align-items:flex-start;gap:10px}
-.ask code{font-family:var(--f-mono);font-size:13px;line-height:1.5;color:var(--amber-ink);flex:1}
-.ask p{font-size:14.5px;color:var(--ink-3);margin:8px 0 0}
+/* the reference table */
+.grp{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--amber-ink);
+  margin:36px 0 2px;padding-top:14px;border-top:1px solid var(--hair)}
+.grp.top{margin-top:0;padding-top:0;border-top:0}
+.ref .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px 24px;
+  align-items:start;padding:15px 0;border-bottom:1px solid var(--hair)}
+.ref code{font-size:13px;line-height:1.5;color:var(--amber-ink);display:block}
+.ref p{margin:0;font-size:14.5px;color:var(--ink-3);line-height:1.5}
+.ref p b{color:var(--ink-2)}
+.ref .row:last-child{border-bottom:0}
 
 /* quiet notes */
-.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px;margin-top:44px;
-  border-top:1px solid var(--hair);padding-top:34px}
-.notes h4{margin:0 0 7px;font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:26px}
+.notes h3{font-size:14.5px;margin:0 0 6px}
 .notes p{margin:0;font-size:14.5px;color:var(--ink-3);line-height:1.55}
+.notes p b{color:var(--ink-2)}
 
-/* close */
-.close{text-align:center;border-top:1px solid var(--hair)}
-.close p{color:var(--ink-2);font-size:1.06rem;margin:14px auto 30px;max-width:46ch}
-.btn{display:inline-block;font-weight:700;font-size:.95rem;color:var(--ink);background:var(--amber);
-  padding:13px 24px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.18);transition:transform .15s,box-shadow .15s,background .15s}
-.btn:hover{background:var(--amber-deep);transform:translateY(-2px) rotate(-1deg);box-shadow:0 8px 20px rgba(217,154,31,.4)}
+.next{border-top:1px solid var(--hair);padding-top:26px;text-align:right}
+.next a{font-size:15px;font-weight:600}
+footer{border-top:1px solid var(--hair);padding:24px 0 40px;margin-top:44px}
+footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
 
-footer{border-top:1px solid var(--hair);padding:26px 0 40px}
-footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
-
-.js .rv{opacity:0;transform:translateY(16px);transition:opacity .7s cubic-bezier(.2,.7,.3,1),transform .7s cubic-bezier(.2,.7,.3,1)}
-.rv.in{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
-
-@media (max-width:760px){
-  section{padding:72px 0}
-  .cards,.rulegrid,.more{grid-template-columns:1fr}
-  .sechead{margin-bottom:34px}
+@media (max-width:640px){
+  .ref .row{grid-template-columns:minmax(0,1fr) auto;gap:7px 14px}
+  .ref .row p{grid-column:1/-1}
+  .opener{padding:52px 0 40px}
+  .cmd{flex-wrap:wrap}
+  .cmd em{width:auto}
 }
 </style>
 
 <header>
-  <div class="wrap">
+  <div class="wide">
     <a class="wordmark" href="/" aria-label="Dori Mini"><svg viewBox="0 0 108 42" fill="none" aria-hidden="true"><path d="M30.5 6.5c-1.4 6.9-3.6 15.2-5 21.9-.8 3.9-.6 6.6 1.6 6.6 2.4 0 4.3-3.4 5.4-7.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M27.4 17.6c-2.2-2.4-6.2-2.3-9 .4-3.3 3.2-4.2 8.9-1.8 11.7 2.2 2.5 6 1.9 8.6-.9 1.6-1.7 2.6-4 3.2-6.3" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M40 20.6c-3 0-5.7 3.4-5.7 7.7 0 3.4 1.9 5.6 4.7 5.6 3.4 0 6.2-3.6 6.2-7.9 0-3.3-1.9-5.4-4.6-5.4Z" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M50 33.6c.7-4.2 1.4-8 2-11.6M52.4 25.6c1-3.2 3.3-5.4 6.4-5.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M66.6 21.4c-.9 4.2-1.6 8-2.1 12.2" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="69.4" cy="12.6" r="3.1" fill="var(--amber)"/></svg><span>mini</span></a>
-    <a class="nx" href="/docs/how-it-works">How it works →</a>
+    <a class="gh" href="https://github.com/vshrinath/dori-mini">github.com/vshrinath/dori-mini</a>
   </div>
 </header>
 
-<section class="hero">
-  <div class="wrap">
+<nav class="tabs">
+  <div class="wide">
+    <a href="/docs/getting-started" aria-current="page">Start here</a>
+    <a href="/docs/how-it-works">How it works</a>
+    <a href="/docs/whatsapp">WhatsApp</a>
+    <a href="/docs/benchmarks">Benchmarks</a>
+  </div>
+</nav>
+
+<div class="doc">
+
+  <div class="opener">
     <p class="eyebrow"><i></i> Start here</p>
     <h1>It's installed.<br><span class="serif-pop">Here's what to say.</span></h1>
-    <p class="sub">There are no commands to learn and nothing to configure. Two rules, then
-    a dozen lines you can steal as they are.</p>
+    <p>No commands to learn. One rule, one first thing, then a list to steal from.</p>
+  </div>
 
+  <section>
     <div class="install">
-      <p class="lbl">Not installed yet? One line, once.</p>
-      <div class="cmd"><em>macOS / Linux</em><code id="c1">curl -fsSL https://mini.mydori.app/install.sh | sh</code><button class="copy" data-c="c1">Copy</button></div>
+      <p class="k">Not set up yet? One line, once.</p>
+      <div class="cmd"><em>macOS/Linux</em><code id="c1">curl -fsSL https://mini.mydori.app/install.sh | sh</code><button class="copy" data-c="c1">Copy</button></div>
       <div class="cmd"><em>Windows</em><code id="c2">irm https://mini.mydori.app/install.ps1 | iex</code><button class="copy" data-c="c2">Copy</button></div>
     </div>
-  </div>
-</section>
 
-<section class="rules">
-  <div class="wrap">
-    <div class="sechead" style="margin-bottom:0">
-      <h2>Two rules. That's the <span class="serif-pop">whole</span> learning curve.</h2>
-      <p class="sub">After this, you're just talking to the agent you already use.</p>
+    <div class="rule">
+      <p><b>The rule:</b> start the message with <b>Dori</b>. That's the entire trigger — every
+      line on this page is one sentence beginning that way.</p>
+      <p><b>The exception:</b> links and files need no trigger at all. Paste a YouTube URL, drop
+      in a PDF or a photo of a receipt, and it files itself.</p>
     </div>
-    <div class="rulegrid">
-      <div class="rule rv">
-        <b class="n">RULE 01</b>
-        <h3>Start the message with <span class="serif-pop">Dori</span>.</h3>
-        <p>That's the whole trigger. Everything on this page is one sentence beginning that way.</p>
-        <div class="say">Dori, what did I decide about pricing?</div>
-      </div>
-      <div class="rule rv">
-        <b class="n">RULE 02</b>
-        <h3>Links and files need no trigger.</h3>
-        <p>Paste a YouTube URL, drop in a PDF or a photo of a receipt — it files itself.</p>
-        <div class="say none">…no "Dori" needed.</div>
-      </div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<section>
-  <div class="wrap">
-    <div class="sechead">
-      <h2>Six lines to start with.</h2>
-      <p class="sub">Say them as they are, or fill in the brackets first — either way it knows
-      what to do with what's missing.</p>
+  <section>
+    <h2>Do one thing first.</h2>
+    <p class="h2sub">Say this in whichever agent you wired up. Any YouTube link works — this
+    one is a 46-minute podcast episode.</p>
+
+    <div class="bigline">
+      <code id="f1">Dori, store this YouTube link: https://youtu.be/hiYTq9xnkPw</code>
+      <button class="copy" data-c="f1">Copy</button>
     </div>
 
-    <div class="cards">
+    <span class="arrowdown"></span>
 
-      <div class="card rv">
-        <div class="art"><div class="files">
-          <div class="dir">acme-nonprofit/</div><div>meetings/</div><div>docs/</div><div>notes.md</div>
-        </div></div>
-        <p class="lbl">Start a project</p>
-        <div class="line"><code id="s1">Dori, start a new project called [Name]</code><button class="copy" data-c="s1">Copy</button></div>
-        <p class="why">Scaffolds an empty folder. Attach files any time after.</p>
+    <div class="out">
+      <div class="path">~/dori-vault/yt/<b>2026-08-24-blind-spots-to-big-bets.md</b></div>
+      <div class="md">
+        <b class="t"># Blind Spots to Big Bets</b>
+        <i>Source · youtube.com/watch?v=hiYTq9xnkPw · 46:08</i>
+        <b>## Summary</b>
+        <b>## Where founders misread the market</b>
+        <b>## The bet that changed the model</b>
+        <b>## Full transcript</b>
       </div>
-
-      <div class="card rv">
-        <div class="art art-vid"><a class="vid" href="https://www.youtube.com/watch?v=hiYTq9xnkPw" target="_blank" rel="noopener" aria-label="Watch on YouTube"><img src="https://img.youtube.com/vi/hiYTq9xnkPw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360"><span class="play"></span><span class="dur">46:08</span></a></div>
-        <p class="lbl">Save a video</p>
-        <div class="line"><code id="s2">Dori, store this YouTube link: https://youtu.be/hiYTq9xnkPw</code><button class="copy" data-c="s2">Copy</button></div>
-        <p class="why">Searchable transcript in your vault in under a minute.</p>
-      </div>
-
-      <div class="card rv">
-        <div class="art"><div class="pc">
-          <div class="hd"><span class="av"></span><span class="l" style="width:54%"></span></div>
-          <div class="fr"><em>Role</em><span class="l" style="width:56%"></span></div>
-          <div class="fr"><em>Company</em><span class="l" style="width:42%"></span></div>
-          <div class="fr"><em>LinkedIn</em><span class="l" style="width:64%"></span></div>
-        </div></div>
-        <p class="lbl">Tell it who you are</p>
-        <div class="line"><code id="s3">Dori, create my profile: I'm [Name], [Role] at [Company]</code><button class="copy" data-c="s3">Copy</button></div>
-        <p class="why">Or drop in a CV and let it read that instead.</p>
-      </div>
-
-      <div class="card rv">
-        <div class="art"><div class="sw">
-          <p class="tx">Warm, plain-spoken<small>Brand voice</small></p>
-          <div class="row"><i style="background:#171c45"></i><i style="background:#d99a1f"></i><i style="background:#3fae5a"></i><i style="background:#e6e3d9"></i></div>
-          <div class="hex"><span>171C45</span><span>D99A1F</span><span>3FAE5A</span><span>E6E3D9</span></div>
-        </div></div>
-        <p class="lbl">Create a brand</p>
-        <div class="line"><code id="s4">Dori, create a brand called [Name] — here's our site: [URL]</code><button class="copy" data-c="s4">Copy</button></div>
-        <p class="why">Reads the site and writes up positioning, voice and colours.</p>
-      </div>
-
-      <div class="card rv">
-        <div class="art"><div class="pc">
-          <p class="q">who's Priya Menon from Acme?</p>
-          <div class="hd"><span class="av"></span><span class="l" style="width:48%"></span></div>
-          <span class="l" style="width:86%"></span><span class="l" style="width:72%"></span><span class="l" style="width:55%"></span>
-        </div></div>
-        <p class="lbl">Look someone up</p>
-        <div class="line"><code id="s5">Dori, who's [Name] from [Company]?</code><button class="copy" data-c="s5">Copy</button></div>
-        <p class="why">Uses your agent's own web search. Works today, free.</p>
-      </div>
-
-      <div class="card rv">
-        <div class="art"><div class="wa">
-          <div class="out">Dori, add WhatsApp as a channel</div>
-          <div class="in"><svg width="36" height="36" viewBox="0 0 21 21" shape-rendering="crispEdges" aria-hidden="true"><rect width="21" height="21" fill="#fff"/><g fill="#111b21"><path d="M0 0h7v7H0zm1 1v5h5V1z"/><rect x="2" y="2" width="3" height="3"/><path d="M14 0h7v7h-7zm1 1v5h5V1z"/><rect x="16" y="2" width="3" height="3"/><path d="M0 14h7v7H0zm1 1v5h5v-5z"/><rect x="2" y="16" width="3" height="3"/><rect x="9" y="1" width="1" height="1"/><rect x="9" y="3" width="1" height="1"/><rect x="10" y="4" width="1" height="1"/><rect x="9" y="6" width="1" height="1"/><rect x="11" y="2" width="1" height="1"/><rect x="1" y="9" width="1" height="1"/><rect x="3" y="9" width="1" height="1"/><rect x="5" y="10" width="1" height="1"/><rect x="7" y="9" width="1" height="1"/><rect x="9" y="9" width="1" height="1"/><rect x="11" y="10" width="1" height="1"/><rect x="13" y="9" width="1" height="1"/><rect x="15" y="10" width="1" height="1"/><rect x="17" y="9" width="1" height="1"/><rect x="19" y="11" width="1" height="1"/><rect x="9" y="12" width="1" height="1"/><rect x="11" y="13" width="1" height="1"/><rect x="13" y="12" width="1" height="1"/><rect x="16" y="13" width="1" height="1"/><rect x="18" y="14" width="1" height="1"/><rect x="10" y="15" width="1" height="1"/><rect x="12" y="16" width="1" height="1"/><rect x="15" y="16" width="1" height="1"/><rect x="17" y="17" width="1" height="1"/><rect x="9" y="18" width="1" height="1"/><rect x="11" y="19" width="1" height="1"/><rect x="14" y="19" width="1" height="1"/><rect x="19" y="19" width="1" height="1"/><rect x="12" y="9" width="1" height="1"/><rect x="20" y="16" width="1" height="1"/></g></svg><span>Scan to pair</span></div>
-        </div></div>
-        <p class="lbl">Add WhatsApp</p>
-        <div class="line"><code id="s6">Dori, add WhatsApp as a channel</code><button class="copy" data-c="s6">Copy</button></div>
-        <p class="why">Shows a QR code to scan. Needs a <b>spare</b> number, never your main one. <a class="u" href="/docs/whatsapp">Why it's safe →</a></p>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<section style="background:var(--paper-2);border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)">
-  <div class="wrap">
-    <div class="sechead">
-      <h2>Then these start earning their keep.</h2>
-      <p class="sub">Once a few things are actually captured, this is what you ask.</p>
     </div>
 
-    <div class="more">
-      <div class="ask">
-        <p class="lbl">Minutes from a transcript</p>
-        <div class="line"><code id="a1">Dori, turn this into minutes</code><button class="copy" data-c="a1">Copy</button></div>
-        <p>Paste the transcript with it. Comes back as Attendees · Topics · Decisions · Action Items, each tagged with an owner.</p>
+    <p class="fn">About a minute later, that file is on your disk. The headings are the video's
+    own chapters, used as they are rather than invented. From that moment it's searchable —
+    <code>Dori, what did that video say about pricing?</code></p>
+  </section>
+
+  <section>
+    <h2>Everything else you can say.</h2>
+    <p class="h2sub">Same shape as the line above. Fill in the brackets, or leave them — it'll ask.</p>
+
+    <p class="grp top">Capture something</p>
+    <div class="ref">
+      <div class="row">
+        <code id="r1">Dori, start a new project called [Name]</code>
+        <p>Scaffolds an empty folder. Attach files any time after.</p>
+        <button class="copy" data-c="r1">Copy</button>
       </div>
-      <div class="ask">
-        <p class="lbl">Recall a decision</p>
-        <div class="line"><code id="a2">Dori, what did I decide about [topic]?</code><button class="copy" data-c="a2">Copy</button></div>
-        <p>Empty the very first time — that's expected. Capture a couple of things, then ask again.</p>
+      <div class="row">
+        <code id="r2">Dori, create my profile: I'm [Name], [Role] at [Company]</code>
+        <p>Or drop in a CV and let it read that instead of typing it out.</p>
+        <button class="copy" data-c="r2">Copy</button>
       </div>
-      <div class="ask">
-        <p class="lbl">Check your tasks</p>
-        <div class="line"><code id="a3">Dori, what are my tasks?</code><button class="copy" data-c="a3">Copy</button></div>
+      <div class="row">
+        <code id="r3">Dori, create a brand called [Name] — here's our site: [URL]</code>
+        <p>Reads the site and writes up positioning, voice and colours.</p>
+        <button class="copy" data-c="r3">Copy</button>
+      </div>
+      <div class="row">
+        <code id="r4">Dori, turn this into minutes</code>
+        <p>Paste a transcript with it. Comes back as Attendees · Topics · Decisions · Action Items, each with an owner.</p>
+        <button class="copy" data-c="r4">Copy</button>
+      </div>
+      <div class="row">
+        <code id="r5">Dori, add WhatsApp as a channel</code>
+        <p>Shows a QR code to scan. Needs a <b>spare</b> number, never your main one. <a class="u" href="/docs/whatsapp">Why it's&nbsp;safe&nbsp;→</a></p>
+        <button class="copy" data-c="r5">Copy</button>
+      </div>
+    </div>
+
+    <p class="grp">Ask it something</p>
+    <div class="ref">
+      <div class="row">
+        <code id="r6">Dori, what did I decide about [topic]?</code>
+        <p>Empty the very first time — that's expected. Capture a few things, then ask again.</p>
+        <button class="copy" data-c="r6">Copy</button>
+      </div>
+      <div class="row">
+        <code id="r7">Dori, who's [Name] from [Company]?</code>
+        <p>Uses your agent's own web search. Free, works today.</p>
+        <button class="copy" data-c="r7">Copy</button>
+      </div>
+      <div class="row">
+        <code id="r8">Dori, what are my tasks?</code>
         <p>Open items from the real task store, sorted by due date.</p>
+        <button class="copy" data-c="r8">Copy</button>
       </div>
-      <div class="ask">
-        <p class="lbl">Add a task</p>
-        <div class="line"><code id="a4">Dori, add a task: [what] by [when]</code><button class="copy" data-c="a4">Copy</button></div>
+      <div class="row">
+        <code id="r9">Dori, add a task: [what] by [when]</code>
         <p>Same store — also fills itself from a meeting's Action Items once minutes exist.</p>
+        <button class="copy" data-c="r9">Copy</button>
       </div>
-      <div class="ask">
-        <p class="lbl">See what needs a decision</p>
-        <div class="line"><code id="a5">Dori, what do I need to resolve?</code><button class="copy" data-c="a5">Copy</button></div>
+      <div class="row">
+        <code id="r10">Dori, what do I need to resolve?</code>
         <p>Anything it couldn't confidently file, usually because it fits two projects. A safeguard, not a bug.</p>
+        <button class="copy" data-c="r10">Copy</button>
       </div>
-      <div class="ask">
-        <p class="lbl">Check the watched folder</p>
-        <div class="line"><code id="a6">Dori, anything new in my inbox folder?</code><button class="copy" data-c="a6">Copy</button></div>
-        <p>Lists what landed since you last looked. Needs the optional install step — rerun the installer if you skipped it.</p>
+      <div class="row">
+        <code id="r11">Dori, anything new in my inbox folder?</code>
+        <p>What landed in the watched folder since you last looked. Needs the optional install step.</p>
+        <button class="copy" data-c="r11">Copy</button>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section>
-  <div class="wrap">
-    <div class="sechead">
-      <h2>Three things worth knowing.</h2>
-      <p class="sub">None of them are required. All of them make a line above work better.</p>
-    </div>
-    <div class="notes" style="border:0;padding-top:0;margin-top:0">
+  <section>
+    <h2>Three things worth knowing.</h2>
+    <p class="h2sub">None required. Each one makes a line above work better.</p>
+    <div class="notes">
       <div>
-        <h4>Your LinkedIn as a PDF</h4>
+        <h3>Your LinkedIn as a PDF</h3>
         <p>On your profile, open <b>Resources</b> under your name and pick <b>Save to PDF</b>. Drag that in and it fills your profile out for you.</p>
       </div>
       <div>
-        <h4>A free Tavily key</h4>
-        <p>1,000 searches a month, no card. Turns "look someone up" into something that files what it finds, instead of just answering in chat.</p>
+        <h3>A free Tavily key</h3>
+        <p>1,000 searches a month, no card. Turns "who's [Name]" into something that files what it finds, rather than just answering in chat.</p>
       </div>
       <div>
-        <h4>Fathom, if you use it</h4>
+        <h3>Fathom, if you use it</h3>
         <p>Pulls meeting recordings straight from your account instead of you pasting a transcript. Add the key by rerunning the installer.</p>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="close">
-  <div class="wrap">
-    <h2>Curious what it did to your machine?</h2>
-    <p>The install transcript, line by line, and what your vault looks like before you've used it versus after a normal week.</p>
-    <a class="btn" href="/docs/how-it-works">How it works →</a>
+  <div class="next">
+    <a href="/docs/how-it-works">Next: what the install actually did →</a>
   </div>
-</section>
+
+</div>
 
 <footer>
-  <div class="wrap">
+  <div class="wide">
     <span>Dori Mini · open source</span>
     <span>Works with Claude Code, Codex and Antigravity</span>
-    <span><a href="https://github.com/vshrinath/dori-mini">github.com/vshrinath/dori-mini</a></span>
+    <span><a href="/">mini.mydori.app</a></span>
   </div>
 </footer>
 
 <script>
-document.documentElement.classList.add('js');
 document.addEventListener('click', function (e) {
   var b = e.target.closest('.copy');
   if (!b) return;
@@ -362,12 +310,5 @@ document.addEventListener('click', function (e) {
     b.classList.add('done');
     setTimeout(function () { b.textContent = t; b.classList.remove('done'); }, 1400);
   });
-});
-var io = new IntersectionObserver(function (es) {
-  es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-}, { rootMargin: '0px 0px -8% 0px' });
-document.querySelectorAll('.rv').forEach(function (el, i) {
-  el.style.transitionDelay = (i % 3) * 70 + 'ms';
-  io.observe(el);
 });
 </script>
