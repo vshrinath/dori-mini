@@ -1,472 +1,251 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dori Mini — With and Without</title>
+<title>Dori Mini — The Numbers</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-  /* Palette and type follow the homepage. See docs/site-v3-spec.md.
-     Token NAMES are unchanged so every existing rule keeps working. */
-  :root {
-    color-scheme: light;
-    --amber: #d99a1f; --amber-soft: #f0d79a; --amber-hover: #b87d14;
-    --amber-ink: #8a6210;   /* amber as small text on light */
-    --on-amber: #171c45;    /* text ON an amber fill; amber never flips */
-    --green-ink: #2b7a42; --coral-ink: #a4381f;
-    --amber-deep: #b87d14;  /* amber as large text on light */
-    --navy: #171c45; --navy-deep: #131737;
-    --canvas: #fdfcf9; --canvas2: #f5f3ec; --card: #ffffff;
-    --ink: #171c45; --muted: #666b88; --body-c: #525878;
-    --green: #3fae5a; --coral: #c0492c; --blue: #3f5bbf; --purple: #7a46b8;
-    --line: #e6e3d9;
-    --r-md: 14px; --r-lg: 22px;
-    --font-display: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-serif: "Instrument Serif", Georgia, serif;
-    --font-body: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  }
-  /* --navy-deep panels stay dark in both themes; --amber-soft is their text. */
+/* Shares the homepage's language (palette, type, chrome) but not its
+   composition — docs are scanned, not led. See docs/site-v3-spec.md. */
+:root{
+  --paper:#fdfcf9; --paper-2:#f5f3ec; --raise:#ffffff;
+  --ink:#171c45; --ink-2:#525878; --ink-3:#666b88;
+  --hair:#e6e3d9;
+  --amber:#d99a1f; --amber-deep:#b87d14; --amber-ink:#8a6210; --amber-soft:#f0d79a;
+  --green:#3fae5a; --green-ink:#2b7a42; --coral-ink:#a4381f; --navy-deep:#131737;
+  --shadow-sm:0 1px 2px rgba(23,28,69,.04),0 6px 16px rgba(23,28,69,.06);
+  --f-sans:"Schibsted Grotesk",-apple-system,"Helvetica Neue",sans-serif;
+  --f-serif:"Instrument Serif",Georgia,serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--f-sans);-webkit-font-smoothing:antialiased}
+::selection{background:var(--amber);color:var(--ink)}
+a{color:var(--amber-ink);text-decoration:none}
+a.u{text-decoration:underline;text-underline-offset:3px}
+h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.025em;font-weight:600}
+code{font-family:var(--f-mono)}
 
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
-  ::selection { background: var(--amber); color: var(--navy); }
-  a { color: var(--amber-ink); }
-  a.underline { text-decoration: underline; text-underline-offset: 3px; font-size: 0.85rem; display: inline-block; margin-top: 8px; }
+.wide{max-width:1080px;margin:0 auto;padding:0 28px}
+.doc{max-width:940px;margin:0 auto;padding:0 28px}
+.narrow{max-width:680px}
 
-  .container { max-width: 820px; margin: 0 auto; padding: 0 24px 110px; }
-  .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 820px; margin: 0 auto; }
-  .wordmark { display: flex; align-items: baseline; gap: 7px; text-decoration: none; flex: none; color: var(--ink); }
-  .wordmark svg { height: 21px; width: auto; display: block; transform: translateY(3px); }
-  .wordmark span { font-family: var(--font-display); font-size: 1rem; font-weight: 500; letter-spacing: -0.01em; color: var(--muted); }
-  .topnav .back { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
-  .serif-pop { font-family: var(--font-serif); font-style: italic; color: var(--amber-deep); }
+header{border-bottom:1px solid var(--hair);background:var(--paper)}
+header .wide{height:56px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.wordmark{display:flex;align-items:baseline;gap:7px;color:var(--ink);flex:none}
+.wordmark svg{height:21px;width:auto;display:block;transform:translateY(3px)}
+.wordmark span{font-size:1rem;font-weight:500;letter-spacing:-.01em;color:var(--ink-3)}
+header .gh{font-family:var(--f-mono);font-size:12px;color:var(--ink-3)}
 
-  h1 { font-family: var(--font-display); font-weight: 780; letter-spacing: -0.03em; font-size: clamp(2.1rem, 5.2vw, 3.2rem); line-height: 1.05; margin: 0 0 18px; text-wrap: balance; }
-  .lede { font-size: 1.12rem; color: var(--body-c); max-width: 60ch; margin: 0 0 8px; }
-  .lede b { color: var(--ink); }
+.tabs{border-bottom:1px solid var(--hair);background:rgba(253,252,249,.92);backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:20}
+.tabs .wide{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
+.tabs .wide::-webkit-scrollbar{display:none}
+.tabs a{font-size:14px;font-weight:600;color:var(--ink-3);padding:13px 0;white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+.tabs a:hover{color:var(--ink)}
+.tabs a[aria-current]{color:var(--ink);border-bottom-color:var(--amber)}
 
-  .cost-badge {
-    margin: 28px 0 0; padding: 16px 20px; background: rgba(74,109,216,0.08); border: 1px solid rgba(74,109,216,0.28);
-    border-radius: var(--r-md); font-size: 0.92rem; color: var(--body-c); display: flex; gap: 12px; align-items: flex-start;
-  }
-  .cost-badge .mark { color: var(--blue); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
-  .cost-badge b { color: var(--ink); }
-  .cost-badge code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
+.opener{text-align:center;padding:72px 0 52px}
+.opener h1{font-size:clamp(2.1rem,5vw,3.3rem);line-height:1.06}
+.opener p{color:var(--ink-2);font-size:1.1rem;margin:16px auto 0;max-width:54ch}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-ink);
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:18px}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--green);display:block}
+.serif-pop{font-family:var(--f-serif);font-style:italic;font-weight:400;color:var(--amber-deep);letter-spacing:-.01em}
 
-  h2 { font-family: var(--font-display); font-weight: 740; letter-spacing: -0.02em; font-size: clamp(1.4rem, 3vw, 1.85rem); margin: 60px 0 8px; text-wrap: balance; }
-  .h2-sub { color: var(--muted); font-size: 0.94rem; margin: 0 0 24px; max-width: 60ch; }
+section{padding:0 0 62px}
+h2{font-size:1.5rem;line-height:1.2;margin:0 0 6px}
+.h2sub{color:var(--ink-3);font-size:15px;margin:0 0 26px;max-width:72ch}
+p{margin:0 0 14px;color:var(--ink-2)}
+p:last-child{margin-bottom:0}
+.fn{font-size:14.5px;color:var(--ink-3);margin:18px 0 0;line-height:1.6}
+.fn code,p code{font-size:.86em;color:var(--amber-ink);background:var(--paper-2);padding:1px 5px;border-radius:4px}
 
-  .cap-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
-  @media (min-width: 640px) { .cap-grid { grid-template-columns: 1fr 1fr; } }
-  .cap-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px 22px; }
-  .cap-card .why { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--purple); margin-bottom: 8px; }
-  .cap-card h3 { font-family: var(--font-display); font-size: 1.02rem; font-weight: 720; margin: 0 0 8px; }
-  .cap-card p { margin: 0; font-size: 0.88rem; color: var(--body-c); line-height: 1.6; }
-  .cap-card code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
+/* the table is the page */
+.scroll{overflow-x:auto;scrollbar-width:thin}
+.tbl{width:100%;min-width:720px;border-collapse:collapse;font-size:14.5px}
+.tbl th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);padding:0 18px 10px 0;border-bottom:1px solid var(--hair);vertical-align:bottom}
+.tbl th:last-child,.tbl td:last-child{text-align:right;padding-right:0}
+.tbl td{padding:16px 18px 16px 0;border-bottom:1px solid var(--hair);color:var(--ink-3);
+  vertical-align:top;line-height:1.5}
+.tbl td.q{color:var(--ink);font-weight:600;width:27%}
+.tbl td.q span{display:block;font-weight:400;font-size:13px;color:var(--ink-3);margin-top:4px}
+.tbl td b{display:block;font-family:var(--f-mono);font-weight:500;font-size:13.5px;margin-bottom:4px}
+.tbl td.wo b{color:var(--coral-ink)}
+.tbl td.wi b{color:var(--green-ink)}
+.tbl td code{font-size:.9em;color:var(--amber-ink)}
+.win{font-family:var(--f-mono);font-size:14px;font-weight:500;color:var(--ink);white-space:nowrap}
 
-  .tablewrap { overflow-x: auto; margin-top: 20px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); }
-  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.86rem; }
-  thead th {
-    text-align: left; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
-    text-transform: uppercase; color: var(--muted); padding: 14px 16px; border-bottom: 1px solid var(--line); white-space: nowrap;
-  }
-  tbody td { padding: 16px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body-c); }
-  tbody tr:last-child td { border-bottom: none; }
-  td.usecase { color: var(--ink); font-weight: 650; white-space: nowrap; }
-  td .num { font-family: var(--font-mono); font-size: 0.86em; color: var(--ink); }
-  td .sub { display: block; font-size: 0.82em; color: var(--muted); margin-top: 3px; line-height: 1.5; }
-  td.win { color: var(--green-ink); font-weight: 650; white-space: nowrap; font-family: var(--font-mono); font-size: 0.86em; }
+/* commands */
+.term{background:var(--navy-deep);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.term pre{margin:0;padding:18px;font-family:var(--f-mono);font-size:12px;line-height:1.9;
+  color:var(--amber-soft);overflow-x:auto;white-space:pre}
+.term .c{color:#9096b8}
 
-  .fine { font-size: 0.86rem; color: var(--muted); margin-top: 14px; line-height: 1.65; }
-  .fine code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
+/* limits */
+.lim{display:grid;grid-template-columns:1fr 1fr;gap:0 34px}
+.lim .it{padding:15px 0;border-bottom:1px solid var(--hair)}
+.lim .it h3{font-size:15px;margin:0 0 4px}
+.lim .it p{margin:0;font-size:14.5px;color:var(--ink-3);line-height:1.5}
 
-  .repro {
-    background: var(--navy-deep); border-radius: var(--r-md); overflow: hidden; margin-top: 22px; box-shadow: 0 12px 32px rgba(19,23,55,0.25);
-  }
-  .repro-bar { display: flex; gap: 6px; padding: 12px 16px; background: rgba(255,255,255,0.04); }
-  .repro-bar i { width: 10px; height: 10px; border-radius: 50%; }
-  .repro-bar i:nth-child(1) { background: var(--coral); }
-  .repro-bar i:nth-child(2) { background: var(--amber); }
-  .repro-bar i:nth-child(3) { background: var(--green); }
-  .repro pre {
-    margin: 0; padding: 16px 20px 20px; font-family: var(--font-mono); font-size: 12px;
-    line-height: 1.8; color: #d9deee; overflow-x: auto; white-space: pre;
-  }
-  .repro .dim { color: #8590ab; }
+.next{border-top:1px solid var(--hair);padding-top:26px;text-align:right}
+.next a{font-size:15px;font-weight:600}
+footer{border-top:1px solid var(--hair);padding:24px 0 40px;margin-top:44px}
+footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
 
-  .scorecard { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 22px; }
-  @media (min-width: 640px) { .scorecard { grid-template-columns: 1fr 1fr; } }
-  .score-card { border-radius: var(--r-md); padding: 20px 22px; }
-  .score-card.bad { background: rgba(208,84,54,0.07); border: 1px solid rgba(208,84,54,0.25); }
-  .score-card.good { background: rgba(42,156,92,0.07); border: 1px solid rgba(42,156,92,0.25); }
-  .score-card .tag { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; display: block; }
-  .score-card.bad .tag { color: var(--coral-ink); }
-  .score-card.good .tag { color: var(--green-ink); }
-  .score-card .tally { font-family: var(--font-display); font-weight: 780; font-size: 1.8rem; color: var(--ink); margin-bottom: 10px; }
-  .score-card ul { margin: 0; padding-left: 18px; font-size: 0.88rem; color: var(--body-c); line-height: 1.7; }
-  .score-card li b { color: var(--ink); }
-
-  details.transcript { margin-top: 20px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--card); }
-  details.transcript summary { cursor: pointer; padding: 14px 18px; font-family: var(--font-display); font-weight: 650; font-size: 0.9rem; color: var(--ink); list-style: none; display: flex; align-items: center; gap: 8px; }
-  details.transcript summary::before { content: "▸"; color: var(--amber-ink); transition: transform 0.15s; }
-  details.transcript[open] summary::before { transform: rotate(90deg); }
-  details.transcript summary::-webkit-details-marker { display: none; }
-  details.transcript .inner { padding: 0 20px 20px; font-size: 0.85rem; color: var(--body-c); line-height: 1.7; border-top: 1px solid var(--line); }
-  details.transcript .inner pre { white-space: pre-wrap; font-family: var(--font-body); font-size: 0.85rem; margin: 14px 0 0; }
-  details.transcript .inner h4 { font-family: var(--font-display); font-size: 0.85rem; margin: 18px 0 6px; color: var(--ink); }
-
-  .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
-  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber-ink); margin-bottom: 6px; }
-  .trust-item p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.55; }
-
-  footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+@media (max-width:640px){
+  .opener{padding:52px 0 40px}
+  .lim{grid-template-columns:1fr;gap:0}
+}
 </style>
 
-<nav class="topnav">
-  <a class="wordmark" href="/" aria-label="Dori Mini"><svg viewBox="0 0 108 42" fill="none" aria-hidden="true"><path d="M30.5 6.5c-1.4 6.9-3.6 15.2-5 21.9-.8 3.9-.6 6.6 1.6 6.6 2.4 0 4.3-3.4 5.4-7.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M27.4 17.6c-2.2-2.4-6.2-2.3-9 .4-3.3 3.2-4.2 8.9-1.8 11.7 2.2 2.5 6 1.9 8.6-.9 1.6-1.7 2.6-4 3.2-6.3" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M40 20.6c-3 0-5.7 3.4-5.7 7.7 0 3.4 1.9 5.6 4.7 5.6 3.4 0 6.2-3.6 6.2-7.9 0-3.3-1.9-5.4-4.6-5.4Z" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M50 33.6c.7-4.2 1.4-8 2-11.6M52.4 25.6c1-3.2 3.3-5.4 6.4-5.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M66.6 21.4c-.9 4.2-1.6 8-2.1 12.2" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="69.4" cy="12.6" r="3.1" fill="var(--amber)"/></svg><span>mini</span></a>
-  <a class="back" href="/docs/getting-started">← Start here</a>
+<header>
+  <div class="wide">
+    <a class="wordmark" href="/" aria-label="Dori Mini"><svg viewBox="0 0 108 42" fill="none" aria-hidden="true"><path d="M30.5 6.5c-1.4 6.9-3.6 15.2-5 21.9-.8 3.9-.6 6.6 1.6 6.6 2.4 0 4.3-3.4 5.4-7.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M27.4 17.6c-2.2-2.4-6.2-2.3-9 .4-3.3 3.2-4.2 8.9-1.8 11.7 2.2 2.5 6 1.9 8.6-.9 1.6-1.7 2.6-4 3.2-6.3" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M40 20.6c-3 0-5.7 3.4-5.7 7.7 0 3.4 1.9 5.6 4.7 5.6 3.4 0 6.2-3.6 6.2-7.9 0-3.3-1.9-5.4-4.6-5.4Z" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M50 33.6c.7-4.2 1.4-8 2-11.6M52.4 25.6c1-3.2 3.3-5.4 6.4-5.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M66.6 21.4c-.9 4.2-1.6 8-2.1 12.2" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="69.4" cy="12.6" r="3.1" fill="var(--amber)"/></svg><span>mini</span></a>
+    <a class="gh" href="https://github.com/vshrinath/dori-mini">github.com/vshrinath/dori-mini</a>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="wide">
+    <a href="/docs/getting-started">Start here</a>
+    <a href="/docs/how-it-works">How it works</a>
+    <a href="/docs/whatsapp">WhatsApp</a>
+    <a href="/docs/benchmarks" aria-current="page">Benchmarks</a>
+  </div>
 </nav>
 
-<div class="container">
+<div class="doc">
 
-  <h1>With Dori Mini,<br><span class="serif-pop">and without it.</span></h1>
-  <p class="lede">Not estimates. Every number below came from actually running the real
-  scripts against a real (if small) test vault, and actually running the plain-grep
-  alternative an agent would fall back to without them. <b>Two different kinds of
-  win show up</b> — some questions get answered with far less context, and some
-  questions a plain agent literally can't answer correctly at all.</p>
-
-  <div class="cost-badge">
-    <div class="mark">✓</div>
-    <div><b>Reproducible, not just reported.</b> The exact commands are at the bottom
-    of this page — run them yourself against <code>dori-mini</code>'s own scripts.</div>
+  <div class="opener">
+    <p class="eyebrow"><i></i> Benchmarks</p>
+    <h1>Same question.<br><span class="serif-pop">Far less to read.</span></h1>
+    <p>Not estimates. Every number below came from running the real scripts against a real
+    test vault, and running the plain-grep alternative an agent falls back to without them.</p>
   </div>
 
-  <h2>New capabilities</h2>
-  <p class="h2-sub">There's no meaningful "without Dori" number for these — a plain
-  chat-based agent session has no persistent process, no background listener, and no
-  way to read a photo of a receipt into structured rows. These aren't faster with
-  Dori Mini. They don't exist without it.</p>
-
-  <div class="cap-grid">
-    <div class="cap-card">
-      <div class="why">Needs a background process</div>
-      <h3>Watched inbox folder</h3>
-      <p>A chat session only runs while you're talking to it. <code>watch-inbox.mjs</code>
-      polls a real folder on a schedule (via launchd) — a plain agent has nothing that
-      keeps running after the conversation ends.</p>
+  <section>
+    <div class="scroll">
+      <table class="tbl">
+        <thead>
+          <tr><th>Question asked</th><th>Without Dori Mini</th><th>With Dori Mini</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="q">"Last meeting with Priya — what got decided?"</td>
+            <td class="wo"><b>3,285 chars</b><code>grep -l</code> matches 10 files, all read in full (~821 tokens)</td>
+            <td class="wi"><b>1,549 chars</b><code>query-vault.mjs last-meeting</code> — one ranked hit's Decisions and Actions, plus 3 lightweight alternates (~387 tokens)</td>
+            <td><span class="win">−53%</span></td>
+          </tr>
+          <tr>
+            <td class="q">"What are my pending tasks?"</td>
+            <td class="wo"><b>3,285 chars</b>the same 10 meeting files, re-read in full to reconstruct open Action Items by hand</td>
+            <td class="wi"><b>122 chars</b><code>list-tasks.mjs open</code> reads the task store directly — 2 open tasks (~31 tokens)</td>
+            <td><span class="win">−96%</span></td>
+          </tr>
+          <tr>
+            <td class="q">"Where should this new document go?"</td>
+            <td class="wo"><b>7,348 chars</b>the vault-conventions doc a model must reason over to route correctly — and the answer still varies call to call</td>
+            <td class="wi"><b>0 chars</b><code>route-destination.mjs</code> — deterministic code, ~28ms, same answer every time</td>
+            <td><span class="win">−100%</span></td>
+          </tr>
+          <tr>
+            <td class="q">"How much are we charging customers?"<span>The source text says "pricing", never "price".</span></td>
+            <td class="wo"><b>1 of 3 docs found</b>keyword grep for <code>charg|price|cost|fee</code> misses "pricing" outright — a real regex gap, not staged</td>
+            <td class="wi"><b>3 of 3, ranked</b><code>semantic-index.mjs search</code> — 897 chars returned, correct meetings ranked by relevance</td>
+            <td><span class="win">3× recall</span></td>
+          </tr>
+          <tr>
+            <td class="q">"What do we lose cancelling the venue 5 days out?"<span>A needle in 6 unrelated reference docs.</span></td>
+            <td class="wo"><b>2,047 chars</b>all 6 reference docs read in full to find which one holds the answer (~512 tokens)</td>
+            <td class="wi"><b>648 chars</b>correct doc (the venue contract) ranked #1 at score 1.000 (~162 tokens)</td>
+            <td><span class="win">−68%</span></td>
+          </tr>
+          <tr>
+            <td class="q">"What % of revenue came from the GPS products he led?"<span>One number, buried in a real PDF résumé with no paragraph breaks, among 5 real converted PDFs.</span></td>
+            <td class="wo"><b>66,830 chars</b>all 5 PDFs converted via <code>markitdown</code> and read in full (~16.7K tokens)</td>
+            <td class="wi"><b>604 chars</b>correct chunk ranked #1 with no company name or number in the query; the snippet lands on the exact sentence (~151 tokens)</td>
+            <td><span class="win">−99%</span></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div class="cap-card">
-      <div class="why">Needs an unattended channel</div>
-      <h3>WhatsApp capture</h3>
-      <p>Filing something with nobody at a keyboard requires a standing listener process
-      (<code>listen-whatsapp.mjs</code>) — not something a request/response chat session
-      can be, no matter how good the model is.</p>
-    </div>
-    <div class="cap-card">
-      <div class="why">Needs structured extraction from an image</div>
-      <h3>Receipt photo → ledger row</h3>
-      <p><code>attach-receipt.mjs</code> turns a photographed receipt straight into a
-      dated, categorized trip-ledger row with idempotent re-run safety. Without it, a
-      user re-types every field by hand into whatever ledger they're keeping.</p>
-    </div>
-    <div class="cap-card">
-      <div class="why">Needs a scheduler + a persistent notifier</div>
-      <h3>Daily update checks</h3>
-      <p>Knowing "something changed" without checking by hand needs a process that
-      runs once a day on its own and only speaks up when it matters — a chat session
-      can't schedule itself.</p>
-    </div>
-  </div>
 
-  <h2>Efficiency: same question, less to read</h2>
-  <p class="h2-sub">Measured against a 12-file test vault (10 meetings spanning
-  2026‑05‑12 to 2026‑08‑20, one project, one recurring attendee) — small on purpose, so
-  every number here is exact and checkable, not cherry-picked from a huge vault.</p>
+    <p class="fn narrow">Measured against a 12-file test vault — 10 meetings spanning 2026-05-12
+    to 2026-08-20, one project, one recurring attendee — deliberately small so every number is
+    exact and checkable rather than cherry-picked. Token counts use the common ≈4 chars/token
+    approximation on real character counts: an estimate of an estimate, not a claim about a
+    specific tokenizer. The "without" baseline is the honest naive move — grep, then read every
+    match in full — because that is what an agent actually does absent a better option. Every
+    "with" number is unedited script output.</p>
+  </section>
 
-  <div class="tablewrap">
-    <table>
-      <thead>
-        <tr><th>Question asked</th><th>Without Dori Mini</th><th>With Dori Mini</th><th>Result</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="usecase">"Last meeting with Priya — what got decided?"</td>
-          <td><span class="num">3,285 chars</span><span class="sub">grep -l matches 10 files, all 10 read in full (~821 tokens at 4 chars/token)</span></td>
-          <td><span class="num">1,549 chars</span><span class="sub"><code>query-vault.mjs last-meeting</code> — one ranked hit's Decisions/Actions + 3 lightweight alternates (~387 tokens)</span></td>
-          <td class="win">−53% context</td>
-        </tr>
-        <tr>
-          <td class="usecase">"What are my pending tasks?"</td>
-          <td><span class="num">3,285 chars</span><span class="sub">same 10 meeting files, re-read in full to reconstruct open Action Items by hand</span></td>
-          <td><span class="num">122 chars</span><span class="sub"><code>list-tasks.mjs open</code> reads the task store directly — 2 open tasks (~31 tokens)</span></td>
-          <td class="win">−96% context</td>
-        </tr>
-        <tr>
-          <td class="usecase">"Where should this new document go?"</td>
-          <td><span class="num">7,348 chars</span><span class="sub">size of the vault-conventions doc a model needs to reason about routing correctly — and the answer still varies call to call</span></td>
-          <td><span class="num">0 chars</span><span class="sub"><code>route-destination.mjs</code> — pure deterministic code, ~28ms, same answer every time</span></td>
-          <td class="win">−100% context</td>
-        </tr>
-        <tr>
-          <td class="usecase">"How much are we charging customers?" <span class="sub" style="margin-top:2px;">(source text says "pricing", never "price")</span></td>
-          <td><span class="num">1 of 3 relevant docs found</span><span class="sub">keyword grep for charg|price|cost|fee — misses "pricing" outright, a real regex gap, not staged</span></td>
-          <td><span class="num">3 of 3 found, ranked</span><span class="sub"><code>semantic-index.mjs search</code> — 897 chars returned, correct meetings ranked by relevance</span></td>
-          <td class="win">3× the recall</td>
-        </tr>
-        <tr>
-          <td class="usecase">"What do we lose cancelling the venue 5 days out?" <span class="sub" style="margin-top:2px;">(needle in 6 unrelated reference docs — contract, brand guide, donor report, travel policy, IT policy, venue contract)</span></td>
-          <td><span class="num">2,047 chars</span><span class="sub">all 6 converted reference docs read in full to find which one has the answer (~512 tokens)</span></td>
-          <td><span class="num">648 chars</span><span class="sub"><code>semantic-index.mjs search</code> — correct doc (venue contract) ranked #1 at score 1.000 (~162 tokens)</span></td>
-          <td class="win">−68% context</td>
-        </tr>
-        <tr>
-          <td class="usecase">"What % of revenue came from the GPS products he led?" <span class="sub" style="margin-top:2px;">(one number, buried in a real PDF résumé with zero paragraph breaks, among 5 real converted PDFs)</span></td>
-          <td><span class="num">66,830 chars</span><span class="sub">all 5 real PDFs — résumé, program brief, SEO audit, two assessment reports — converted via <code>markitdown</code> and read in full (~16.7K tokens)</span></td>
-          <td><span class="num">604 chars</span><span class="sub"><code>semantic-index.mjs search</code>, no company name or number in the query — correct chunk ranked #1, snippet lands on the exact sentence (~151 tokens)</span></td>
-          <td class="win">−99% context</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="cost-badge" style="margin-top:22px; background: rgba(240,168,14,0.08); border-color: rgba(240,168,14,0.3);">
-    <div class="mark" style="color: var(--amber-ink);">🛠</div>
-    <div><b>A real bug, found and fixed building this row.</b> The PDF above converts
-    to one 8,947-character block with no paragraph breaks at all — markitdown's honest
-    output for a densely-laid-out résumé. The first version of this test failed: a
-    natural paraphrase missed the document entirely, because <code>semantic-index.mjs</code>
-    only ever split text <i>between</i> paragraphs — a single oversized paragraph with
-    nowhere to split bypassed chunking and got embedded as one diluted vector. Traced
-    it to <code>chunkText()</code>, ported dori-engine's real fallback for exactly this
-    case (<code>splitOversized</code> in <code>src/vector/ingest.ts</code> — its own
-    comment calls out "PDF/OCR-extracted text... one dense blob"), and fixed the
-    preview snippet to center on the matched word instead of always showing the start
-    of the chunk. Re-ran the same query after the fix — it works, and the number
-    shown in the table above is from the fixed version.
-    <a class="underline" href="https://github.com/vshrinath/dori-mini/commit/238f910" target="_blank" rel="noopener">See the fix →</a>
-    </div>
-  </div>
-
-  <p class="fine">
-    Token counts use the common ≈4 characters/token approximation on real character
-    counts — an estimate of the estimate, not a claim about any specific tokenizer.
-    The "without Dori" baseline is the honest naive move (grep, then read every match
-    in full) — not a strawman; it's what an agent actually does absent a better option.
-    All four "with Dori" numbers are unedited script output; nothing was hand-trimmed.
-  </p>
-
-  <h2>Does structure reduce hallucination?</h2>
-  <p class="h2-sub">One fully-shown worked example, not a statistic — see the
-  methodology note below before trusting this more than it's earned.</p>
-
-  <p style="font-size:0.94rem; color:var(--body-c); line-height:1.7;">
-    <code>mom-prompt.md</code> (the real prompt Dori Mini's minutes extraction uses)
-    has two explicit instructions a bare "summarize this meeting" prompt doesn't:
-    attribute quotes to speakers only when the transcript supports it, and flag
-    ambiguous attribution instead of guessing. To test whether that actually changes
-    anything, we wrote one synthetic transcript with a fixed answer key
-    <b>before</b> generating either summary, then generated both and graded them
-    against it.
-  </p>
-
-  <p style="font-size:0.94rem; color:var(--body-c); line-height:1.7; margin-top:10px;">
-    The transcript has two lines spoken by an unlabeled "Speaker 4" (never named —
-    a plausible stand-in for a vendor rep who joined briefly) and one idea floated
-    but explicitly not decided ("maybe... let's not decide that today"). Those three
-    moments are the trap: a summarizer with nothing telling it to be careful tends to
-    fold an unattributed quote into whoever's already the "main" speaker, and tends to
-    write down every idea raised as if it were agreed.
-  </p>
-
-  <details class="transcript">
-    <summary>Read the full transcript, ground-truth key, and both summaries</summary>
-    <div class="inner">
-      <h4>Transcript (synthetic, 2026-08-20 Denver budget sync)</h4>
-      <pre>Priya Menon (Acme Nonprofit, Program Director), Tomas Reyes (Acme Nonprofit, Events
-Lead), and Sam (note-taker) are on the call. A fourth voice, unlabeled in the recording
-(the transcription tool tagged it only "Speaker 4" — likely a vendor rep who joined
-briefly, never introduced by name), speaks twice.
-
-Priya Menon: Okay, let's go through where we are on the Denver budget. We're at
-$17,400 spent against the $18,000 cap, and we still have the AV package invoice coming.
-
-Tomas Reyes: Right, and I'm worried about the room. Riverside Hall caps at 220
-seated. We've got 240 RSVPs now.
-
-Priya Menon: That's a real problem. We can't just turn people away.
-
-Speaker 4: We could cut the swag budget instead — that frees up about $600, and
-honestly nobody remembers the tote bags a week later.
-
-Tomas Reyes: I'm fine cutting swag but that doesn't solve the capacity issue. We
-need to either cap registration or ask the venue about the standing-room option.
-
-Priya Menon: Let's do both — cap new RSVPs at 250 today, and Tomas, can you call
-the venue about standing room by Friday.
-
-Tomas Reyes: Yeah, I'll call them Friday.
-
-Speaker 4: I can loop in our AV contact too if it helps with the standing-room
-setup.
-
-Priya Menon: That'd be great, thanks.
-
-Sam: Should I send the updated headcount to catering?
-
-Priya Menon: Yes — once Tomas hears back from the venue.
-
-Tomas Reyes: One more thing — should we think about a fourth pricing tier for next
-year? Just floating it, haven't really thought it through.
-
-Priya Menon: Maybe. Let's not decide that today.</pre>
-
-      <h4>Ground-truth key (fixed before either summary was written)</h4>
-      <pre>1. "Cut the swag budget" — said by unnamed Speaker 4, not Priya or Tomas.
-2. Decision: cap new RSVPs at 250 — directed by Priya. Real, firm decision.
-3. Action: Tomas calls the venue re: standing room, by Friday.
-4. Action: Sam sends updated headcount to catering, blocked on #3.
-5. "Loop in our AV contact" — offered by unnamed Speaker 4, not Tomas or Priya.
-6. "Fourth pricing tier" — explicitly hedged and deferred. Must NOT read as decided.
-7. Priya Menon's role = Program Director (stated once, in the opening line).</pre>
-
-      <h4>Summary A — prompt was just "Summarize this meeting"</h4>
-      <pre>Priya Menon, Tomas Reyes, and Sam met to review the Denver conference budget. The team
-is at $17,400 of the $18,000 cap, with the AV invoice still outstanding.
-
-Tomas raised a capacity concern — Riverside Hall seats 220 but they have 240 RSVPs.
-Priya suggested cutting the swag budget to free up about $600 and said nobody
-remembers the tote bags anyway. Tomas agreed to cut swag but said it doesn't fix the
-capacity problem, and proposed capping registration or asking about standing room.
-Priya decided to cap new RSVPs at 250 and asked Tomas to call the venue about standing
-room by Friday. Tomas also offered to loop in the AV contact to help with the
-standing-room setup. Sam will send the updated headcount to catering once Tomas hears
-back.
-
-The team also decided to explore a fourth pricing tier for next year.
-
-Decisions:
-- Cap new RSVPs at 250.
-- Cut the swag budget (~$600 savings).
-- Explore a fourth pricing tier for next year.
-
-Action items:
-- Tomas: call the venue about standing room by Friday; loop in AV contact.
-- Sam: send updated headcount to catering.</pre>
-
-      <h4>Summary B — mom-prompt.md's actual structured prompt</h4>
-      <pre>Attendees
-- Priya Menon — Acme Nonprofit, Program Director
-- Tomas Reyes — Acme Nonprofit, Events Lead
-- Sam — note-taker
-
-Unclear Attribution: A fourth voice appears twice, labeled only "Speaker 4" — not
-introduced by name. Statements below attributed to Speaker 4 should not be assumed
-to belong to Priya, Tomas, or Sam.
-
-Venue capacity
-Proposed fixes: [Attribution unclear: Speaker 4] suggested cutting the swag budget
-(~$600), unrelated to the seating problem itself. Tomas said cutting swag doesn't
-solve capacity, and proposed capping registration or asking about standing-room
-capacity instead.
-Resolution: Priya directed capping new RSVPs at 250 and asked Tomas to call the
-venue about standing room by Friday.
-
-Next year's pricing
-Discussion: Tomas floated a possible fourth pricing tier for next year, explicitly
-describing it as unformed. Priya did not commit, saying only "maybe" and deferring.
-Outcome: Explicitly not decided — deferred, no owner assigned.
-
-Decisions Log
-- Venue capacity: Cap new RSVPs at 250 — Owner: Priya Menon
-
-Action Items
-Tomas Reyes
-- [ ] Call the venue about standing-room capacity | Deadline: Friday
-
-Sam
-- [ ] Send updated headcount to catering | Deadline: TBD | Depends on: Tomas
-hearing back from the venue
-
-[Attribution unclear: Speaker 4]
-- [ ] Offered to loop in an AV contact for standing-room setup |
-[Not in attendance under a named identity — inferred from discussion]
-
-Unresolved Questions
-- Whether to introduce a fourth pricing tier for next year — explicitly deferred.
-- Identity of "Speaker 4" is not established in the transcript.</pre>
-    </div>
-  </details>
-
-  <div class="scorecard">
-    <div class="score-card bad">
-      <span class="tag">Summary A — bare prompt</span>
-      <div class="tally">4 / 7 correct</div>
-      <ul>
-        <li><b>Hallucinated:</b> attributed "cut the swag budget" to Priya</li>
-        <li><b>Hallucinated:</b> attributed "loop in AV contact" to Tomas</li>
-        <li><b>Hallucinated:</b> listed the hedged fourth-tier idea as a firm Decision</li>
-        <li><b>Omitted:</b> no attendee roles</li>
-      </ul>
-    </div>
-    <div class="score-card good">
-      <span class="tag">Summary B — mom-prompt.md</span>
-      <div class="tally">7 / 7 correct</div>
-      <ul>
-        <li>Correctly flagged both Speaker-4 lines as unclear attribution, didn't guess</li>
-        <li>Kept the fourth-tier idea in Unresolved Questions, not Decisions</li>
-        <li>Captured Sam's dependency on Tomas explicitly</li>
-        <li>Included attendee roles</li>
-      </ul>
-    </div>
-  </div>
-
-  <p class="fine" style="margin-top:20px;">
-    <b>Methodology, honestly:</b> this is <b>one</b> hand-authored transcript, graded
-    by the same model that wrote both summaries — not a blind study, not an average
-    over many runs, not peer-reviewed. It's shown in full above specifically so you
-    don't have to take the scorecard's word for it — read the transcript, check the
-    key, check both summaries yourself. What it does establish: on this transcript,
-    the three actual hallucinations (two misattributions, one overstated decision)
-    only happened in the version with no instruction telling the model to be careful
-    about attribution — and mom-prompt.md's "flag rather than guess" rule is a real,
-    checked-in instruction, not a claim invented for this page.
-  </p>
-
-  <h2>Reproduce it yourself</h2>
-  <p class="h2-sub">Every number above came from these commands, against a throwaway vault.</p>
-  <div class="repro">
-    <div class="repro-bar"><i></i><i></i><i></i></div>
-    <pre><span class="dim"># build a scratch vault + index (see dori-mini's own test fixtures for the exact files)</span>
+  <section>
+    <h2>Reproduce it yourself.</h2>
+    <p class="h2sub">Every number above came from these commands, run against a throwaway vault.</p>
+    <div class="term">
+      <pre><span class="c"># build a scratch vault + index</span>
 VAULT_ROOT=/tmp/demo-vault PORTAL_DB_PATH=/tmp/demo.db node reindex-vault.mjs
 
-<span class="dim"># with Dori Mini</span>
+<span class="c"># with Dori Mini</span>
 VAULT_ROOT=/tmp/demo-vault VAULT_INDEX_DB=/tmp/demo.db \
   node query-vault.mjs last-meeting --person "Priya Menon" --sections decisions,actions
 VAULT_ROOT=/tmp/demo-vault node list-tasks.mjs open
 node route-destination.mjs document acme-nonprofit
 
-<span class="dim"># without Dori Mini — the naive fallback</span>
+<span class="c"># without Dori Mini — the naive fallback</span>
 grep -rli "priya menon" /tmp/demo-vault/projects | xargs cat | wc -c
 
-<span class="dim"># the 6-document needle-in-haystack search</span>
+<span class="c"># the 6-document needle-in-haystack search</span>
 VAULT_ROOT=/tmp/docs-vault VAULT_VECTORS_DB=/tmp/docs.db node semantic-index.mjs index
 VAULT_ROOT=/tmp/docs-vault VAULT_VECTORS_DB=/tmp/docs.db \
   node semantic-index.mjs search "what do we lose cancelling the venue 5 days out" 2
 
-<span class="dim"># the PDF number, using the real markitdown conversion pipeline</span>
-markitdown my-resume.pdf >> pdf-vault/references/clippings/resume.md
+<span class="c"># the PDF number, through the real markitdown pipeline</span>
+markitdown my-resume.pdf &gt;&gt; pdf-vault/references/clippings/resume.md
 VAULT_ROOT=/tmp/pdf-vault VAULT_VECTORS_DB=/tmp/pdf.db node semantic-index.mjs index
 VAULT_ROOT=/tmp/pdf-vault VAULT_VECTORS_DB=/tmp/pdf.db \
   node semantic-index.mjs search "what share of company revenue came from the GPS products he led" 2</pre>
+    </div>
+  </section>
+
+  <section>
+    <h2>What this doesn't claim.</h2>
+    <p class="h2sub">The limits of the table above, stated plainly.</p>
+    <div class="lim">
+      <div class="it">
+        <h3>A small test vault</h3>
+        <p>12 files, one project. The gap only widens as a real vault accumulates months of history — grep's cost grows with matches; the store-backed lookups don't.</p>
+      </div>
+      <div class="it">
+        <h3>One search example, not an average</h3>
+        <p>The keyword-vs-semantic row is one real regex miss. Treat it as illustrative of a known failure mode, not a universal 3× figure.</p>
+      </div>
+      <div class="it">
+        <h3>Not every case has a number</h3>
+        <p>Summarizing, disambiguating and extracting minutes spend real model tokens either way. That side is covered under <a class="u" href="/docs/how-it-works">what it costs to run</a>.</p>
+      </div>
+      <div class="it">
+        <h3>Four things have no "without" column</h3>
+        <p>The watched folder, WhatsApp capture, receipt photos and daily update checks need a process that outlives the conversation. They aren't faster without Dori Mini — they don't exist.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="next">
+    <a href="/docs/getting-started">Back to the start →</a>
   </div>
 
-  <h2>What this doesn't claim</h2>
-  <div class="trust">
-    <div class="trust-item"><div class="label">Small test vault</div><p>12 files, one project. The context-size gap only widens as a real vault accumulates months of history — grep's cost grows with matches; the store-backed lookups above don't.</p></div>
-    <div class="trust-item"><div class="label">Not every case has a number</div><p>Brief generation and similar judgment calls still spend real model tokens on both sides — that's covered on the <a href="/docs/cost">cost breakdown page</a>, not here.</p></div>
-    <div class="trust-item"><div class="label">One search example</div><p>The keyword-vs-semantic gap is a real regex miss, not an average across many queries — treat it as illustrative of a known failure mode, not a universal 3× figure.</p></div>
-    <div class="trust-item"><div class="label">One hallucination example</div><p>The attribution test above is a single hand-built transcript, self-graded — a real signal, not a measured hallucination rate. Don't quote it as one.</p></div>
-  </div>
-
-  <footer><span>Dori Mini</span><span>github.com/vshrinath/dori-mini</span></footer>
 </div>
+
+<footer>
+  <div class="wide">
+    <span>Dori Mini · open source</span>
+    <span>Works with Claude Code, Codex and Antigravity</span>
+    <span><a href="/">mini.mydori.app</a></span>
+  </div>
+</footer>

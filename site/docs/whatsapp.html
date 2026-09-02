@@ -2,222 +2,229 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dori Mini — WhatsApp</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-  /* Palette and type follow the homepage. See docs/site-v3-spec.md.
-     Token NAMES are unchanged so every existing rule keeps working. */
-  :root {
-    color-scheme: light;
-    --amber: #d99a1f; --amber-soft: #f0d79a; --amber-hover: #b87d14;
-    --amber-ink: #8a6210;   /* amber as small text on light */
-    --on-amber: #171c45;    /* text ON an amber fill; amber never flips */
-    --green-ink: #2b7a42; --coral-ink: #a4381f;
-    --amber-deep: #b87d14;  /* amber as large text on light */
-    --navy: #171c45; --navy-deep: #131737;
-    --canvas: #fdfcf9; --canvas2: #f5f3ec; --card: #ffffff;
-    --ink: #171c45; --muted: #666b88; --body-c: #525878;
-    --green: #3fae5a; --coral: #c0492c; --blue: #3f5bbf; --purple: #7a46b8;
-    --line: #e6e3d9;
-    --r-md: 14px; --r-lg: 22px;
-    --font-display: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-serif: "Instrument Serif", Georgia, serif;
-    --font-body: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  }
-  /* --navy-deep panels stay dark in both themes; --amber-soft is their text. */
+/* Shares the homepage's language (palette, type, chrome) but not its
+   composition — docs are scanned, not led. See docs/site-v3-spec.md. */
+:root{
+  --paper:#fdfcf9; --paper-2:#f5f3ec; --raise:#ffffff;
+  --ink:#171c45; --ink-2:#525878; --ink-3:#666b88;
+  --hair:#e6e3d9;
+  --amber:#d99a1f; --amber-deep:#b87d14; --amber-ink:#8a6210;
+  --green:#3fae5a; --green-ink:#2b7a42; --coral-ink:#a4381f;
+  --shadow-sm:0 1px 2px rgba(23,28,69,.04),0 6px 16px rgba(23,28,69,.06);
+  --f-sans:"Schibsted Grotesk",-apple-system,"Helvetica Neue",sans-serif;
+  --f-serif:"Instrument Serif",Georgia,serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--f-sans);-webkit-font-smoothing:antialiased}
+::selection{background:var(--amber);color:var(--ink)}
+a{color:var(--amber-ink);text-decoration:none}
+a.u{text-decoration:underline;text-underline-offset:3px}
+h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.025em;font-weight:600}
+code{font-family:var(--f-mono)}
 
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
-  ::selection { background: var(--amber); color: var(--navy); }
-  a { color: var(--amber-ink); text-decoration: none; }
-  a.underline { text-decoration: underline; text-underline-offset: 3px; }
+.wide{max-width:1080px;margin:0 auto;padding:0 28px}
+.doc{max-width:760px;margin:0 auto;padding:0 28px}
 
-  .container { max-width: 760px; margin: 0 auto; padding: 0 24px 100px; }
-  .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 760px; margin: 0 auto; }
-  .wordmark { display: flex; align-items: baseline; gap: 7px; text-decoration: none; flex: none; color: var(--ink); }
-  .wordmark svg { height: 21px; width: auto; display: block; transform: translateY(3px); }
-  .wordmark span { font-family: var(--font-display); font-size: 1rem; font-weight: 500; letter-spacing: -0.01em; color: var(--muted); }
-  .topnav .back { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
-  .serif-pop { font-family: var(--font-serif); font-style: italic; color: var(--amber-deep); }
+header{border-bottom:1px solid var(--hair);background:var(--paper)}
+header .wide{height:56px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.wordmark{display:flex;align-items:baseline;gap:7px;color:var(--ink);flex:none}
+.wordmark svg{height:21px;width:auto;display:block;transform:translateY(3px)}
+.wordmark span{font-size:1rem;font-weight:500;letter-spacing:-.01em;color:var(--ink-3)}
+header .gh{font-family:var(--f-mono);font-size:12px;color:var(--ink-3)}
 
-  .eyebrow { font-family: var(--font-display); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--green-ink); display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
-  .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+.tabs{border-bottom:1px solid var(--hair);background:rgba(253,252,249,.92);backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:20}
+.tabs .wide{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none}
+.tabs .wide::-webkit-scrollbar{display:none}
+.tabs a{font-size:14px;font-weight:600;color:var(--ink-3);padding:13px 0;white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+.tabs a:hover{color:var(--ink)}
+.tabs a[aria-current]{color:var(--ink);border-bottom-color:var(--amber)}
 
-  h1 { font-family: var(--font-display); font-weight: 780; letter-spacing: -0.03em; font-size: clamp(2.1rem, 5.2vw, 3.2rem); line-height: 1.06; margin: 0 0 18px; text-wrap: balance; }
-  .lede { font-size: 1.12rem; color: var(--body-c); max-width: 58ch; margin: 0 0 28px; }
-  .lede b { color: var(--ink); }
+.opener{text-align:center;padding:72px 0 56px}
+.opener h1{font-size:clamp(2.1rem,5vw,3.3rem);line-height:1.06}
+.opener p{color:var(--ink-2);font-size:1.1rem;margin:16px auto 0;max-width:50ch}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber-ink);
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:18px}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--amber);display:block}
+.serif-pop{font-family:var(--f-serif);font-style:italic;font-weight:400;color:var(--amber-deep);letter-spacing:-.01em}
 
-  .promise { margin: 20px 0 0; padding: 18px 20px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); font-size: 0.95rem; color: var(--body-c); display: flex; gap: 12px; align-items: flex-start; }
-  .promise .mark { color: var(--amber-ink); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; line-height: 1.4; }
-  .promise b { color: var(--ink); }
+section{padding:0 0 62px}
+h2{font-size:1.5rem;line-height:1.2;margin:0 0 6px}
+.h2sub{color:var(--ink-3);font-size:15px;margin:0 0 26px;max-width:64ch}
+p{margin:0 0 14px;color:var(--ink-2)}
+p:last-child{margin-bottom:0}
+.fn{font-size:15px;color:var(--ink-3);margin:14px 0 0}
+.fn code,p code{font-size:.86em;color:var(--amber-ink);background:var(--paper-2);padding:1px 5px;border-radius:4px}
 
-  h2 { font-family: var(--font-display); font-weight: 740; letter-spacing: -0.02em; font-size: clamp(1.4rem, 3vw, 1.85rem); margin: 60px 0 8px; text-wrap: balance; }
-  .h2-sub { color: var(--muted); font-size: 0.94rem; margin: 0 0 22px; max-width: 58ch; }
+/* the chat itself — the real interface, not an illustration */
+.chat{background:#efeae2;border-radius:16px;padding:16px 14px;display:flex;flex-direction:column;gap:9px;
+  box-shadow:var(--shadow-sm);margin-bottom:8px}
+.chat div{font-size:14.5px;line-height:1.45;padding:9px 12px;border-radius:10px;max-width:76%;
+  color:#111b21;box-shadow:0 1px 1px rgba(0,0,0,.09)}
+.chat .out{background:#d9fdd3;align-self:flex-end}
+.chat .in{background:#fff;align-self:flex-start}
+.chat .in em{font-style:normal;display:block;font-size:11.5px;color:#667781;margin-top:5px;font-family:var(--f-mono)}
 
-  .sticker { display: inline-flex; align-items: center; font-family: var(--font-display); font-weight: 700; font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
-  .sticker.amber { color: var(--amber-ink); background: rgba(217,154,31,0.16); }
-  .sticker.green { color: var(--green-ink); background: rgba(63,174,90,0.16); }
-  .sticker.coral { color: var(--coral-ink); background: rgba(192,73,44,0.14); }
+/* two-column what-it-does */
+.does{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:26px}
+.does h3{font-size:1.06rem;margin:0 0 7px}
+.does p{font-size:15px;color:var(--ink-3);margin:0}
+.does .st{font-family:var(--f-mono);font-size:11px;color:var(--green-ink);background:rgba(63,174,90,.13);
+  padding:3px 9px;border-radius:999px;display:inline-block;margin-top:12px}
 
-  .slip { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); margin-bottom: 20px; overflow: hidden; }
-  .slip-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; }
-  .slip-title { font-family: var(--font-display); font-size: 1.28rem; font-weight: 720; margin: 8px 0 0; }
-  .slip-body { padding: 0 20px 22px; }
-  .say-label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-  .say { font-family: var(--font-serif); font-style: italic; font-size: 1.15rem; color: var(--ink); margin: 0 0 14px; padding-left: 16px; border-left: 2px solid var(--amber); text-wrap: balance; }
-  .then { font-size: 0.92rem; color: var(--body-c); margin: 0 0 16px; line-height: 1.6; }
-  .then b { color: var(--ink); }
-  .then code { font-family: var(--font-mono); font-size: 0.88em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
-  .filed { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-family: var(--font-mono); font-size: 11.5px; color: var(--green-ink); }
-  .filed::before { content: "✓"; }
+/* numbered needs */
+.needs{margin:0;padding:0;list-style:none;counter-reset:n}
+.needs li{counter-increment:n;position:relative;padding:0 0 20px 40px;font-size:15.5px;color:var(--ink-2);line-height:1.6}
+.needs li::before{content:counter(n);position:absolute;left:0;top:1px;width:25px;height:25px;border-radius:50%;
+  background:var(--paper-2);border:1px solid var(--hair);display:flex;align-items:center;justify-content:center;
+  font:700 11.5px var(--f-sans);color:var(--ink)}
+.needs li b{color:var(--ink)}
+.needs li:last-child{padding-bottom:0}
 
-  .steps { list-style: none; margin: 20px 0 0; padding: 0; counter-reset: step; }
-  .steps li { counter-increment: step; position: relative; padding: 0 0 20px 40px; font-size: 0.95rem; color: var(--body-c); }
-  .steps li::before { content: counter(step); position: absolute; left: 0; top: -1px; width: 26px; height: 26px; border-radius: 50%; background: var(--canvas2); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--navy); }
-  .steps li b { color: var(--ink); }
-  .steps li code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
+/* constraints and limits */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 34px}
+.grid2 .it{padding:15px 0;border-bottom:1px solid var(--hair)}
+.grid2 .it h3{font-size:15px;margin:0 0 4px;display:flex;align-items:baseline;gap:8px}
+.grid2 .it h3::before{content:"✓";color:var(--green-ink);font-size:13px;font-weight:700}
+.grid2.no .it h3::before{content:"✕";color:var(--coral-ink)}
+.grid2 .it p{margin:0;font-size:14.5px;color:var(--ink-3);line-height:1.5}
 
-  .safe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
-  .safe-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px 20px; }
-  .safe-item .label { font-family: var(--font-display); font-size: 0.92rem; font-weight: 720; color: var(--ink); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-  .safe-item .label::before { content: "✓"; color: var(--green-ink); font-weight: 800; }
-  .safe-item p { margin: 0; font-size: 0.87rem; color: var(--body-c); line-height: 1.55; }
+.skip{background:var(--paper-2);border-radius:14px;padding:18px 20px;font-size:15px;color:var(--ink-2)}
+.skip b{color:var(--ink)}
 
-  .limits { display: grid; gap: 10px; margin-top: 20px; }
-  .limit-row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); font-size: 0.92rem; color: var(--body-c); line-height: 1.55; }
-  .limit-row:first-child { border-top: none; }
-  .limit-row .x { color: var(--coral-ink); font-weight: 800; font-family: var(--font-display); flex-shrink: 0; }
-  .limit-row b { color: var(--ink); }
+.next{border-top:1px solid var(--hair);padding-top:26px;text-align:right}
+.next a{font-size:15px;font-weight:600}
+footer{border-top:1px solid var(--hair);padding:24px 0 40px;margin-top:44px}
+footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
 
-  .optional { margin-top: 20px; padding: 16px 20px; border: 1.5px dashed var(--line); border-radius: var(--r-md); font-size: 0.9rem; color: var(--body-c); }
-  .optional .tag { display: inline-block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral-ink); background: rgba(208,84,54,0.12); padding: 3px 9px; border-radius: 20px; margin-bottom: 8px; }
-
-  .cta-row { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-  .btn-amber { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; color: var(--on-amber); background: var(--amber); padding: 12px 22px; border-radius: 999px; display: inline-block; box-shadow: 0 2px 0 rgba(0,0,0,0.18); transition: transform 0.15s, box-shadow 0.15s, background 0.15s; }
-  .btn-amber:hover { background: var(--amber-hover); transform: translateY(-2px) rotate(-1deg); box-shadow: 0 8px 20px rgba(240,168,14,0.4); }
-
-  footer { max-width: 760px; margin: 0 auto; padding: 30px 24px 40px; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+@media (max-width:640px){
+  .opener{padding:52px 0 40px}
+  .does,.grid2{grid-template-columns:1fr;gap:0}
+  .does{gap:26px}
+}
 </style>
 
-<nav class="topnav">
-  <a class="wordmark" href="/" aria-label="Dori Mini"><svg viewBox="0 0 108 42" fill="none" aria-hidden="true"><path d="M30.5 6.5c-1.4 6.9-3.6 15.2-5 21.9-.8 3.9-.6 6.6 1.6 6.6 2.4 0 4.3-3.4 5.4-7.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M27.4 17.6c-2.2-2.4-6.2-2.3-9 .4-3.3 3.2-4.2 8.9-1.8 11.7 2.2 2.5 6 1.9 8.6-.9 1.6-1.7 2.6-4 3.2-6.3" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M40 20.6c-3 0-5.7 3.4-5.7 7.7 0 3.4 1.9 5.6 4.7 5.6 3.4 0 6.2-3.6 6.2-7.9 0-3.3-1.9-5.4-4.6-5.4Z" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M50 33.6c.7-4.2 1.4-8 2-11.6M52.4 25.6c1-3.2 3.3-5.4 6.4-5.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M66.6 21.4c-.9 4.2-1.6 8-2.1 12.2" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="69.4" cy="12.6" r="3.1" fill="var(--amber)"/></svg><span>mini</span></a>
-  <a class="back" href="/docs/getting-started">← Start here</a>
+<header>
+  <div class="wide">
+    <a class="wordmark" href="/" aria-label="Dori Mini"><svg viewBox="0 0 108 42" fill="none" aria-hidden="true"><path d="M30.5 6.5c-1.4 6.9-3.6 15.2-5 21.9-.8 3.9-.6 6.6 1.6 6.6 2.4 0 4.3-3.4 5.4-7.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M27.4 17.6c-2.2-2.4-6.2-2.3-9 .4-3.3 3.2-4.2 8.9-1.8 11.7 2.2 2.5 6 1.9 8.6-.9 1.6-1.7 2.6-4 3.2-6.3" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M40 20.6c-3 0-5.7 3.4-5.7 7.7 0 3.4 1.9 5.6 4.7 5.6 3.4 0 6.2-3.6 6.2-7.9 0-3.3-1.9-5.4-4.6-5.4Z" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M50 33.6c.7-4.2 1.4-8 2-11.6M52.4 25.6c1-3.2 3.3-5.4 6.4-5.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M66.6 21.4c-.9 4.2-1.6 8-2.1 12.2" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="69.4" cy="12.6" r="3.1" fill="var(--amber)"/></svg><span>mini</span></a>
+    <a class="gh" href="https://github.com/vshrinath/dori-mini">github.com/vshrinath/dori-mini</a>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="wide">
+    <a href="/docs/getting-started">Start here</a>
+    <a href="/docs/how-it-works">How it works</a>
+    <a href="/docs/whatsapp" aria-current="page">WhatsApp</a>
+    <a href="/docs/benchmarks">Benchmarks</a>
+  </div>
 </nav>
 
-<div class="container">
+<div class="doc">
 
-  <div class="eyebrow"><span class="dot"></span> Optional add-on</div>
-  <h1>The one channel<br><span class="serif-pop">that doesn't need a chat open.</span></h1>
-  <p class="lede">Everything else happens inside a live session with Claude or Codex.
-  This is the exception — text a dedicated WhatsApp number and it still files what you
-  send, and can still answer questions, with nobody at the keyboard. Read-only: nothing
-  it says back can change anything.</p>
+  <div class="opener">
+    <p class="eyebrow"><i></i> Optional add-on</p>
+    <h1>The one channel with<br><span class="serif-pop">nobody at the keyboard.</span></h1>
+    <p>Everything else happens inside a live session with Claude or Codex. This is the
+    exception — text a dedicated number and it still files what you send.</p>
+  </div>
 
+  <section>
+    <h2>What it actually does.</h2>
+    <p class="h2sub">Two things, and nothing else.</p>
 
-  <h2 id="what">What it actually does</h2>
-  <div class="slip">
-    <div class="slip-head"><div><span class="sticker amber">Capture</span><div class="slip-title">Anything you send gets filed</div></div></div>
-    <div class="slip-body">
-      <div class="say-label">You send</div>
-      <p class="say">A link, a photo of a receipt, or a quick note</p>
-      <p class="then">Filed the same way a pasted link or dropped file would be in a
-      normal chat — a YouTube link becomes a transcript, a photo becomes a filed
-      capture, a note lands in your inbox if nothing tells it which project it belongs
-      to. No AI decides where things go; that part is the same deterministic routing
-      every other capture type uses.</p>
-      <div class="filed">filed the moment it arrives</div>
+    <div class="chat">
+      <div class="out">youtu.be/hiYTq9xnkPw</div>
+      <div class="in">Filed to <b>yt/</b> — transcript and chapters saved.<em>filed the moment it arrived</em></div>
+      <div class="out">What's the NDA status with Kestrel?</div>
+      <div class="in">Signed 14 Aug, two-year term. Renewal notice due 60 days out.<em>answered — nothing written, nothing changed</em></div>
     </div>
-  </div>
-  <div class="slip">
-    <div class="slip-head"><div><span class="sticker green">Ask</span><div class="slip-title">Real questions get real answers</div></div></div>
-    <div class="slip-body">
-      <div class="say-label">You send</div>
-      <p class="say">"What's the NDA status with Kestrel?"</p>
-      <p class="then">Answered by looking things up in your vault — <b>read-only</b>,
-      the same three lookup scripts your agent already uses for recall, nothing more.
-      A follow-up like "and when does it renew?" works too — it remembers the last
-      few messages in that conversation. A bare link with no question attached skips
-      this step entirely and just gets filed, instantly, no AI call spent on it.</p>
-      <div class="filed">answered — nothing written, nothing changed</div>
+
+    <div class="does">
+      <div>
+        <h3>Anything you send gets filed</h3>
+        <p>A link, a photo of a receipt, a quick note — handled exactly as a pasted link or
+        dropped file would be in a normal chat. No AI decides where it goes; that's the same
+        deterministic routing every other capture type uses. Anything ambiguous lands in your
+        inbox rather than being filed wrong.</p>
+        <span class="st">filed the moment it arrives</span>
+      </div>
+      <div>
+        <h3>Real questions get real answers</h3>
+        <p>Answered by looking things up in your vault — the same lookup scripts your agent
+        already uses for recall, nothing more. A follow-up like "and when does it renew?"
+        works too. A bare link with no question skips this entirely and just gets filed, with
+        no AI call spent on it.</p>
+        <span class="st">read-only</span>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <h2 id="setup">What this needs</h2>
-  <p class="h2-sub">One extra step during setup, or any time after.</p>
-  <ol class="steps">
-    <li><b>A spare WhatsApp number.</b> Not your real one — see why below. A second
-    SIM, a WhatsApp-only number, or a number you already keep for exactly this kind of
-    thing all work.</li>
-    <li><b>A one-time scan.</b> The installer (or <code>listen-whatsapp.mjs
-    --pair-only</code> any time after) shows a QR code right there in your terminal —
-    scan it from that number's WhatsApp app under <i>Linked Devices → Link a
-    Device</i>. Done once, ever, unless you log it out yourself.</li>
-    <li><b>Optionally, pick what answers questions.</b> Claude Code or Codex — whichever
-    you already have configured — replies using your existing subscription, not a
-    separate API key or bill. Say no here and it still files everything; it just won't
-    answer questions back.</li>
-  </ol>
+  <section>
+    <h2>What it needs.</h2>
+    <p class="h2sub">One extra step during setup, or any time after.</p>
+    <ol class="needs">
+      <li><b>A spare WhatsApp number.</b> Not your real one — see why below. A second SIM, a
+      WhatsApp-only number, or a number you already keep for exactly this kind of thing.</li>
+      <li><b>A one-time scan.</b> The installer — or <code>listen-whatsapp.mjs --pair-only</code>
+      at any point after — shows a QR code in your terminal. Scan it from that number's
+      WhatsApp under <b>Linked Devices → Link a Device</b>. Done once, ever, unless you log it
+      out yourself.</li>
+      <li><b>Optionally, something to answer questions.</b> Claude Code or Codex, whichever
+      you already have, replies on your existing subscription — no separate API key or bill.
+      Say no and it still files everything; it just won't answer back.</li>
+    </ol>
+  </section>
 
-  <h2 id="safe">Why this is safe</h2>
-  <p class="h2-sub">Each of these is an actual constraint in the code, not a promise in
-  this paragraph.</p>
-  <div class="safe-grid">
-    <div class="safe-item"><div class="label">A dedicated number</div><p>Isolated from
-    your real one on purpose — nothing about this ever touches the number people
-    actually reach you on.</p></div>
-    <div class="safe-item"><div class="label">Direct messages only</div><p>Group chats
-    are rejected outright before anything else runs — not discouraged, blocked in
-    code.</p></div>
-    <div class="safe-item"><div class="label">Filing is always mechanical</div><p>No AI
-    decides what happens to something you send — the same deterministic routing every
-    other capture type uses, every time.</p></div>
-    <div class="safe-item"><div class="label">Replies are read-only</div><p>The AI that
-    answers questions can only look things up — three specific lookup scripts, nothing
-    else. It cannot write, edit, delete, or run anything beyond that.</p></div>
-    <div class="safe-item"><div class="label">Credentials are locked to you</div><p>The
-    session file that keeps you paired is owner-only on disk — unreadable by any other
-    account on the machine.</p></div>
-    <div class="safe-item"><div class="label">Cheap by design</div><p>A bare link or
-    attachment never triggers an AI call — only an actual question does, so nothing
-    idle costs anything.</p></div>
-  </div>
-
-  <h2 id="limits">What it won't do</h2>
-  <p class="h2-sub">The honest limits — the same standard as the rest of these pages: if
-  it's not here, it doesn't do it.</p>
-  <div class="limits">
-    <div class="limit-row"><span class="x">✕</span><div><b>No memory beyond the
-    current back-and-forth.</b> It recalls the last handful of messages in that
-    conversation — not everything you've ever sent it.</div></div>
-    <div class="limit-row"><span class="x">✕</span><div><b>Not the official WhatsApp
-    Business API.</b> It connects the same way the WhatsApp Web app does, via
-    <a class="underline" href="https://github.com/WhiskeySockets/Baileys" target="_blank" rel="noopener">Baileys</a> —
-    an unofficial but widely used open-source library for exactly this, not something
-    built or run by WhatsApp itself. Fine for a personal number at normal volume, not
-    something to point at a large audience.</div></div>
-    <div class="limit-row"><span class="x">✕</span><div><b>Replies can't take
-    action.</b> They can answer from your vault; they can't file, move, or resolve
-    anything on your behalf.</div></div>
-    <div class="limit-row"><span class="x">✕</span><div><b>No groups, full stop.</b>
-    If the number's ever added to one, messages from it are ignored entirely rather
-    than partially handled.</div></div>
-  </div>
-
-  <div class="optional">
-    <span class="tag">Skip freely</span>
-    <div>This entire page describes an optional add-on. Nothing else in Dori Mini
-    depends on it, and skipping it during setup changes nothing else about how the
-    tool works.</div>
-  </div>
-
-  <div class="cta-row">
-    <div style="font-size:0.92rem; color:var(--body-c); max-width:38ch;">
-      Everything else this tool does — YouTube, documents, meetings, expenses, recall —
-      starts with the copy-paste lines.
+  <section>
+    <h2>Why this is safe.</h2>
+    <p class="h2sub">Each of these is an actual constraint in the code, not a promise in this
+    paragraph.</p>
+    <div class="grid2">
+      <div class="it"><h3>A dedicated number</h3><p>Isolated from your real one on purpose. Nothing here ever touches the number people actually reach you on.</p></div>
+      <div class="it"><h3>Direct messages only</h3><p>Group chats are rejected before anything else runs — not discouraged, blocked in code.</p></div>
+      <div class="it"><h3>Filing is always mechanical</h3><p>No AI decides what happens to what you send. Same deterministic routing as every other capture type, every time.</p></div>
+      <div class="it"><h3>Replies are read-only</h3><p>The AI that answers can only look things up — three specific lookup scripts. It cannot write, edit, delete or run anything else.</p></div>
+      <div class="it"><h3>Credentials are locked to you</h3><p>The session file that keeps you paired is owner-only on disk, unreadable by any other account on the machine.</p></div>
+      <div class="it"><h3>Cheap by design</h3><p>A bare link or attachment never triggers an AI call. Only an actual question does, so nothing idle costs anything.</p></div>
     </div>
-    <a class="btn-amber" href="/docs/getting-started">Start here →</a>
+  </section>
+
+  <section>
+    <h2>What it won't do.</h2>
+    <p class="h2sub">The honest limits — same standard as the rest of these pages. If it isn't
+    here, it doesn't do it.</p>
+    <div class="grid2 no">
+      <div class="it"><h3>No memory beyond the current back-and-forth</h3><p>It recalls the last handful of messages in that conversation, not everything you've ever sent.</p></div>
+      <div class="it"><h3>Not the official Business API</h3><p>It connects the way the WhatsApp Web app does, via <a class="u" href="https://github.com/WhiskeySockets/Baileys" target="_blank" rel="noopener">Baileys</a> — unofficial, widely used, not built or run by WhatsApp. Fine for a personal number at normal volume; not for a large audience.</p></div>
+      <div class="it"><h3>Replies can't take action</h3><p>They answer from your vault. They can't file, move or resolve anything on your behalf.</p></div>
+      <div class="it"><h3>No groups, full stop</h3><p>If the number is ever added to one, messages from it are ignored entirely rather than partially handled.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="skip"><b>Skip freely.</b> This whole page describes an optional add-on. Nothing
+    else in Dori Mini depends on it, and skipping it during setup changes nothing about how
+    the rest works.</div>
+  </section>
+
+  <div class="next">
+    <a href="/docs/benchmarks">Next: the measured numbers →</a>
   </div>
 
 </div>
 
-<footer>Dori Mini · github.com/vshrinath/dori-mini</footer>
+<footer>
+  <div class="wide">
+    <span>Dori Mini · open source</span>
+    <span>Works with Claude Code, Codex and Antigravity</span>
+    <span><a href="/">mini.mydori.app</a></span>
+  </div>
+</footer>
