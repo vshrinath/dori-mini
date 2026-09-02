@@ -1,5 +1,46 @@
 # Changelog
 
+## [2026-09-02] — Design Tokens, Space Categories & Calibrated Shell Navigation (Milestone 2)
+
+**Branch**: `main`
+
+### What changed
+- Completed Figtree font token bridge and space accent variables (`--color-space-now`, `--color-space-work`, `--color-space-knowledge`, `--color-space-create`, `--color-space-personal`, `--color-space-system`, `--color-space-accent`) in `electron-app/src/tokens.css`.
+- Added `.space-now`, `.space-work`, `.space-knowledge`, `.space-create`, `.space-personal`, `.space-system` scope classes and `.space-card` dot-grid radial texture rules with hover transforms and light/dark surface ladders.
+- Implemented complete Space Shell sidebar navigation in `electron-app/src/components/Sidebar.jsx` with `Work`, `Knowledge`, and `System` categories in `SPACES_NAV`.
+- Implemented calibrated 34px item metrics (`min-h-[2.15rem]`, `rounded-[10px]`, `text-[13px]`, `font-medium`), 34px circular avatar in `ProfileFooter`, collapsible group accordions with animated chevron triggers and localStorage persistence.
+- Implemented 40px `CollapsedRail` with 30px icon buttons, active space accent indicator dots, unread count badges, and Base UI Tooltips.
+- Mounted `CredentialsModal` in `electron-app/src/App.jsx` and connected modal handlers for Settings, Credentials Vault, and Search alongside global keyboard shortcuts (`Cmd+K`, `/`, `Cmd+,`, `Cmd+\`).
+
+### Why
+Port the canonical Space Shell layout and design system from `dori-portal` into `dori-mini`'s Electron application, providing calibrated 34px navigation, full space categorization, and responsive modal interactions.
+
+### Files touched
+- `electron-app/src/tokens.css` — Added Figtree font tokens, space accent color variables, space scope utilities, and .space-card dot-grid texture
+- `electron-app/src/components/Sidebar.jsx` — Implemented calibrated 34px Space Shell navigation, System category, collapsible accordions, and 40px collapsed rail
+- `electron-app/src/App.jsx` — Integrated CredentialsModal, wired onOpenCredentials, and registered global keyboard shortcuts
+- `test/m2-verification.mjs` — Added comprehensive Milestone 2 design token and sidebar verification test suite
+
+## [2026-09-02] — Complete Decoupled Client API Adapter & Backend Action Hardening (Milestone 1)
+
+**Branch**: `main`
+
+### What changed
+- Exported `BUILTIN_TEMPLATES` in `apply-template.mjs` for template validation.
+- Registered `apply_template` action in `actions.mjs` with flexible schema, template shorthand alias resolution (`client` -> `engine.client`), subproject directory creation with initial `.setup.md`, and updated total MCP actions count assertion to 56.
+- Expanded `electron-app/src/lib/api.js` into an exhaustive, decoupled API client adapter covering 44+ methods across all 12 functional domains with polymorphic parameter normalization and bridge event helpers.
+- Added Section 8 adversarial test suite in `test/actions-adversarial.mjs` validating `apply_template` input validation, invalid templates, path traversal rejection, alias resolution, and idempotency, bringing test assertions to 90 passing tests.
+
+### Why
+Provide a complete, typed, and resilient communication bridge between the React UI layer and backend domain actions, hardening the action registry and preventing runtime failures.
+
+### Files touched
+- `apply-template.mjs` — Exported `BUILTIN_TEMPLATES`
+- `actions.mjs` — Registered `apply_template`, hardened parameter schemas, updated action count assertion to 56
+- `electron-app/src/lib/api.js` — Complete decoupled client API adapter with 44+ polymorphic methods
+- `test/actions-adversarial.mjs` — Added Section 8 `apply_template` adversarial test suite
+
+
 ## [2026-09-02] — Decouple UI Components via Dedicated Dori Client API Layer (`api.js`)
 
 **Branch**: `main`

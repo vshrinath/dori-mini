@@ -25,7 +25,7 @@ import { homedir } from 'node:os';
 
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
 
-const BUILTIN_TEMPLATES = {
+export const BUILTIN_TEMPLATES = {
   'engine.default': [
     { path: 'docs', purpose: 'Project documentation' },
     { path: 'notes', purpose: 'General project notes, observations, thinking' },

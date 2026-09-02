@@ -53,6 +53,7 @@ import { loadDecisions, createDecision } from './decision-store.mjs';
 import { convertDocument } from './convert-document.mjs';
 import { db as getCredentialsDb } from './credentials-lib.mjs';
 import { processMeetingMinutes } from './process-meeting-minutes.mjs';
+import { applyTemplate, BUILTIN_TEMPLATES } from './apply-template.mjs';
 
 /** @typedef {{ id: string, description: string, inputSchema: import('zod').ZodType, scope: 'read'|'write', exposeToMcp?: boolean, handler: (input: any) => Promise<any> | any }} ActionDefinition */
 
@@ -168,6 +169,94 @@ export const actions = [
     handler: ({ projectPath }) => getProjectDetails(projectPath),
   },
   {
+    id: 'apply_template',
+    description: 'Apply a standard project template (scaffold standard directories and record template provenance in .setup.md)',
+    inputSchema: z
+      .object({
+        template: z.string().min(1).optional(),
+        templateKey: z.string().min(1).optional(),
+        templateName: z.string().min(1).optional(),
+        project: z.string().min(1).optional(),
+        projectPath: z.string().min(1).optional(),
+        target: z.string().min(1).optional(),
+        targetDir: z.string().min(1).optional(),
+        vars: z.record(z.string(), z.any()).optional(),
+      })
+      .refine((data) => Boolean(data.template || data.templateKey || data.templateName), {
+        message: 'template (or templateKey / templateName) is required',
+      })
+      .refine((data) => Boolean(data.project || data.projectPath || data.target || data.targetDir), {
+        message: 'project (or projectPath / target / targetDir) is required',
+      }),
+    scope: 'write',
+    exposeToMcp: true,
+    handler: ({ template, templateKey, templateName, project, projectPath, target, targetDir }) => {
+      const rawKey = (template || templateKey || templateName || '').trim();
+      const rawProj = (project || projectPath || target || targetDir || '').trim();
+
+      const TEMPLATE_ALIASES = {
+        default: 'engine.default',
+        software: 'engine.software',
+        client: 'engine.client',
+        research: 'engine.research',
+        standard: 'portal.standard',
+        minimal: 'portal.minimal',
+        full: 'portal.full',
+      };
+
+      const normalizedKey = rawKey.toLowerCase();
+      const canonicalKey = TEMPLATE_ALIASES[normalizedKey] || (BUILTIN_TEMPLATES[rawKey] ? rawKey : BUILTIN_TEMPLATES[normalizedKey] ? normalizedKey : null);
+      if (!canonicalKey || !BUILTIN_TEMPLATES[canonicalKey]) {
+        throw new Error(`Unknown template: ${rawKey}`);
+      }
+
+      const cleanPath = rawProj
+        .replace(/^projects\//, '')
+        .replace(/^\/+|\/+$/g, '')
+        .trim();
+      if (!cleanPath || cleanPath.includes('..')) {
+        throw new Error(`Invalid project path: "${rawProj}"`);
+      }
+
+      const projectDir = join(VAULT_ROOT, 'projects', cleanPath);
+      if (!existsSync(projectDir)) {
+        mkdirSync(projectDir, { recursive: true });
+      }
+
+      const setupPath = join(projectDir, '.setup.md');
+      if (!existsSync(setupPath)) {
+        const lastSegment = cleanPath.split('/').pop() || 'project';
+        const title = lastSegment
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        const initialSetup = [
+          '---',
+          `project_path: "${cleanPath}"`,
+          `project: "${title}"`,
+          `template_origin: ${canonicalKey}`,
+          'status: active',
+          '---',
+          '',
+          `# ${title}`,
+          '',
+        ].join('\n');
+        writeFileSync(setupPath, initialSetup, 'utf-8');
+      }
+
+      const res = applyTemplate(cleanPath, canonicalKey);
+
+      try {
+        const HERE = dirname(fileURLToPath(import.meta.url));
+        execFileSync('node', [join(HERE, 'reindex-vault.mjs')], { stdio: 'ignore' });
+      } catch {}
+
+      return {
+        success: true,
+        ...res,
+      };
+    },
+  },
+  {
     id: 'get_profile',
     description: 'Get the user\'s own profile (the person entity marked is_self: true)',
     inputSchema: z.object({}),
@@ -248,13 +337,16 @@ export const actions = [
   {
     id: 'save_document',
     description: 'Save edited markdown content to an existing vault document and trigger non-fatal reindexing (FTS + semantic)',
-    inputSchema: z.object({
-      path: z.string().min(1),
-      content: z.string(),
-    }),
+    inputSchema: z
+      .object({
+        path: z.string().min(1).optional(),
+        relPath: z.string().min(1).optional(),
+        content: z.string(),
+      })
+      .refine((d) => Boolean(d.path || d.relPath), { message: 'path or relPath is required' }),
     scope: 'write',
     exposeToMcp: true,
-    handler: ({ path, content }) => saveDocument(path, content),
+    handler: ({ path, relPath, content }) => saveDocument(path || relPath, content),
   },
   {
     id: 'get_engine_config',
@@ -453,10 +545,11 @@ ${projectPath ? `project: "${projectPath}"\n` : ''}---
     inputSchema: z.object({
       message: z.string().min(1),
       key: z.string().optional(),
+      targetLedger: z.string().optional(),
     }),
     scope: 'write',
     exposeToMcp: true,
-    handler: ({ message, key }) => routeExpense(message, key),
+    handler: ({ message, key, targetLedger }) => routeExpense(message, key || targetLedger),
   },
   {
     id: 'attach_receipt',
@@ -549,11 +642,13 @@ ${projectPath ? `project: "${projectPath}"\n` : ''}---
     description: 'List recordings from Fathom AI REST API, indicating which are already filed in the vault',
     inputSchema: z.object({
       since: z.string().optional(),
-      includeFiled: z.boolean().default(false),
+      includeFiled: z.boolean().optional(),
+      unfiledOnly: z.boolean().optional(),
     }),
     scope: 'read',
     exposeToMcp: true,
-    handler: async ({ since, includeFiled }) => {
+    handler: async ({ since, includeFiled, unfiledOnly }) => {
+      const shouldInclude = includeFiled ?? (unfiledOnly != null ? !unfiledOnly : false);
       const meetings = await listAllMeetings({ since });
       const filed = findFiledRecordingIds();
       const formatted = meetings.map((m) => ({
@@ -566,7 +661,7 @@ ${projectPath ? `project: "${projectPath}"\n` : ''}---
         invitees: (m.calendar_invitees || []).map((i) => i.name || i.email),
         isFiled: filed.has(String(m.recording_id)),
       }));
-      return includeFiled ? formatted : formatted.filter((m) => !m.isFiled);
+      return shouldInclude ? formatted : formatted.filter((m) => !m.isFiled);
     },
   },
   {
@@ -906,11 +1001,12 @@ ${projectPath ? `project: "${projectPath}"\n` : ''}---
     inputSchema: z.object({
       title: z.string().min(1),
       due: z.string().optional(),
+      dueDate: z.string().optional(),
       owner: z.string().optional(),
     }),
     scope: 'write',
     exposeToMcp: true,
-    handler: ({ title, due, owner }) => addTask({ title, due, owner }),
+    handler: ({ title, due, dueDate, owner }) => addTask({ title, due: due || dueDate, owner }),
   },
   {
     id: 'convert_document',
@@ -1066,7 +1162,7 @@ if (import.meta.main) {
     await runFromCli(actionId, jsonInput);
   } else {
     const { strict: assert } = await import('node:assert');
-    assert.equal(actions.filter((a) => a.exposeToMcp).length, 52, 'all fifty-two actions should be MCP-exposed');
+    assert.equal(actions.filter((a) => a.exposeToMcp).length, 56, 'all fifty-six actions should be MCP-exposed');
     assert.throws(() => getAction('nope'));
     console.log('ok —', actions.map((a) => a.id).join(', '));
   }

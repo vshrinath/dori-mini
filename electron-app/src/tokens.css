@@ -48,6 +48,15 @@
   --color-surface-field-hover: var(--surface-field-hover);
   --color-surface-tint: var(--surface-tint);
 
+  --color-space-now: var(--space-now);
+  --color-space-work: var(--space-work);
+  --color-space-knowledge: var(--space-knowledge);
+  --color-space-create: var(--space-create);
+  --color-space-personal: var(--space-personal);
+  --color-space-system: var(--space-system);
+  --color-space-accent: var(--space-accent);
+
+  --font-figtree: 'Figtree', system-ui, -apple-system, sans-serif;
   --font-display: 'Figtree', system-ui, sans-serif;
   --font-body: 'Figtree', system-ui, sans-serif;
   --font-mono:
@@ -210,7 +219,9 @@
   --space-accent: var(--brand-accent);
 
   /* Space sidebar metrics */
+  --space-shell-bg: var(--surface-canvas);
   --space-sidebar-bg: var(--surface-canvas);
+  --font-figtree: 'Figtree', system-ui, -apple-system, sans-serif;
   --space-sidebar-field: rgba(255, 255, 255, 0.07);
   --space-sidebar-border: rgba(255, 255, 255, 0.08);
   --space-nav-hover: rgba(255, 255, 255, 0.045);
@@ -557,6 +568,7 @@
   --surface-field: #202126;
   --surface-field-hover: #292b32;
 
+  --space-shell-bg: var(--surface-canvas);
   --space-sidebar-bg: var(--surface-canvas);
   --space-sidebar-field: rgba(255, 255, 255, 0.09);
   --space-sidebar-border: rgba(255, 255, 255, 0.09);
@@ -1171,5 +1183,81 @@ body.is-resizing-sidebar {
   box-shadow: var(--shadow-sm);
   transform: translateY(-2px);
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * SPACE UTILITIES & SPACE-CARD TEXTURE
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.space-now {
+  --space-accent: var(--space-now);
+}
+.space-work {
+  --space-accent: var(--space-work);
+}
+.space-knowledge {
+  --space-accent: var(--space-knowledge);
+}
+.space-create {
+  --space-accent: var(--space-create);
+}
+.space-personal {
+  --space-accent: var(--space-personal);
+}
+.space-system {
+  --space-accent: var(--space-system);
+}
+
+.space-card {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--space-accent), transparent 91%) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 18px 18px;
+  transition:
+    background-color var(--dur-quick) var(--ease-out),
+    border-color var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out),
+    transform var(--dur-quick) var(--ease-out);
+}
+
+.space-card:hover {
+  background-color: color-mix(in srgb, var(--space-accent), transparent 94%);
+  border-color: color-mix(in srgb, var(--space-accent), transparent 55%);
+  box-shadow: 0 4px 20px
+    color-mix(in srgb, var(--space-accent), transparent 86%);
+  transform: translateY(-1px);
+}
+
+.app-shell-pending-dot {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--space-now);
+}
+
+.skip-link {
+  position: fixed;
+  top: max(0.5rem, env(safe-area-inset-top));
+  left: max(0.5rem, env(safe-area-inset-left));
+  z-index: var(--z-max);
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: var(--text-control);
+  font-weight: 500;
+  text-decoration: none;
+  transform: translateY(calc(-100% - 1rem));
+  transition: transform var(--dur-quick) var(--ease-out);
+}
+.skip-link:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+  transform: translateY(0);
+}
+
 
 

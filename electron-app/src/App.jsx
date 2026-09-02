@@ -14,6 +14,7 @@ import { ProfileView } from "./components/ProfileView.jsx";
 import { ViewCanvas } from "./components/ViewCanvas.jsx";
 import { SearchModal } from "./components/SearchModal.jsx";
 import { SettingsModal } from "./components/SettingsModal.jsx";
+import { CredentialsModal } from "./components/CredentialsModal.jsx";
 
 export function App() {
   const [active, setActive] = useState("chat");
@@ -21,6 +22,7 @@ export function App() {
   const [activeDocument, setActiveDocument] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCredentialsOpen, setIsCredentialsOpen] = useState(false);
 
   // Global keyboard shortcuts (/ & Cmd+K for search, Cmd+, for settings)
   useEffect(() => {
@@ -61,6 +63,7 @@ export function App() {
           onSelect={setActive}
           onOpenSearch={() => setIsSearchOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenCredentials={() => setIsCredentialsOpen(true)}
           onNewNote={() => setActive("chat")}
           profileVersion={profileVersion}
         />
@@ -144,6 +147,12 @@ export function App() {
         <SettingsModal
           isOpen={isSettingsOpen}
           onClose={() => setIsSettingsOpen(false)}
+        />
+
+        {/* Global Credentials Vault Modal */}
+        <CredentialsModal
+          isOpen={isCredentialsOpen}
+          onClose={() => setIsCredentialsOpen(false)}
         />
 
         {/* Co-mounted View Canvas Workspace */}

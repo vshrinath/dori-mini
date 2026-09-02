@@ -905,7 +905,80 @@ console.log("\n=== 7. EXTENDED VAULT OPERATIONS & MUTATION INTEGRITY TESTS ===")
   recordResult("Profile", "get_profile", "Get user self profile", "PASS", "Retrieved self profile accurately");
 }
 
-console.log("\n=== 8. COMPREHENSIVE ACTION REGISTRY COVERAGE AUDIT ===");
+console.log("\n=== 8. PROJECT TEMPLATES DOMAIN TESTS (apply_template) ===");
+
+// 8.1 Missing required arguments
+{
+  const resMissing = runCli("apply_template", "{}");
+  assert.equal(resMissing.status, 1);
+  recordResult("Projects", "apply_template", "Missing template and project rejection", "PASS", "Zod required fields rejected");
+}
+
+// 8.2 Unknown template key
+{
+  const resBadTemplate = runCli("apply_template", { template: "unknown.preset", project: "test-proj" });
+  assert.equal(resBadTemplate.status, 1);
+  assert.ok(resBadTemplate.stderr.includes("Unknown template"));
+  recordResult("Projects", "apply_template", "Unknown template key rejection", "PASS", "Clean error on invalid template");
+}
+
+// 8.3 Path traversal attempt
+{
+  const resTraversal = runCli("apply_template", { template: "client", project: "../../etc/danger" });
+  assert.equal(resTraversal.status, 1);
+  assert.ok(resTraversal.stderr.includes("Invalid project path"));
+  recordResult("Projects", "apply_template", "Path traversal injection rejection", "PASS", "Safely rejected relative path escape");
+}
+
+// 8.4 Valid template creation via shorthand alias ('client')
+{
+  const resValid = runCli("apply_template", { template: "client", project: "acme-client" });
+  assert.equal(resValid.status, 0);
+  const data = JSON.parse(resValid.stdout);
+  assert.equal(data.success, true);
+  assert.equal(data.templateKey, "engine.client");
+  assert.ok(existsSync(join(TEST_VAULT, "projects/acme-client/.setup.md")));
+  assert.ok(existsSync(join(TEST_VAULT, "projects/acme-client/docs")));
+  assert.ok(existsSync(join(TEST_VAULT, "projects/acme-client/invoices")));
+  assert.ok(existsSync(join(TEST_VAULT, "projects/acme-client/meetings")));
+  assert.ok(existsSync(join(TEST_VAULT, "projects/acme-client/deliverables")));
+  recordResult("Projects", "apply_template", "Valid project scaffolding from shorthand alias", "PASS", "Scaffolded client folders and .setup.md");
+}
+
+// 8.5 Idempotent re-run on existing project
+{
+  const resIdempotent = runCli("apply_template", { templateKey: "engine.client", projectPath: "acme-client" });
+  assert.equal(resIdempotent.status, 0);
+  const data = JSON.parse(resIdempotent.stdout);
+  assert.ok(data.alreadyPresent.includes("docs"));
+  assert.equal(data.added.length, 0);
+  recordResult("Projects", "apply_template", "Idempotent re-application", "PASS", "Additive-only behavior verified without duplicate folders");
+}
+
+// 8.6 Valid scaffolding using canonical portal template ('portal.standard')
+{
+  const resStandard = runCli("apply_template", { project: "alpha-project", template: "portal.standard" });
+  assert.equal(resStandard.status, 0);
+  const data = JSON.parse(resStandard.stdout);
+  assert.equal(data.success, true);
+  assert.equal(data.templateKey, "portal.standard");
+  assert.ok(existsSync(join(TEST_VAULT, "projects/alpha-project/.setup.md")));
+  assert.ok(existsSync(join(TEST_VAULT, "projects/alpha-project/meetings")));
+  assert.ok(existsSync(join(TEST_VAULT, "projects/alpha-project/notes")));
+  assert.ok(existsSync(join(TEST_VAULT, "projects/alpha-project/source-data")));
+  const setupContent = readFileSync(join(TEST_VAULT, "projects/alpha-project/.setup.md"), "utf8");
+  assert.ok(setupContent.includes("template_origin: portal.standard"));
+  recordResult("Projects", "apply_template", "Canonical preset scaffolding and provenance tracking", "PASS", "Scaffolded standard portal folders and recorded provenance");
+}
+
+// 8.7 Empty string parameter rejection
+{
+  const resEmpty = runCli("apply_template", { projectPath: "", templateKey: "" });
+  assert.equal(resEmpty.status, 1);
+  recordResult("Projects", "apply_template", "Empty string parameter rejection", "PASS", "Zod rejected empty string parameters");
+}
+
+console.log("\n=== 9. COMPREHENSIVE ACTION REGISTRY COVERAGE AUDIT ===");
 
 // Audit all registered actions for schema validity, scope, and MCP exposure
 for (const a of actions) {
