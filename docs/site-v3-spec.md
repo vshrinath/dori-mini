@@ -1,7 +1,7 @@
 # Dori Mini homepage — v3 spec
 
 Status: agreed in session 2026-09-02. Supersedes the current `site/index.html` and the
-`site/v2.html` draft. Build target: `site/v3.html`.
+`site/v2.html` draft. Build target: `site/index.html` (the live homepage; was drafted as `site/v3.html` and promoted 2026-09-02).
 
 ---
 
