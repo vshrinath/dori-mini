@@ -221,8 +221,20 @@ are baked into two SVGs and the whole `url()` is swapped via `--wa-doodle` per t
 ### 3.11 Your first five minutes
 Fixes the empty-room problem: every group above assumes you've already fed it something.
 
-> Paste your last meeting transcript. Drop a folder of invoices in. Ask Dori what's open.
-> That's the whole onboarding.
+**Three ways in, each with a mock visual**, then one question below them. Three inputs and
+one question is a cleaner shape than two inputs and an output, which is what it was.
+
+| # | Step | Mock visual |
+|---|---|---|
+| 01 | Paste your last meeting transcript. | four lines of speaker dialogue |
+| 02 | Point Dori at a folder full of invoices. | four PDF filenames |
+| 03 | Paste a link. | a URL bar with a real YouTube link |
+
+Then, centred underneath: *Then just ask.* followed by
+> Dori, what did Alan promise in the last meeting? By when did he say he will do it?
+
+Uses Alan, already established two sections up as the person who commits to things in
+meetings, rather than introducing a new name for one line.
 
 ### 3.12 Closing panel
 Anatomy borrowed from the reference emailer: illustration, problem-first headline, one

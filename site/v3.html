@@ -214,9 +214,20 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 /* first five */
 .five{background:var(--paper-2);text-align:center}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:44px;text-align:left}
-.step{background:var(--raise);border-radius:16px;padding:22px;box-shadow:var(--shadow-sm)}
-.step b{display:block;font-family:var(--f-mono);font-size:12px;color:var(--amber-ink);margin-bottom:9px}
+.step{background:var(--raise);border-radius:16px;padding:18px;box-shadow:var(--shadow-sm)}
+.step b{display:block;font-family:var(--f-mono);font-size:12px;color:var(--amber-ink);margin-bottom:8px}
 .step p{font-size:1rem}
+.sart{background:var(--paper-2);border-radius:11px;height:114px;padding:12px;overflow:hidden;margin-bottom:16px;display:flex;align-items:flex-start}
+.sart.mid{align-items:center}
+.stx{font-family:var(--f-mono);font-size:10.5px;line-height:1.62;color:var(--ink-3)}
+.stx b{display:inline;font-family:var(--f-mono);font-size:10.5px;color:var(--ink-2);margin:0}
+.sfiles{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:6px;width:100%}
+.sfiles div{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
+.sfiles div::before{content:"";width:8px;height:10px;background:var(--ink-3);opacity:.45;border-radius:1.5px;flex:none}
+.slink{width:100%;background:var(--raise);border-radius:8px;padding:9px 11px;font-family:var(--f-mono);font-size:10.5px;color:var(--ink-2);display:flex;align-items:center;gap:7px;box-shadow:var(--shadow-sm);overflow:hidden;white-space:nowrap}
+.slink .lock{width:7px;height:9px;border:1.5px solid var(--ink-3);border-radius:2px;flex:none}
+.then{margin-top:46px;font-size:1.04rem;color:var(--ink-2)}
+.ask{margin:16px auto 0;max-width:56ch;font-family:var(--f-mono);font-size:13.5px;line-height:1.65;color:var(--amber-ink);background:var(--raise);border-radius:14px;padding:16px 20px;box-shadow:var(--shadow-sm);text-align:left}
 
 /* close */
 .close{text-align:center;padding:110px 0 96px}
@@ -512,10 +523,21 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
     <h2 class="center">Your first five minutes.</h2>
     <p class="sub center">Nothing to configure. Just give it something to work with.</p>
     <div class="steps">
-      <div class="step rv"><b>01</b><p>Paste your last meeting transcript.</p></div>
-      <div class="step rv"><b>02</b><p>Point Dori at a folder full of invoices.</p></div>
-      <div class="step rv"><b>03</b><p>Ask Dori what's still open.</p></div>
+      <div class="step rv">
+        <div class="sart"><p class="stx"><b>Priya:</b> aim for the 20th?<br><b>Alan:</b> I'll send the deck.<br><b>Priya:</b> before Friday?<br><b>Alan:</b> Friday, yes.</p></div>
+        <b>01</b><p>Paste your last meeting transcript.</p>
+      </div>
+      <div class="step rv">
+        <div class="sart"><div class="sfiles"><div>invoice-mar.pdf</div><div>invoice-apr.pdf</div><div>invoice-may.pdf</div><div>receipt-scan-04.pdf</div></div></div>
+        <b>02</b><p>Point Dori at a folder full of invoices.</p>
+      </div>
+      <div class="step rv">
+        <div class="sart mid"><div class="slink"><span class="lock"></span>youtube.com/watch?v=hiYTq9xnkPw</div></div>
+        <b>03</b><p>Paste a link.</p>
+      </div>
     </div>
+    <p class="then">Then just ask.</p>
+    <div class="ask rv">Dori, what did Alan promise in the last meeting? By when did he say he will do it?</div>
   </div>
 </section>
 
