@@ -185,8 +185,9 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .chapline{margin-top:13px;padding-top:11px;border-top:1px solid var(--hair);font-size:12.5px;color:var(--ink-3)}
 .chapline b{color:var(--ink);font-weight:600}
 .synth{margin-top:34px;background:var(--raise);border-radius:20px;box-shadow:var(--shadow-lg);padding:24px;display:flex;flex-direction:column;gap:13px}
-.kicker{margin-top:26px;font-family:var(--f-serif);font-style:italic;font-size:1.35rem;line-height:1.35;max-width:44ch}
-.aside{margin-top:18px;color:var(--ink-2);font-size:1rem;max-width:52ch}
+.kbclose{display:grid;grid-template-columns:1.12fr 1fr;gap:52px;align-items:start;margin-top:38px}
+.kicker{font-family:var(--f-serif);font-style:italic;font-size:clamp(1.35rem,2.3vw,1.8rem);line-height:1.28}
+.aside{color:var(--ink-2);font-size:1rem;padding-top:.35rem}
 
 /* trust */
 .trust h2{max-width:16ch}
@@ -235,7 +236,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}.msg{opacity:1;transform:none}}
 @media (max-width:880px){
-  .frames,.two-vids,.zrow,.steps,.grp,.wa .wrap{grid-template-columns:1fr}
+  .frames,.two-vids,.zrow,.steps,.grp,.wa .wrap,.kbclose{grid-template-columns:1fr}
   .grp{gap:32px;padding:36px 0}
   .grp:nth-child(odd)>.gtext{order:0}
   section{padding:72px 0}
@@ -243,6 +244,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
   .demo{margin-top:56px}
   header nav{display:none}
   .zrow{gap:34px}
+  .kbclose{gap:22px}
+  .aside{padding-top:0}
   .phone{max-width:330px;margin:0 auto}
 }
 </style>
@@ -457,8 +460,10 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
       <div class="msg dori show">Both land on expertise being where the blind spot starts. Taufel on self-evaluation as a discipline, Shrinath on expertise as pattern matching. Both give advice to a younger self, and both got where they went by taking the unfamiliar route.<span class="src">taufel · 10:00 &nbsp;·&nbsp; blind-spots · 23:02</span></div>
     </div>
 
-    <p class="kicker">One is a cricket umpire. The other is a product strategist. Nothing in either title tells you they're having the same conversation.</p>
-    <p class="aside">You could have found that yourself, of course. After watching both episodes end to end. That's 82 minutes before you can even start looking.</p>
+    <div class="kbclose">
+      <p class="kicker">One is a cricket umpire. The other is a product strategist. Nothing in either title tells you they're having the same conversation.</p>
+      <p class="aside">You could have found that yourself, of course. After watching both episodes end to end. That's 82 minutes before you can even start looking.</p>
+    </div>
   </div>
 </section>
 

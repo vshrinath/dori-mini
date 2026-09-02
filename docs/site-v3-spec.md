@@ -183,6 +183,11 @@ no explanatory sentence.
 Closing line: *one is a cricket umpire, the other a product strategist, and nothing in
 either title tells you they're having the same conversation.*
 
+The two closing lines sit **side by side in two columns**, not stacked in a narrow left
+measure — stacked, they left half the section's width empty against the two-card grid
+directly above. Emotional line left in serif italic at display size, rational line right,
+smaller and muted. Collapses to one column on mobile.
+
 Then the honest differentiator (specific, not absolute):
 > You could have found that yourself. After watching both episodes end to end. That's 82
 > minutes before you can even start looking.
