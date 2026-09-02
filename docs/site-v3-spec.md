@@ -107,7 +107,17 @@ by is not a benefit.
 
 Then one line, the only statistic on the page:
 > 95% fewer tokens to find something or answer a question. Measured against a real
-> working vault of about 2,800 files. [See the numbers →]
+> working vault of about 2,800 files.
+
+No link: that sentence is the evidence. A benchmarks page behind it turned into a wall of
+caveats, which made the claim read weaker, not stronger. Retired 2026-09-02 along with
+`/docs/how-it-works`. The measurements themselves stay in
+`docs/research-benchmarks-2026-08-26.md`.
+
+**The doc set is two pages: Getting started and WhatsApp.** They use the homepage's tokens
+*and* its type scale — same `clamp()` h2, same 17px/1.55 body. Docs differ in alignment
+(one centred opener, everything else left) and density. Never in scale: flattening the
+scale is what made them read like a Word document.
 
 "Up to" dropped 2026-09-02: every real-vault measurement in
 `docs/research-benchmarks-2026-08-26.md` §8.1 lands between 94% and 99.9%, so 95% is at
