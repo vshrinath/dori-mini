@@ -95,7 +95,7 @@ One line, large, on its own, serif italic:
 Placed **after** the frames, never before — zero of something you haven't yet been annoyed
 by is not a benefit.
 
-> **Zero** digging through folders. It reads one page, not your whole drive.
+> **Zero** digging through folders. It finds the details you want. Quickly.
 > **Zero** technical skill to set up. One line, inside the tool you already use.
 > **Zero** extra per month. No new subscription, no API key.
 
