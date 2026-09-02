@@ -117,9 +117,9 @@ Full-width alternating bands. Each states **how**, and carries a real `Dori, …
    project structure. Paste a transcript and it identifies who was in the room, creates a
    profile for each of them, and maps every future meeting to them.
    → *"Dori, start a project for the Kestrel rebrand."*
-4. **Your knowledge base.** Drop in a talk, a proposal, a framework, a set of brand
+4. **Your knowledge base.** Drop in a video, a proposal, a framework, a set of brand
    guidelines. It indexes each one and answers from them, showing the passage it came from.
-   → *"Dori, what did that talk say about pricing?"*
+   → *"Dori, what did that video say about pricing?"*
 
 ### 3.7a Watched folder — its own short band
 
