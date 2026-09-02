@@ -161,9 +161,12 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .z b{display:block;font-size:clamp(2.6rem,5.4vw,4rem);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--amber-deep)}
 .z p{margin-top:12px;font-size:1.02rem}
 .z p em{font-style:normal;color:var(--ink-2);display:block;font-size:.94rem;margin-top:5px}
-.stat{margin:56px auto 0;padding:30px 34px;background:var(--raise);border-radius:18px;box-shadow:var(--shadow-sm);font-size:1.22rem;line-height:1.5;color:var(--ink-2);max-width:60ch;text-align:center}
-.stat b{display:block;font-family:var(--f-display);font-size:2.5rem;font-weight:600;letter-spacing:-.03em;color:var(--ink);margin-bottom:6px}
-.stat a{display:inline-block;margin-top:12px;color:var(--amber-ink);font-weight:500;white-space:nowrap}
+.stat{margin:62px auto 0;padding:36px 34px 32px;background:var(--raise);border-radius:20px;box-shadow:var(--shadow-sm);max-width:60ch;text-align:center}
+.statbig{display:flex;align-items:baseline;justify-content:center;gap:15px;flex-wrap:wrap}
+.statbig span{font-size:1.16rem;color:var(--ink-2)}
+.stat b{font-family:var(--f-display);font-size:clamp(3.6rem,8.4vw,5.6rem);font-weight:600;letter-spacing:-.045em;line-height:.94;color:var(--ink)}
+.statsub{margin-top:16px;font-size:1.04rem;line-height:1.55;color:var(--ink-2)}
+.stat a{display:inline-block;margin-top:18px;color:var(--amber-ink);font-weight:500;white-space:nowrap}
 
 /* groups */
 .grp{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;padding:52px 0}
@@ -377,7 +380,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
       <div class="z rv"><b>Zero</b><p>technical skill to set up.<em>One line, inside the tool you already use.</em></p></div>
       <div class="z rv"><b>Zero</b><p>extra per month.<em>No new subscription, no API key.</em></p></div>
     </div>
-    <p class="stat"><b>Up to 95% fewer tokens</b> to find something or answer a question. Measured against a real working vault of about 2,800 files, not a demo folder.<br><a href="/docs/benchmarks">See the numbers →</a></p>
+    <div class="stat">
+      <p class="statbig"><span>Up&nbsp;to</span><b>95%</b><span>fewer&nbsp;tokens</span></p>
+      <p class="statsub">to find something or answer a question. Measured against a real working vault of about 2,800 files, not a demo folder.</p>
+      <a href="/docs/benchmarks">See the numbers →</a>
+    </div>
   </div>
 </section>
 
@@ -608,10 +615,12 @@ let fi = 0;
 function sizeFlip() {
   flipBox.style.width = 'auto';
   const w = Math.max(...flips.map(f => f.getBoundingClientRect().width));
-  if (w) flipBox.style.width = w + 'px';
+  // never wider than the heading itself, or a narrow screen scrolls sideways
+  if (w) flipBox.style.width = Math.min(w, flipBox.parentElement.clientWidth) + 'px';
 }
 document.fonts.ready.then(sizeFlip);
 addEventListener('resize', sizeFlip);
+new ResizeObserver(sizeFlip).observe(flipBox.parentElement.parentElement);
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   setInterval(() => {
     const cur = flips[fi];
@@ -620,7 +629,9 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       cur.classList.remove('on');
       cur.style.opacity = '';
       fi = (fi + 1) % flips.length;
-      flips[fi].classList.add('on');            // width never changes, so nothing shifts
+      sizeFlip();                               // recomputes the SAME max, so nothing shifts;
+                                                // self-heals if the viewport changed
+      flips[fi].classList.add('on');
     }, 340);
   }, 2800);
 }
