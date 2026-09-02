@@ -190,8 +190,8 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .aside{color:var(--ink-2);font-size:1rem;padding-top:.35rem}
 
 /* trust */
-.trust h2{max-width:16ch}
-.tlist{margin-top:32px;display:flex;flex-direction:column;gap:16px;max-width:56ch}
+.trust .wrap{display:grid;grid-template-columns:1fr 1.15fr;gap:56px;align-items:start}
+.tlist{display:flex;flex-direction:column;gap:16px}
 .tlist div{display:flex;gap:13px;align-items:flex-start;font-size:1.04rem;color:var(--ink-2)}
 .tlist div::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--amber);flex:none;margin-top:.55em}
 
@@ -236,7 +236,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}.msg{opacity:1;transform:none}}
 @media (max-width:880px){
-  .frames,.two-vids,.zrow,.steps,.grp,.wa .wrap,.kbclose{grid-template-columns:1fr}
+  .frames,.two-vids,.zrow,.steps,.grp,.wa .wrap,.kbclose,.trust .wrap{grid-template-columns:1fr}
   .grp{gap:32px;padding:36px 0}
   .grp:nth-child(odd)>.gtext{order:0}
   section{padding:72px 0}
@@ -245,6 +245,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
   header nav{display:none}
   .zrow{gap:34px}
   .kbclose{gap:22px}
+  .trust .wrap{gap:26px}
   .aside{padding-top:0}
   .phone{max-width:330px;margin:0 auto}
 }

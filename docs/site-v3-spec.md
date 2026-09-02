@@ -193,6 +193,11 @@ Then the honest differentiator (specific, not absolute):
 > minutes before you can even start looking.
 
 ### 3.9 No new company in the loop
+
+Two columns, heading left and the three lines right. The heading previously carried a hard
+`max-width: 16ch`, which forced an arbitrary break and left the right half of the section
+empty. Never cap a heading in `ch` to shape its break — set the column and let
+`text-wrap: balance` do it at every screen size.
 Replaces the false "100% private" claim. Answers the real question: *am I taking on new risk?*
 
 > **No new company in the loop.**
