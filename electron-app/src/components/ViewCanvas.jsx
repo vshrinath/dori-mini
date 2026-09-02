@@ -226,7 +226,7 @@ export function ViewCanvas({
     setConvertResult(null);
     setConvertError(null);
     try {
-      const res = await window.dori?.call('get_document', { relPath: path });
+      const res = await window.dori?.call('get_document', { path, relPath: path });
       setDoc(res);
       if (editor && res?.content) {
         editor.commands.setContent(res.content);

@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-09-02] — Fix `get_document` Action Schema to Accept `path` and `relPath` Aliases
+
+**Branch**: `main`
+
+### What changed
+- Updated `get_document` action definition in `actions.mjs` to accept either `path` or `relPath` via Zod union refinement, preventing remote call validation crashes.
+- Updated `ViewCanvas.jsx` and `ProjectView.jsx` to pass both `path` and `relPath`.
+- Ensured both `html` and `renderedHtml` fields are returned by `get_document`.
+
+### Why
+`get_document` previously strictly required `{ path: string }`, which caused Zod `invalid_type: Required` validation errors when callers passed `{ relPath: ... }`.
+
+### Files touched
+- `actions.mjs` — Relaxed `get_document` schema to accept `path` or `relPath`
+- `electron-app/src/components/ViewCanvas.jsx` — Updated `get_document` IPC call
+- `electron-app/src/components/ProjectView.jsx` — Updated context document fetch
+
 ## [2026-09-02] — Fix Sidebar, ViewCanvas and Project Dashboard Color Contrast with Theme-Aware Tokens
 
 **Branch**: `main`

@@ -201,21 +201,27 @@ export const actions = [
     id: 'get_document',
     description: 'Get one document\'s raw content + frontmatter + pre-rendered HTML by rel_path (or title)',
     inputSchema: z.object({
-      path: z.string().min(1),
+      path: z.string().min(1).optional(),
+      relPath: z.string().min(1).optional(),
+    }).refine((data) => Boolean(data.path || data.relPath), {
+      message: 'path or relPath is required',
     }),
     scope: 'read',
     exposeToMcp: true,
-    handler: ({ path }) => {
-      const doc = getDocument(path);
+    handler: ({ path, relPath }) => {
+      const targetPath = path || relPath;
+      const doc = getDocument(targetPath);
       if (!doc) return null;
       const { fm, body } = parseFrontmatter(doc.content || '');
       const frontmatter = { ...doc.frontmatter, ...fm };
       const bodyContent = body || doc.content || '';
+      const html = renderMarkdownToHtml(bodyContent);
       return {
         ...doc,
         frontmatter,
         body: bodyContent,
-        html: renderMarkdownToHtml(bodyContent),
+        html,
+        renderedHtml: html,
       };
     },
   },

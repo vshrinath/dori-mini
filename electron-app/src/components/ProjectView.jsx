@@ -144,7 +144,7 @@ export function ProjectView({
     const tryFetchContext = async () => {
       for (const cand of contextCandidates) {
         try {
-          const doc = await window.dori?.call('get_document', { relPath: cand });
+          const doc = await window.dori?.call('get_document', { path: cand, relPath: cand });
           if (doc?.content) {
             setContextDoc({ path: cand, ...doc });
             break;
