@@ -200,6 +200,22 @@
   --brand-beige: #f7f7f5;
   --brand-canvas: #fafaf8;
 
+  /* Space accent palette */
+  --space-now: #d99b24; /* amber gold — attention & today */
+  --space-work: #c44e28; /* terra cotta — professional, warm */
+  --space-knowledge: #4a7a6a; /* sage teal — archival, reference */
+  --space-create: #c47218; /* golden orange — making & output */
+  --space-personal: #a03c5c; /* berry rose — intimate, personal */
+  --space-system: #5a6880; /* slate blue — background infra */
+  --space-accent: var(--brand-accent);
+
+  /* Space sidebar metrics */
+  --space-sidebar-bg: var(--surface-canvas);
+  --space-sidebar-field: rgba(255, 255, 255, 0.07);
+  --space-sidebar-border: rgba(255, 255, 255, 0.08);
+  --space-nav-hover: rgba(255, 255, 255, 0.045);
+  --space-nav-active: rgba(255, 255, 255, 0.075);
+
   /* Primary actions — executive navy. Amber remains a semantic accent. */
   --color-cta: #1a1f4e;
   --color-cta-hover: #243070;

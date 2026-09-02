@@ -1,5 +1,34 @@
 # Changelog
 
+## [2026-09-02] — Real Dori Design Alignment: ViewCanvas Workspace, Refined Sidebar & Single-Canvas Project Dashboard
+
+**Branch**: `main`
+
+### What changed
+- **Co-Mounted ViewCanvas Workspace (`ViewCanvas.jsx`)**:
+  - Replaced the modal slide-over with a persistent, resizable right-docked workspace canvas co-mounted alongside the active route.
+  - Implemented interactive drag-to-resize separator with localStorage width persistence (`MIN_WIDTH: 480px`, `MAX_WIDTH: 1300px`, double-click reset).
+  - Added dedicated reader toolbar: dynamic text-size scaling (`A-` / `A+`), copy path/link, workspace maximize toggle (`Maximize2` / `Minimize2`), and document navigation history back stack.
+- **Refined Sidebar Metrics & Spaces Geometry (`Sidebar.jsx` & `tokens.css`)**:
+  - Calibrated navigation row height to $34.4\text{px}$ (`min-h-[2.15rem]`), font size to $13\text{px}$ (`text-[13px]`), border-radius to $10\text{px}$, and Lucide icon stroke-width to $1.55\text{px}$.
+  - Added Categorical Space Accent palette tokens (`--space-work`, `--space-now`, `--space-knowledge`, `--space-personal`, `--space-system`).
+  - Added collapsible project and space groups with quick-create `+` menu.
+- **Single-Canvas Quick-Use Project Dashboard (`ProjectView.jsx`)**:
+  - Redesigned project view into a single continuous cockpit: Breadcrumbs + Meta stats + Sub-projects dropdown chip with inline `+ Quick add`.
+  - Promoted Context card (`ℹ Context [>]`) with direct ViewCanvas reader trigger, Open Loops tasks with interactive completion toggles, and unified Activity Feed.
+  - Integrated scoped chat and assistant composer at the bottom.
+
+### Why
+Align Dori Go (`electron-app`) directly with real Dori (`dori-portal`) design tokens, surface geometry, and non-blocking co-mounted reading workflows.
+
+### Files touched
+- `electron-app/src/components/ViewCanvas.jsx` — Created co-mounted resizable canvas with reader toolbar and history navigation
+- `electron-app/src/components/Sidebar.jsx` — Refined row metrics ($34\text{px}$), $13\text{px}$ typography, and $1.55\text{px}$ icon line-weights
+- `electron-app/src/components/ProjectView.jsx` — Replaced tabbed view with single-canvas quick-use cockpit
+- `electron-app/src/App.jsx` — Swapped slideover with persistent ViewCanvas
+- `electron-app/src/tokens.css` — Added Space Accent palette and sidebar field tokens
+- `CHANGELOG.md` — Documented changes
+
 ## [2026-09-02] — Two-Phase Automated Background Meeting Minutes Processing Pipeline
 
 **Branch**: `main`

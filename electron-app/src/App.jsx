@@ -11,7 +11,7 @@ import { TimelineView } from "./components/TimelineView.jsx";
 import { EntitiesView } from "./components/EntitiesView.jsx";
 import { LibraryView } from "./components/LibraryView.jsx";
 import { ProfileView } from "./components/ProfileView.jsx";
-import { FileSlideover } from "./components/FileSlideover.jsx";
+import { ViewCanvas } from "./components/ViewCanvas.jsx";
 import { SearchModal } from "./components/SearchModal.jsx";
 import { SettingsModal } from "./components/SettingsModal.jsx";
 
@@ -146,11 +146,14 @@ export function App() {
           onClose={() => setIsSettingsOpen(false)}
         />
 
-        {/* Global File Slideover Drawer */}
-        <FileSlideover
-          relPath={activeDocument}
-          onClose={() => setActiveDocument(null)}
-        />
+        {/* Co-mounted View Canvas Workspace */}
+        {activeDocument && (
+          <ViewCanvas
+            relPath={activeDocument}
+            onClose={() => setActiveDocument(null)}
+            onOpenDocument={(path) => setActiveDocument(path)}
+          />
+        )}
       </div>
     </TooltipProvider>
   );

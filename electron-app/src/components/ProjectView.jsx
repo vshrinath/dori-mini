@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import {
   Folder,
   FolderOpen,
-  FolderX,
   FileText,
   FileImage,
   FileSpreadsheet,
@@ -11,6 +10,7 @@ import {
   Circle,
   Home,
   ChevronRight,
+  ChevronDown,
   Clock,
   Send,
   Plus,
@@ -22,21 +22,15 @@ import {
   ListTodo,
   AlertCircle,
   Check,
+  Sparkles,
+  Info,
+  ArrowRight,
 } from 'lucide-react';
 import { RouteHeader } from './ui/RouteHeader.jsx';
 import { Badge } from './ui/badge.jsx';
 import { Button } from './ui/button.jsx';
 import { EmptyState } from './ui/empty-state.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs.jsx';
-import {
-  Attachment,
-  AttachmentGroup,
-  AttachmentMedia,
-  AttachmentContent,
-  AttachmentTitle,
-  AttachmentDescription,
-} from './ui/attachment.jsx';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -48,44 +42,24 @@ import {
 import { EnginePicker } from './EnginePicker.jsx';
 import { cn } from '../lib/utils.js';
 
-const IMAGE_EXTS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
-const SPREADSHEET_EXTS = new Set(['csv', 'xls', 'xlsx']);
-
 function getFileIcon(filename) {
   const ext = filename?.split('.').pop()?.toLowerCase() || '';
-  if (ext === 'md') return <FileText size={18} className="text-blue-500" />;
-  if (IMAGE_EXTS.has(ext)) return <FileImage size={18} className="text-purple-500" />;
-  if (SPREADSHEET_EXTS.has(ext)) return <FileSpreadsheet size={18} className="text-emerald-500" />;
-  return <FileIcon size={18} className="text-amber-500" />;
+  if (ext === 'md') return <FileText size={15} className="text-amber-400" />;
+  if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) return <FileImage size={15} className="text-purple-400" />;
+  if (['csv', 'xlsx', 'xls'].includes(ext)) return <FileSpreadsheet size={15} className="text-emerald-400" />;
+  return <FileIcon size={15} className="text-sky-400" />;
 }
 
-function formatDate(iso) {
+function formatRelativeTime(iso) {
   if (!iso) return '';
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffHours < 1) return 'Just now';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 30) return `${diffDays}d ago`;
   return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
-}
-
-function renderBriefHighlights(rawContent) {
-  if (!rawContent) return { items: [], summary: '' };
-  const lines = rawContent.split('\n');
-  const items = [];
-  let summary = '';
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.startsWith('**') && trimmed.includes(':**')) {
-      const match = trimmed.match(/^\*\*(.+?):\*\*\s*(.+)$/);
-      if (match) {
-        items.push({ label: match[1], value: match[2] });
-      }
-    } else if (trimmed.startsWith('- `') || (trimmed.startsWith('- ') && !trimmed.startsWith('---'))) {
-      const text = trimmed.replace(/^-\s*/, '');
-      if (text) items.push({ label: 'Key Ref', value: text });
-    } else if (!trimmed.startsWith('#') && !trimmed.startsWith('---') && !trimmed.startsWith('**') && trimmed.length > 25 && !summary) {
-      summary = trimmed;
-    }
-  }
-
-  return { items, summary };
 }
 
 export function ProjectView({
@@ -97,12 +71,17 @@ export function ProjectView({
 }) {
   const [project, setProject] = useState(undefined);
   const [children, setChildren] = useState([]);
-  const [details, setDetails] = useState({ files: [], meetings: [], people: [] });
-  const [allTasks, setAllTasks] = useState([]);
+  const [details, setDetails] = useState({ files: [], meetings: [], people: [], tasks: [] });
+  const [openTasks, setOpenTasks] = useState([]);
   const [contextDoc, setContextDoc] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
 
-  // Inline contextual composer state
+  // Sub-projects dropdown state
+  const [isSubProjectsOpen, setIsSubProjectsOpen] = useState(false);
+  const [quickAddName, setQuickAddName] = useState('');
+  const [isCreatingSub, setIsCreatingSub] = useState(false);
+  const subDropdownRef = useRef(null);
+
+  // Contextual composer state
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -116,851 +95,463 @@ export function ProjectView({
     setContextDoc(null);
     setMessages([]);
 
-    // 1. Fetch project list & sub-projects
+    // 1. Fetch project list & hierarchy
     window.dori
       ?.call('list_projects', {})
-      .then((list) => {
-        const found = list.find((p) => p.projectPath === projectPath) || null;
-        setProject(found);
-        setChildren(
-          list.filter(
-            (p) =>
-              p.projectPath.startsWith(`${projectPath}/`) &&
-              !p.projectPath.slice(projectPath.length + 1).includes('/')
-          )
+      .then((all) => {
+        const found = all?.find((p) => p.projectPath === projectPath);
+        setProject(found || null);
+
+        const subs = all?.filter(
+          (p) =>
+            p.projectPath !== projectPath &&
+            p.projectPath.startsWith(`${projectPath}/`) &&
+            !p.projectPath.slice(projectPath.length + 1).includes('/')
         );
+        setChildren(subs || []);
       })
       .catch(() => setProject(null));
 
-    // 2. Fetch full project details (linked files, meetings, people)
+    // 2. Fetch project details (files, meetings, people, tasks)
     window.dori
       ?.call('get_project_details', { projectPath })
-      .then((data) => setDetails(data || { files: [], meetings: [], people: [] }))
-      .catch(() => setDetails({ files: [], meetings: [], people: [] }));
+      .then((det) => {
+        setDetails(det || { files: [], meetings: [], people: [], tasks: [] });
+      })
+      .catch(() => setDetails({ files: [], meetings: [], people: [], tasks: [] }));
 
-    // 3. Fetch all tasks
+    // 3. Fetch open tasks
     window.dori
-      ?.call('list_tasks', { status: 'all' })
-      .then((tasks) => setAllTasks(tasks || []))
-      .catch(() => setAllTasks([]));
+      ?.call('list_tasks', { status: 'open' })
+      .then((tasks) => {
+        const projTasks = (tasks || []).filter(
+          (t) =>
+            t.project === projectPath ||
+            (t.sourcePath && t.sourcePath.includes(projectPath)) ||
+            (t.title && t.title.toLowerCase().includes(projectPath.toLowerCase()))
+        );
+        setOpenTasks(projTasks);
+      })
+      .catch(() => setOpenTasks([]));
 
-    // 4. Fetch engine config
+    // 4. Fetch context document (README.md or project context)
+    const contextCandidates = [
+      `entities/projects/${projectPath}/README.md`,
+      `projects/${projectPath}/README.md`,
+      `entities/projects/${projectPath}/context.md`,
+    ];
+
+    const tryFetchContext = async () => {
+      for (const cand of contextCandidates) {
+        try {
+          const doc = await window.dori?.call('get_document', { relPath: cand });
+          if (doc?.content) {
+            setContextDoc({ path: cand, ...doc });
+            break;
+          }
+        } catch {}
+      }
+    };
+    tryFetchContext();
+
+    // 5. Engine config
     window.dori
       ?.call('get_engine_config', {})
-      .then((cfg) => {
-        if (cfg?.replyCli) setEngine(cfg.replyCli);
-      })
-      .catch(() => {});
+      .then((cfg) => setEngine(cfg?.replyCli || 'none'))
+      .catch(() => setEngine('none'));
   }, [projectPath]);
 
-  // Load project context document
+  // Click outside sub-projects dropdown
   useEffect(() => {
-    if (!details.files || details.files.length === 0) return;
-    const candidates = ['.setup.md', 'context.md', 'project.md', 'README.md', 'brief.md'];
-    const found =
-      details.files.find((f) => candidates.includes(f.name)) ||
-      details.files.find((f) => f.name.endsWith('.md'));
-
-    if (found) {
-      window.dori
-        ?.call('get_document', { path: found.relPath })
-        .then(setContextDoc)
-        .catch(() => {});
-    }
-  }, [details.files]);
-
-  // Filter tasks belonging to this project from details.tasks and allTasks
-  const projectTasks = useMemo(() => {
-    const map = new Map();
-    if (Array.isArray(details.tasks)) {
-      for (const t of details.tasks) {
-        map.set(t.id, t);
+    const handleClickOutside = (e) => {
+      if (subDropdownRef.current && !subDropdownRef.current.contains(e.target)) {
+        setIsSubProjectsOpen(false);
       }
+    };
+    if (isSubProjectsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-    const prefix = `projects/${projectPath}`;
-    for (const t of allTasks) {
-      if (t.relPath?.startsWith(prefix) || t.projectPath === projectPath) {
-        if (!map.has(t.id)) {
-          map.set(t.id, t);
-        }
-      }
-    }
-    return Array.from(map.values());
-  }, [details.tasks, allTasks, projectPath]);
+  }, [isSubProjectsOpen]);
 
-  // Group tasks by attributed person
-  const tasksByPerson = useMemo(() => {
-    const groups = new Map();
-    for (const t of projectTasks) {
-      const personName = t.person || 'Unassigned';
-      if (!groups.has(personName)) {
-        groups.set(personName, []);
-      }
-      groups.get(personName).push(t);
-    }
-    return Array.from(groups.entries()).map(([person, tasks]) => ({
-      person,
-      tasks,
-    }));
-  }, [projectTasks]);
-
-  // Handle task status toggle
   const handleToggleTask = async (taskId) => {
     try {
       await window.dori?.call('mark_task_done', { id: taskId });
-      setDetails((prev) => ({
-        ...prev,
-        tasks: (prev.tasks || []).map((t) =>
-          t.id === taskId ? { ...t, status: t.status === 'done' ? 'open' : 'done' } : t
-        ),
-      }));
-      setAllTasks((prev) =>
-        prev.map((t) =>
-          t.id === taskId ? { ...t, status: t.status === 'done' ? 'open' : 'done' } : t
-        )
-      );
-    } catch (e) {
-      console.error('Failed to toggle task:', e);
+      setOpenTasks((prev) => prev.filter((t) => t.id !== taskId));
+    } catch (err) {
+      window.alert(`Failed to complete task: ${err.message}`);
     }
   };
 
-  // Handle send message from project composer
-  const handleSendText = async () => {
-    const text = input.trim();
-    if (!text || isLoading) return;
-
-    if (engine === 'none') {
-      setErrorMessage('AI is not configured. Please select Claude Code or Codex in the picker.');
-      return;
+  const handleCreateSubProject = async (e) => {
+    e.preventDefault();
+    if (!quickAddName.trim()) return;
+    setIsCreatingSub(true);
+    const newSlug = `${projectPath}/${quickAddName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    try {
+      await window.dori?.call('apply_template', {
+        template: 'client',
+        project: newSlug,
+      });
+      setQuickAddName('');
+      setIsSubProjectsOpen(false);
+      onSelectProject?.(newSlug);
+    } catch (err) {
+      window.alert(`Failed to create sub-project: ${err.message}`);
+    } finally {
+      setIsCreatingSub(false);
     }
+  };
 
-    const userTurn = { role: 'user', text, timestamp: new Date().toISOString() };
-    const nextHistory = [...messages, userTurn];
-    setMessages(nextHistory);
+  const handleSendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+    const userText = input.trim();
     setInput('');
-    setIsLoading(true);
     setErrorMessage(null);
 
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
+    const newHistory = [...messages, { role: 'user', text: userText }];
+    setMessages(newHistory);
+    setIsLoading(true);
 
     try {
-      const response = await window.dori.call('chat_send', {
-        message: text,
-        history: messages.map((m) => ({ role: m.role, text: m.text })),
+      const res = await window.dori?.call('chat_send', {
+        message: userText,
+        history: messages,
         projectContext: projectPath,
       });
-
-      const doriTurn = {
-        role: 'dori',
-        text: response.reply,
-        timestamp: response.timestamp || new Date().toISOString(),
-      };
-      setMessages([...nextHistory, doriTurn]);
+      setMessages([...newHistory, { role: 'dori', text: res?.reply || 'Done.' }]);
     } catch (err) {
-      setErrorMessage(err.message || 'Failed to get a reply from the CLI.');
+      setErrorMessage(err?.message || 'Failed to send message');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendText();
-    }
-  };
+  // Build merged chronological activity feed
+  const activityTimeline = useMemo(() => {
+    const events = [];
+    (details.files || []).forEach((f) => {
+      events.push({
+        id: `file-${f.relPath}`,
+        type: 'file',
+        title: f.title || f.name || f.relPath.split('/').pop(),
+        date: f.date || 'Recent',
+        relPath: f.relPath,
+      });
+    });
+    (details.meetings || []).forEach((m) => {
+      events.push({
+        id: `meeting-${m.relPath || m.title}`,
+        type: 'meeting',
+        title: m.title,
+        date: m.date || 'Recent',
+        relPath: m.relPath,
+        attendees: m.attendees,
+      });
+    });
+    return events.slice(0, 10);
+  }, [details]);
 
-  // Breadcrumbs
-  const pathSegments = projectPath?.split('/') || [];
-  const openTaskCount = projectTasks.filter((t) => t.status === 'open').length;
+  const breadcrumbSegments = useMemo(() => {
+    const parts = projectPath.split('/');
+    let cumulative = '';
+    return parts.map((seg, i) => {
+      cumulative = cumulative ? `${cumulative}/${seg}` : seg;
+      return {
+        name: seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        path: cumulative,
+        isLast: i === parts.length - 1,
+      };
+    });
+  }, [projectPath]);
+
+  if (project === undefined) {
+    return (
+      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+        <Skeleton className="h-8 w-1/3 bg-white/5" />
+        <Skeleton className="h-24 w-full bg-white/5" />
+        <div className="grid grid-cols-2 gap-6">
+          <Skeleton className="h-48 w-full bg-white/5" />
+          <Skeleton className="h-48 w-full bg-white/5" />
+        </div>
+      </div>
+    );
+  }
+
+  if (project === null) {
+    return (
+      <EmptyState
+        icon={AlertCircle}
+        title="Project Not Found"
+        description={`No project configuration found matching "${projectPath}".`}
+        actionLabel="Back to Projects"
+        onAction={onNavigateProjects}
+      />
+    );
+  }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--surface-canvas)]">
-      <div className="flex-1 overflow-y-auto">
-        <div className="page-frame space-y-6 pb-28">
-          {/* Skeleton Loading */}
-          {project === undefined && (
-            <div className="flex items-start gap-4 p-4">
-              <Skeleton className="h-12 w-12 rounded-xl" />
-              <div className="flex-1 space-y-2.5">
-                <Skeleton className="h-5 w-1/3" />
-                <Skeleton className="h-4 w-1/4" />
+    <div className="flex h-full flex-col overflow-hidden bg-[var(--surface-canvas)] text-[var(--foreground)]">
+      {/* Scrollable Dashboard Body */}
+      <div className="flex-1 overflow-y-auto p-8 space-y-6 max-w-5xl w-full mx-auto">
+        {/* Header Breadcrumbs & Actions */}
+        <header className="space-y-3 pb-4 border-b border-white/[0.08]">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink onClick={onNavigateProjects} className="cursor-pointer text-white/50 hover:text-white">
+                  Projects
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              {breadcrumbSegments.map((seg) => (
+                <div key={seg.path} className="flex items-center gap-1.5">
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    {seg.isLast ? (
+                      <BreadcrumbPage className="font-semibold text-white/90">{seg.name}</BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink onClick={() => onSelectProject(seg.path)} className="cursor-pointer text-white/50 hover:text-white">
+                        {seg.name}
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                </div>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-white/95">
+                  {project.title}
+                </h1>
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20 text-xs font-semibold px-2 py-0.5">
+                  Active
+                </Badge>
               </div>
+              <p className="mt-1 text-xs text-white/50">
+                {details.files?.length || 0} files · {details.meetings?.length || 0} meetings · {openTasks.length} open loops
+              </p>
+            </div>
+
+            {/* Sub-projects Dropdown Chip */}
+            <div ref={subDropdownRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsSubProjectsOpen(!isSubProjectsOpen)}
+                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer shadow-xs"
+              >
+                <Layers size={13} className="text-amber-400" />
+                <span>Sub-projects ({children.length})</span>
+                <ChevronDown size={12} className={cn('transition-transform duration-150 text-white/40', isSubProjectsOpen && 'rotate-180')} />
+              </button>
+
+              {isSubProjectsOpen && (
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-white/10 bg-[#161922] p-2 shadow-2xl z-30 anim-rise space-y-1">
+                  {children.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-white/40 italic">No sub-projects yet</div>
+                  ) : (
+                    children.map((child) => (
+                      <button
+                        key={child.projectPath}
+                        onClick={() => {
+                          setIsSubProjectsOpen(false);
+                          onSelectProject(child.projectPath);
+                        }}
+                        className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors"
+                      >
+                        <span className="truncate">{child.title}</span>
+                        <ChevronRight size={12} className="text-white/30" />
+                      </button>
+                    ))
+                  )}
+
+                  {/* Inline Quick Add */}
+                  <form onSubmit={handleCreateSubProject} className="pt-2 border-t border-white/[0.08]">
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="+ Quick add sub-project..."
+                        value={quickAddName}
+                        onChange={(e) => setQuickAddName(e.target.value)}
+                        className="flex-1 rounded-md border border-white/10 bg-black/30 px-2 py-1 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!quickAddName.trim() || isCreatingSub}
+                        className="h-6 px-2 rounded bg-amber-500 hover:bg-amber-400 text-black text-[11px] font-semibold transition-colors disabled:opacity-40"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* 1. Context Summary Card */}
+        {contextDoc && (
+          <div
+            onClick={() => onSelectDocument(contextDoc.path)}
+            className="group flex items-center justify-between p-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.03] hover:bg-amber-500/[0.07] hover:border-amber-500/35 transition-all cursor-pointer shadow-xs"
+          >
+            <div className="flex items-start gap-3 min-w-0">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 mt-0.5">
+                <Info size={15} />
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Project Context</span>
+                  <span className="text-[11px] text-white/40">({contextDoc.path})</span>
+                </div>
+                <p className="mt-1 text-xs text-white/70 line-clamp-2 leading-relaxed">
+                  {contextDoc.content.replace(/^#+.*$/gm, '').trim().slice(0, 180)}...
+                </p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-white/30 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all shrink-0 ml-4" />
+          </div>
+        )}
+
+        {/* 2-Column Cockpit Layout: Open Loops + Activity Timeline */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left: Open Loops (Tasks) */}
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2 font-semibold text-xs text-white/80 uppercase tracking-wider">
+                <ListTodo size={14} className="text-emerald-400" />
+                <span>Open Loops ({openTasks.length})</span>
+              </div>
+            </div>
+
+            {openTasks.length === 0 ? (
+              <div className="py-6 text-center text-xs text-white/40 italic">
+                No open tasks for this project
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {openTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="group flex items-start gap-2.5 p-2 rounded-lg hover:bg-white/[0.04] transition-colors"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleToggleTask(task.id)}
+                      className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-white/20 hover:border-emerald-400 hover:bg-emerald-500/20 text-transparent hover:text-emerald-400 transition-colors"
+                    >
+                      <Check size={10} strokeWidth={3} />
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-white/90 leading-tight">{task.title}</p>
+                      {task.dueDate && (
+                        <p className="mt-0.5 text-[11px] text-amber-400/80">Due {task.dueDate}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right: Activity Feed (Files & Meetings) */}
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2 font-semibold text-xs text-white/80 uppercase tracking-wider">
+                <Clock size={14} className="text-sky-400" />
+                <span>Activity Timeline</span>
+              </div>
+            </div>
+
+            {activityTimeline.length === 0 ? (
+              <div className="py-6 text-center text-xs text-white/40 italic">
+                No activity recorded yet
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {activityTimeline.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => item.relPath && onSelectDocument(item.relPath)}
+                    className="flex w-full items-center justify-between gap-3 p-2 rounded-lg text-left hover:bg-white/[0.04] transition-colors group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="shrink-0">{getFileIcon(item.relPath)}</span>
+                      <span className="truncate text-xs font-medium text-white/80 group-hover:text-white">
+                        {item.title}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-white/40 shrink-0 font-mono">
+                      {formatRelativeTime(item.date)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Scoped Project Chat & Actions */}
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+            <div className="flex items-center gap-2 font-semibold text-xs text-white/80 uppercase tracking-wider">
+              <MessageSquare size={14} className="text-amber-400" />
+              <span>Project Assistant & Notes</span>
+            </div>
+            <div className="text-[11px] text-white/40 font-mono">
+              Engine: <span className="text-amber-400 font-semibold">{engine}</span>
+            </div>
+          </div>
+
+          {/* Chat History Snippets */}
+          {messages.length > 0 && (
+            <div className="space-y-3 max-h-60 overflow-y-auto p-2 bg-black/20 rounded-lg border border-white/[0.06]">
+              {messages.map((m, i) => (
+                <div key={i} className={cn('text-xs leading-relaxed', m.role === 'user' ? 'text-amber-300' : 'text-white/90')}>
+                  <span className="font-semibold uppercase tracking-wider text-[10px] text-white/40 mr-1.5">
+                    {m.role === 'user' ? 'You' : 'Dori'}:
+                  </span>
+                  {m.text}
+                </div>
+              ))}
             </div>
           )}
 
-          {project && (
-            <>
-              {/* Breadcrumb Navigation Trail */}
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink onClick={onNavigateHome}>
-                      <Home size={13} className="mr-1" />
-                      Home
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbLink onClick={onNavigateProjects}>
-                      Projects
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  {pathSegments.map((segment, idx) => {
-                    const isLast = idx === pathSegments.length - 1;
-                    const cumulativePath = pathSegments.slice(0, idx + 1).join('/');
-                    return (
-                      <span key={cumulativePath} className="inline-flex items-center gap-1.5 sm:gap-2">
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                          {isLast ? (
-                            <BreadcrumbPage>{project.title}</BreadcrumbPage>
-                          ) : (
-                            <BreadcrumbLink onClick={() => onSelectProject?.(cumulativePath)}>
-                              {segment}
-                            </BreadcrumbLink>
-                          )}
-                        </BreadcrumbItem>
-                      </span>
-                    );
-                  })}
-                </BreadcrumbList>
-              </Breadcrumb>
-
-              {/* Route Header */}
-              <RouteHeader
-                title={project.title}
-                description={
-                  <span className="flex flex-wrap items-center gap-2 text-muted-foreground text-sm">
-                    <span className="font-mono">projects/{projectPath}</span>
-                    <span>·</span>
-                    <span>{details.files.length} file{details.files.length === 1 ? '' : 's'}</span>
-                    <span>·</span>
-                    <span>{details.meetings.length} meeting{details.meetings.length === 1 ? '' : 's'}</span>
-                    <span>·</span>
-                    <span>{openTaskCount} open loop{openTaskCount === 1 ? '' : 's'}</span>
-                    {details.people.length > 0 && (
-                      <>
-                        <span>·</span>
-                        <span>{details.people.length} person{details.people.length === 1 ? '' : 's'}</span>
-                      </>
-                    )}
-                  </span>
+          {/* Chat Input */}
+          <div className="flex items-center gap-2">
+            <input
+              ref={textareaRef}
+              type="text"
+              placeholder={`Ask Dori about ${project.title} or add an update...`}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
                 }
-                meta={
-                  <Badge variant="muted" size="compact">
-                    {project.status || 'Active'}
-                  </Badge>
-                }
-              />
-
-              {/* Sub-projects Row (if any) */}
-              {children.length > 0 && (
-                <div className="rounded-panel border border-[var(--space-sidebar-border)] bg-card p-4 shadow-2xs">
-                  <div className="flex items-center gap-2 mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    <Layers size={14} />
-                    <span>Sub-projects ({children.length})</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                    {children.map((c) => (
-                      <button
-                        key={c.projectPath}
-                        onClick={() => onSelectProject?.(c.projectPath)}
-                        className="flex items-center gap-2.5 rounded-control border border-[var(--space-sidebar-border)] bg-[var(--surface-field)] p-2.5 text-left transition-all hover:border-[var(--hairline-strong)] hover:bg-card hover:shadow-2xs"
-                      >
-                        <Folder size={17} className="text-[var(--brand-accent)] shrink-0" />
-                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                          {c.title}
-                        </span>
-                        <ChevronRight size={14} className="text-muted-foreground shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Tabs for Overview, Files, Meetings, People, Tasks */}
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="w-fit">
-                  <TabsTrigger value="overview" className="gap-2">
-                    <FileText size={15} />
-                    Overview
-                  </TabsTrigger>
-                  <TabsTrigger value="files" className="gap-2">
-                    <FolderOpen size={15} />
-                    Files ({details.files.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="meetings" className="gap-2">
-                    <Calendar size={15} />
-                    Meetings ({details.meetings.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="people" className="gap-2">
-                    <Users size={15} />
-                    People ({details.people.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="tasks" className="gap-2">
-                    <ListTodo size={15} />
-                    Tasks ({openTaskCount})
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* OVERVIEW TAB */}
-                <TabsContent value="overview" className="space-y-6 mt-2">
-                  {/* Context Brief Preview Card */}
-                  {contextDoc && (
-                    <div className="rounded-panel border border-[var(--space-sidebar-border)] bg-card p-5 shadow-2xs">
-                      <div className="flex items-center justify-between border-b border-[var(--space-sidebar-border)] pb-3 mb-3.5">
-                        <div className="flex items-center gap-2">
-                          <FileText size={16} className="text-[var(--brand-primary)]" />
-                          <h3 className="text-sm font-semibold text-foreground">
-                            {contextDoc.title || 'Project Overview & Brief'}
-                          </h3>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => onSelectDocument?.(contextDoc.relPath)}
-                          className="text-xs text-muted-foreground hover:text-foreground h-7 px-2.5 gap-1.5"
-                        >
-                          <span>Open Document</span>
-                          <ExternalLink size={12} />
-                        </Button>
-                      </div>
-
-                      {(() => {
-                        const { items, summary } = renderBriefHighlights(contextDoc.content);
-                        return (
-                          <div className="space-y-3">
-                            {items.length > 0 && (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                                {items.map((item, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-baseline gap-2 rounded-lg bg-[var(--surface-field)] px-3 py-2 border border-[var(--space-sidebar-border)]"
-                                  >
-                                    <span className="font-semibold text-muted-foreground shrink-0">
-                                      {item.label}:
-                                    </span>
-                                    <span className="font-medium text-foreground truncate">
-                                      {item.value}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {summary && (
-                              <p className="text-sm text-foreground-secondary leading-relaxed font-normal pt-1">
-                                {summary}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {/* Linked People Section */}
-                  {details.people.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
-                          <Users size={16} className="text-[var(--brand-primary)]" />
-                          <span>Linked People ({details.people.length})</span>
-                        </h3>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {details.people.map((person) => {
-                          const initials = person.name
-                            .split(/\s+/)
-                            .map((s) => s[0])
-                            .slice(0, 2)
-                            .join('')
-                            .toUpperCase();
-                          return (
-                            <div
-                              key={person.relPath}
-                              onClick={() => onSelectDocument?.(person.relPath)}
-                              className="flex items-center gap-3 rounded-panel border border-[var(--space-sidebar-border)] bg-card p-3 shadow-2xs hover:border-[var(--hairline-strong)] transition-all cursor-pointer"
-                            >
-                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-xs font-bold text-white shadow-2xs">
-                                {initials}
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <h4 className="text-sm font-semibold text-foreground truncate">
-                                  {person.name}
-                                </h4>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {person.role || person.org || 'Linked entity'}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Linked Meetings Section */}
-                  {details.meetings.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
-                          <Calendar size={16} className="text-[var(--brand-primary)]" />
-                          <span>Linked Meetings ({details.meetings.length})</span>
-                        </h3>
-                        {details.meetings.length > 3 && (
-                          <button
-                            onClick={() => setActiveTab('meetings')}
-                            className="text-xs font-semibold text-[var(--brand-primary)] hover:underline"
-                          >
-                            View all →
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {details.meetings.slice(0, 3).map((meeting) => (
-                          <div
-                            key={meeting.relPath}
-                            onClick={() => onSelectDocument?.(meeting.relPath)}
-                            className="rounded-panel border border-[var(--space-sidebar-border)] bg-card p-4 shadow-2xs hover:border-[var(--hairline-strong)] transition-all cursor-pointer space-y-2"
-                          >
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Calendar size={13} />
-                              <span>{formatDate(meeting.date)}</span>
-                            </div>
-                            <h4 className="text-sm font-semibold text-foreground line-clamp-2">
-                              {meeting.title}
-                            </h4>
-                            {meeting.attendees?.length > 0 && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                Attendees: {meeting.attendees.join(', ')}
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Project Files Section */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-[15px] font-semibold text-foreground">
-                        Project Files ({details.files.length})
-                      </h3>
-                      {details.files.length > 6 && (
-                        <button
-                          onClick={() => setActiveTab('files')}
-                          className="text-xs font-semibold text-[var(--brand-primary)] hover:underline"
-                        >
-                          View all {details.files.length} files →
-                        </button>
-                      )}
-                    </div>
-
-                    {details.files.length === 0 ? (
-                      <p className="text-sm text-muted-foreground py-1">
-                        No files recorded under projects/{projectPath}/ yet.
-                      </p>
-                    ) : (
-                      <AttachmentGroup>
-                        {details.files.slice(0, 6).map((file) => (
-                          <Attachment
-                            key={file.relPath}
-                            onClick={() => onSelectDocument?.(file.relPath)}
-                            className="cursor-pointer"
-                          >
-                            <AttachmentMedia>
-                              {getFileIcon(file.name)}
-                            </AttachmentMedia>
-                            <AttachmentContent>
-                              <AttachmentTitle>{file.name}</AttachmentTitle>
-                              <AttachmentDescription>
-                                {formatDate(file.date)}
-                              </AttachmentDescription>
-                            </AttachmentContent>
-                          </Attachment>
-                        ))}
-                      </AttachmentGroup>
-                    )}
-                  </div>
-
-                  {/* Open Tasks Section */}
-                  {projectTasks.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-[15px] font-semibold text-foreground">
-                        Open Loops & Actions ({openTaskCount})
-                      </h3>
-                      <div className="rounded-panel border border-[var(--space-sidebar-border)] bg-card overflow-hidden shadow-2xs divide-y divide-[var(--space-sidebar-border)]">
-                        {projectTasks.slice(0, 5).map((task) => (
-                          <div
-                            key={task.id}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--space-nav-hover)] transition-colors"
-                          >
-                            <button
-                              onClick={() => handleToggleTask(task.id)}
-                              className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              {task.status === 'done' ? (
-                                <CheckCircle2 size={18} className="text-emerald-500" />
-                              ) : (
-                                <Circle size={18} />
-                              )}
-                            </button>
-                            <span
-                              className={cn(
-                                'text-sm flex-1 truncate text-foreground',
-                                task.status === 'done' && 'line-through text-muted-foreground'
-                              )}
-                            >
-                              {task.title}
-                            </span>
-                            {task.priority && (
-                              <Badge
-                                size="compact"
-                                variant={task.priority.toLowerCase() === 'high' ? 'danger' : 'muted'}
-                              >
-                                {task.priority}
-                              </Badge>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Live Conversation Stream if messages exist */}
-                  {messages.length > 0 && (
-                    <div className="space-y-4 pt-4 border-t border-[var(--space-sidebar-border)]">
-                      <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
-                        <MessageSquare size={16} className="text-[var(--brand-primary)]" />
-                        <span>Project Notes & Thread</span>
-                      </h3>
-                      <div className="space-y-4">
-                        {messages.map((m, idx) => (
-                          <div
-                            key={idx}
-                            className={cn('flex flex-col anim-rise', m.role === 'user' ? 'items-end' : 'items-start')}
-                          >
-                            <span className="text-xs font-semibold text-muted-foreground mb-1 px-1 uppercase tracking-wider">
-                              {m.role === 'user' ? 'You' : 'Dori'}
-                            </span>
-                            <div
-                              className={cn(
-                                'rounded-2xl text-[15px] leading-relaxed',
-                                m.role === 'user'
-                                  ? 'max-w-xl bg-primary text-primary-foreground px-4.5 py-3 rounded-tr-sm shadow-xs'
-                                  : 'w-full max-w-2xl bg-card border border-[var(--border-soft)] px-5 py-4 rounded-tl-sm shadow-xs prose dark:prose-invert text-foreground'
-                              )}
-                            >
-                              {m.text}
-                            </div>
-                          </div>
-                        ))}
-
-                        {isLoading && (
-                          <div className="flex items-start flex-col anim-rise">
-                            <span className="text-xs font-semibold text-muted-foreground mb-1 px-1 uppercase tracking-wider">
-                              Dori
-                            </span>
-                            <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-card border border-[var(--border-soft)] px-4 py-3 text-sm text-muted-foreground shadow-xs">
-                              <div className="flex items-center gap-1">
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.15s]" />
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.3s]" />
-                              </div>
-                              <span className="ml-1 font-medium text-xs">Thinking…</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </TabsContent>
-
-                {/* FILES TAB */}
-                <TabsContent value="files" className="space-y-4 mt-2">
-                  {details.files.length === 0 ? (
-                    <EmptyState
-                      icon={FolderX}
-                      title="No files yet"
-                      description={`Add files to projects/${projectPath} in your vault to view them here.`}
-                    />
-                  ) : (
-                    <AttachmentGroup>
-                      {details.files.map((file) => (
-                        <Attachment
-                          key={file.relPath}
-                          onClick={() => onSelectDocument?.(file.relPath)}
-                          className="cursor-pointer"
-                        >
-                          <AttachmentMedia>
-                            {getFileIcon(file.name)}
-                          </AttachmentMedia>
-                          <AttachmentContent>
-                            <AttachmentTitle>{file.name}</AttachmentTitle>
-                            <AttachmentDescription>
-                              {file.relPath} · {formatDate(file.date)}
-                            </AttachmentDescription>
-                          </AttachmentContent>
-                        </Attachment>
-                      ))}
-                    </AttachmentGroup>
-                  )}
-                </TabsContent>
-
-                {/* MEETINGS TAB */}
-                <TabsContent value="meetings" className="space-y-4 mt-2">
-                  {details.meetings.length === 0 ? (
-                    <EmptyState
-                      icon={Calendar}
-                      title="No linked meetings"
-                      description={`Meetings with project: "${projectPath}" in their frontmatter will be automatically surfaced here.`}
-                    />
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {details.meetings.map((meeting) => (
-                        <div
-                          key={meeting.relPath}
-                          onClick={() => onSelectDocument?.(meeting.relPath)}
-                          className="rounded-panel border border-[var(--space-sidebar-border)] bg-card p-4 shadow-2xs hover:border-[var(--hairline-strong)] transition-all cursor-pointer space-y-2.5"
-                        >
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Calendar size={14} />
-                            <span>{formatDate(meeting.date)}</span>
-                          </div>
-                          <h4 className="text-[15px] font-semibold text-foreground line-clamp-2">
-                            {meeting.title}
-                          </h4>
-                          {meeting.attendees?.length > 0 && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              Attendees: {meeting.attendees.join(', ')}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                {/* PEOPLE TAB */}
-                <TabsContent value="people" className="space-y-4 mt-2">
-                  {details.people.length === 0 ? (
-                    <EmptyState
-                      icon={Users}
-                      title="No linked people"
-                      description={`People in your vault with project: "${projectPath}" will be linked here.`}
-                    />
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-                      {details.people.map((person) => {
-                        const initials = person.name
-                          .split(/\s+/)
-                          .map((s) => s[0])
-                          .slice(0, 2)
-                          .join('')
-                          .toUpperCase();
-                        return (
-                          <div
-                            key={person.relPath}
-                            onClick={() => onSelectDocument?.(person.relPath)}
-                            className="flex items-center gap-3 rounded-panel border border-[var(--space-sidebar-border)] bg-card p-3.5 shadow-2xs hover:border-[var(--hairline-strong)] transition-all cursor-pointer"
-                          >
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-sm font-bold text-white shadow-2xs">
-                              {initials}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <h4 className="text-[15px] font-semibold text-foreground truncate">
-                                {person.name}
-                              </h4>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {person.role || person.org || 'Linked Person'}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </TabsContent>
-
-                {/* TASKS TAB */}
-                <TabsContent value="tasks" className="space-y-6 mt-2">
-                  {projectTasks.length === 0 ? (
-                    <EmptyState
-                      icon={ListTodo}
-                      title="No tasks in this project"
-                      description="All open loops and action items for this project will appear here."
-                    />
-                  ) : (
-                    <div className="space-y-5">
-                      {tasksByPerson.map(({ person, tasks }) => {
-                        const initials = person
-                          .split(/\s+/)
-                          .map((s) => s[0])
-                          .slice(0, 2)
-                          .join('')
-                          .toUpperCase();
-                        const openCount = tasks.filter((t) => t.status === 'open').length;
-
-                        return (
-                          <div
-                            key={person}
-                            className="rounded-panel border border-[var(--space-sidebar-border)] bg-card overflow-hidden shadow-2xs"
-                          >
-                            {/* Person Group Header */}
-                            <div className="flex items-center justify-between border-b border-[var(--space-sidebar-border)] bg-[var(--surface-field)] px-4 py-3">
-                              <div className="flex items-center gap-2.5">
-                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)] text-xs font-bold text-white shadow-2xs">
-                                  {initials}
-                                </span>
-                                <h4 className="text-sm font-semibold text-foreground">
-                                  {person}
-                                </h4>
-                              </div>
-                              <span className="text-xs font-medium text-muted-foreground">
-                                {openCount} open · {tasks.length} total
-                              </span>
-                            </div>
-
-                            {/* Task List for this Person */}
-                            <div className="divide-y divide-[var(--space-sidebar-border)]">
-                              {tasks.map((task) => (
-                                <div
-                                  key={task.id}
-                                  className="flex items-start gap-3.5 px-4 py-3.5 hover:bg-[var(--space-nav-hover)] transition-colors"
-                                >
-                                  <button
-                                    onClick={() => handleToggleTask(task.id)}
-                                    className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors"
-                                  >
-                                    {task.status === 'done' ? (
-                                      <CheckCircle2 size={18} className="text-emerald-500" />
-                                    ) : (
-                                      <Circle size={18} />
-                                    )}
-                                  </button>
-                                  <div className="min-w-0 flex-1 space-y-1">
-                                    <span
-                                      className={cn(
-                                        'text-sm font-medium text-foreground block',
-                                        task.status === 'done' && 'line-through text-muted-foreground'
-                                      )}
-                                    >
-                                      {task.title}
-                                    </span>
-                                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                      {task.relPath && (
-                                        <button
-                                          onClick={() => onSelectDocument?.(task.relPath)}
-                                          className="hover:text-foreground hover:underline font-mono text-[11px] truncate max-w-xs"
-                                        >
-                                          {task.relPath.split('/').pop()}
-                                        </button>
-                                      )}
-                                      {task.deadline && (
-                                        <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
-                                          Due: {task.deadline}
-                                        </span>
-                                      )}
-                                      {task.dependsOn && task.dependsOn !== 'None' && (
-                                        <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[11px] font-medium text-blue-600 dark:text-blue-400">
-                                          Depends: {task.dependsOn}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </>
-          )}
-
-          {/* Project not found state */}
-          {project === null && (
-            <EmptyState
-              icon={FolderX}
-              title="Project not found"
-              description={`Could not find projects/${projectPath} in the vault.`}
-              action={{
-                label: 'Browse all projects',
-                onClick: onNavigateProjects,
               }}
+              disabled={isLoading}
+              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3.5 py-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
             />
+            <Button
+              size="sm"
+              onClick={handleSendMessage}
+              disabled={!input.trim() || isLoading}
+              className="h-8 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs px-3"
+            >
+              {isLoading ? <Clock size={12} className="animate-spin" /> : <Send size={12} />}
+            </Button>
+          </div>
+          {errorMessage && (
+            <p className="text-xs text-red-400">{errorMessage}</p>
           )}
         </div>
       </div>
-
-      {/* Sleek Docked Project Composer (Bottom) */}
-      {project && (
-        <div className="shrink-0 border-t border-[var(--hairline)] bg-[var(--surface-canvas)]/95 backdrop-blur-md px-6 py-4">
-          <div className="max-w-4xl mx-auto">
-            {errorMessage && (
-              <div className="mb-2.5 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-500 flex items-center gap-2">
-                <AlertCircle size={14} className="shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            <div className="chat-composer-stack">
-              {/* Sticky d-source context tab above composer */}
-              <div className="chat-context-shelf" aria-label="Composer context">
-                <div className="chat-context-segment">
-                  <Folder size={13} className="text-[var(--brand-accent)] shrink-0" />
-                  <span className="text-xs font-semibold text-foreground">d-source:</span>
-                  <span className="text-xs font-mono text-muted-foreground">projects/{projectPath}</span>
-                </div>
-              </div>
-
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSendText();
-                }}
-                className="chat-dock-composer"
-              >
-                <textarea
-                  ref={textareaRef}
-                  rows={1}
-                  value={input}
-                  onChange={(e) => {
-                    setInput(e.target.value);
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder={`Message, capture, or ask in ${project.title}…`}
-                  disabled={isLoading}
-                  className="quick-capture-input"
-                />
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <EnginePicker onEngineChange={setEngine} />
-
-                  <button
-                    type="submit"
-                    disabled={!input.trim() || isLoading}
-                    className="quick-capture-send-button flex items-center justify-center"
-                    title="Send (Enter)"
-                    aria-label="Send"
-                  >
-                    <Send size={16} />
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
