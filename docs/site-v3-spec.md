@@ -290,6 +290,13 @@ Re-run the audit after any palette change: walk every text-bearing element, comp
 alpha stack to get the true background, and compare. Check all three theme states — bare
 `:root`, `prefers-color-scheme: dark`, and `[data-theme="dark"]`.
 
+**A `.sub` centres its own block; never rely on a descendant selector for it.** The centring
+rule was written as `.center .sub`, which only matches a `.sub` *inside* a `.center`. Two
+subheads carried both classes on the same element, so the rule never fired: the text inside
+was centred while the block itself hugged the left edge, 271px off centre. Fixed by putting
+`margin: 14px auto 0` on `.sub` itself and deleting both descendant rules. Section headings
+also take the full column rather than a 60ch cap, which was making them wrap for no reason.
+
 **The agent-name flip must not move anything but the word.** "Got" sits outside the flipping
 box and the headline is centred, so *any* change to the box's width re-centres the line and
 shifts "Got" — animating that width slides it, changing it instantly teleports it. Measured on
