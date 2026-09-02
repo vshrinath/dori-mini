@@ -2,21 +2,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How Dori Mini Optimizes Cost</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@1&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
+  /* Palette and type follow the homepage. See docs/site-v3-spec.md.
+     Token NAMES are unchanged so every existing rule keeps working. */
   :root {
-    --amber: #f0a80e; --amber-soft: #ffd978; --amber-hover: #ffbb1f;
-    --navy: #1a1f4e; --navy-deep: #131737;
-    --canvas: #fcfbf7; --canvas2: #f3f1ea; --card: #ffffff;
-    --ink: #0e1626; --muted: #6b7280; --body-c: #4a5568;
-    --green: #2a9c5c; --coral: #d05436; --blue: #4a6dd8; --purple: #8a54cc;
-    --line: rgba(14,22,38,0.1);
-    --r-md: 16px; --r-lg: 28px;
-    --font-display: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont, sans-serif;
+    --amber: #d99a1f; --amber-soft: #f0d79a; --amber-hover: #b87d14;
+    --navy: #171c45; --navy-deep: #131737;
+    --canvas: #fdfcf9; --canvas2: #f5f3ec; --card: #ffffff;
+    --ink: #171c45; --muted: #666b88; --body-c: #525878;
+    --green: #3fae5a; --coral: #c0492c; --blue: #3f5bbf; --purple: #7a46b8;
+    --line: #e6e3d9;
+    --r-md: 14px; --r-lg: 22px;
+    --font-display: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
     --font-serif: "Instrument Serif", Georgia, serif;
-    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-    --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+    --font-body: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   }
+  /* --navy-deep panels stay dark in both themes; --amber-soft is their text. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
+      --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
+      --amber: #e8b542; --amber-hover: #f0c766;
+      --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
+      --line: #2b3164;
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
+    --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
+    --amber: #e8b542; --amber-hover: #f0c766;
+    --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
+    --line: #2b3164;
+  }
+
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
