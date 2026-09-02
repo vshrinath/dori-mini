@@ -35,8 +35,9 @@
   .container { max-width: 760px; margin: 0 auto; padding: 0 24px 100px; }
 
   .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 760px; margin: 0 auto; }
-  .wordmark { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--ink); letter-spacing: -0.03em; }
-  .wordmark span { color: var(--amber-ink); }
+  .wordmark { display: flex; align-items: baseline; gap: 7px; text-decoration: none; flex: none; color: var(--ink); }
+  .wordmark svg { height: 21px; width: auto; display: block; transform: translateY(3px); }
+  .wordmark span { font-family: var(--font-display); font-size: 1rem; font-weight: 500; letter-spacing: -0.01em; color: var(--muted); }
   .topnav .to-guide { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
 
   .serif-pop { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--amber-deep); }
@@ -119,7 +120,7 @@
 </style>
 
 <nav class="topnav">
-  <a class="wordmark" href="/">dori<span>mini</span></a>
+  <a class="wordmark" href="/" aria-label="Dori Mini"><svg viewBox="0 0 108 42" fill="none" aria-hidden="true"><path d="M30.5 6.5c-1.4 6.9-3.6 15.2-5 21.9-.8 3.9-.6 6.6 1.6 6.6 2.4 0 4.3-3.4 5.4-7.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M27.4 17.6c-2.2-2.4-6.2-2.3-9 .4-3.3 3.2-4.2 8.9-1.8 11.7 2.2 2.5 6 1.9 8.6-.9 1.6-1.7 2.6-4 3.2-6.3" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M40 20.6c-3 0-5.7 3.4-5.7 7.7 0 3.4 1.9 5.6 4.7 5.6 3.4 0 6.2-3.6 6.2-7.9 0-3.3-1.9-5.4-4.6-5.4Z" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M50 33.6c.7-4.2 1.4-8 2-11.6M52.4 25.6c1-3.2 3.3-5.4 6.4-5.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M66.6 21.4c-.9 4.2-1.6 8-2.1 12.2" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="69.4" cy="12.6" r="3.1" fill="var(--amber)"/></svg><span>mini</span></a>
   <a class="to-guide" href="/docs/getting-started">← Quick start</a>
 </nav>
 
