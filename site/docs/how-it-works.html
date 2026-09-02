@@ -86,16 +86,16 @@
   .term .ask { color: var(--amber-soft); }
   .term .dim { color: #8590ab; }
 
-  .steps { list-style: none; margin: 20px 0 0; padding: 0; counter-reset: step; }
+  .steps { list-style: none; margin: 18px 0 0; padding: 0; }
   .steps li {
-    counter-increment: step; position: relative; padding: 0 0 20px 40px; font-size: 0.95rem; color: var(--body-c);
+    position: relative; padding: 0 0 18px 24px; font-size: 0.95rem; color: var(--body-c);
   }
   .steps li::before {
-    content: counter(step); position: absolute; left: 0; top: -1px;
-    width: 26px; height: 26px; border-radius: 50%; background: var(--canvas2); border: 1px solid var(--line);
-    display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700;
-    font-size: 12px; color: var(--navy);
+    content: ""; position: absolute; left: 2px; top: 9px;
+    width: 7px; height: 7px; border-radius: 50%; background: var(--amber);
   }
+  .worth { font-family: var(--font-display); font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 34px 0 0; }
   .steps li b { color: var(--ink); }
   .steps li code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
 
@@ -155,48 +155,27 @@
 <span class="ask">? Check for updates once a day automatically? [y/N]</span> <span class="dim">(macOS only, optional)</span></pre>
   </div>
 
+  <h3 class="worth">What's worth knowing</h3>
   <ol class="steps">
-    <li><b>Installs Node.js 24+ if you don't have it</b> — via <code>nvm</code>,
-    <code>brew</code>, <code>apt</code>, or <code>pacman</code>, whichever's available. The
-    one real requirement; everything else is a plain script, nothing to compile.</li>
-    <li><b>Installs its dependencies</b> — standard open-source npm libraries, same as any
-    Node project. The only one worth knowing about by size: a local search model (a few
-    hundred MB, downloaded once, runs entirely on your machine — this is what makes "find
-    that thing I was thinking about" work later, even when your wording doesn't match
-    exactly). Search itself uses SQLite, which ships built into Node — nothing extra to
-    install for that part.</li>
-    <li><b>Installs <code>yt-dlp</code> and <code>markitdown</code> if missing</b> — for
-    pulling YouTube transcripts and converting documents, via <code>brew</code>,
-    <code>pacman</code>, or <code>pip3</code>, whichever's available (<code>markitdown</code>
-    isn't in Arch's official repos, so that one always falls back to <code>pip3</code>
-    there).</li>
-    <li><b>Asks where your vault lives</b> — press Enter and it creates an empty one for
-    you. This folder is the only thing that matters; everything else is disposable and
-    rebuilds from it.</li>
-    <li><b>Asks your name</b> — the one required question. Used so meeting notes can
-    automatically recognize and skip you when matching who attended.</li>
-    <li><b>Asks for two optional API keys</b> (Fathom, Tavily) — skip both if you don't
-    have them. Fathom pulls meeting recordings straight from your account instead of you
-    pasting a transcript; Tavily looks up context on a new meeting attendee or contact.</li>
-    <li><b>Wires itself into your agent</b> — Claude Code, Codex CLI, Antigravity, or
-    Grok Build, whichever you already have. This is the only reason it needs to touch
-    anything outside its own folder, and it's also the entire "interface" — there is
-    no separate app or website to learn.</li>
-    <li><b>Offers to pair the WhatsApp channel</b> (macOS only) — say no and skip it
-    entirely, or say yes and scan a QR code right there in the terminal. Runs on
-    <a class="underline" href="https://github.com/WhiskeySockets/Baileys" target="_blank" rel="noopener">Baileys</a>,
-    an unofficial but widely used library for connecting your own WhatsApp account as a
-    channel — not something built or run by WhatsApp itself. <a class="underline" href="/docs/whatsapp">What it needs, and why it's safe →</a></li>
-    <li><b>Offers to watch a folder</b> (macOS only) — point it at Downloads or wherever
-    files already land, and it notices new ones once they stop changing, no pasting or
-    attaching required. Say no and set it up later any time.</li>
-    <li><b>Offers to schedule morning/evening digests</b> (macOS only) — a local summary
-    page plus a desktop notification, at times you pick. Say no and run it by hand later
-    any time instead.</li>
-    <li><b>Offers to check for updates once a day</b> (macOS only) — a desktop
-    notification only fires when it actually pulled new commits, or when it's blocked
-    and needs you; the common no-op day stays silent. Say no and run <code>./update.sh</code>
-    by hand whenever you like instead.</li>
+    <li><b>The one real download is a local search model</b> — a few hundred MB, once. It
+    runs entirely on your machine, and it's what makes "find that thing I was thinking
+    about" work later even when your wording doesn't match. Everything else is standard
+    open-source npm libraries; search itself uses SQLite, which ships built into Node.</li>
+    <li><b>Your vault is the only thing that matters</b> — press Enter and it creates one
+    for you. Everything else is disposable and rebuilds from that folder.</li>
+    <li><b>The two optional keys</b> — Fathom pulls meeting recordings straight from your
+    account instead of you pasting a transcript; Tavily looks up context on a new meeting
+    attendee or contact. Skip both if you don't have them.</li>
+    <li><b>Wiring into your agent is the only thing it touches outside its own folder</b>
+    — Claude Code, Codex CLI, Antigravity, or Grok Build, whichever you already have.
+    That agent is also the entire interface: there is no separate app or website to
+    learn.</li>
+    <li><b>Every macOS prompt can be a no</b> — WhatsApp channel, watched folder, digests,
+    daily update check. Say no to all four and set any of them up later. The WhatsApp one
+    runs on <a class="underline" href="https://github.com/WhiskeySockets/Baileys" target="_blank" rel="noopener">Baileys</a>,
+    an unofficial but widely used library for connecting your own account as a channel —
+    not something built or run by WhatsApp itself.
+    <a class="underline" href="/docs/whatsapp">What it needs, and why it's safe →</a></li>
   </ol>
 
   <h2>Your vault, before and after</h2>
