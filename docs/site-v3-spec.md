@@ -1,7 +1,10 @@
 # Dori Mini homepage — v3 spec
 
-Status: agreed in session 2026-09-02. Supersedes the current `site/index.html` and the
-`site/v2.html` draft. Build target: `site/index.html` (the live homepage; was drafted as `site/v3.html` and promoted 2026-09-02).
+Status: agreed and shipped 2026-09-02. Build target: `site/index.html`, the live homepage.
+
+Drafted as `site/v3.html` and promoted over the previous homepage on 2026-09-02. Two earlier
+drafts, the original `site/index.html` and `site/v2.html`, are superseded and no longer in the
+tree; both are recoverable from git history if a line of that copy is ever wanted back.
 
 ---
 
