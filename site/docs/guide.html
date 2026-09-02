@@ -7,7 +7,13 @@
   /* Palette and type follow the homepage. See docs/site-v3-spec.md.
      Token NAMES are unchanged so every existing rule keeps working. */
   :root {
+    color-scheme: light;
     --amber: #d99a1f; --amber-soft: #f0d79a; --amber-hover: #b87d14;
+    --amber-ink: #8a6210;   /* amber as small text on light */
+    --on-amber: #171c45;    /* text ON an amber fill; amber never flips */
+    --green-ink: #2b7a42; --coral-ink: #a4381f;
+    --blue-ink: #33499b; --purple-ink: #653a99;
+    --amber-deep: #b87d14;  /* amber as large text on light */
     --navy: #171c45; --navy-deep: #131737;
     --canvas: #fdfcf9; --canvas2: #f5f3ec; --card: #ffffff;
     --ink: #171c45; --muted: #666b88; --body-c: #525878;
@@ -20,47 +26,18 @@
     --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   }
   /* --navy-deep panels stay dark in both themes; --amber-soft is their text. */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
-      --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
-      --amber: #e8b542; --amber-hover: #f0c766;
-      --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
-      --line: #2b3164;
-    }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
-    --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
-    --amber: #e8b542; --amber-hover: #f0c766;
-    --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
-    --line: #2b3164;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
-      --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
-      --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
-    }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
-    --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
-    --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
-  }
 
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
   ::selection { background: var(--amber); color: var(--navy); }
-  a { color: var(--amber); }
+  a { color: var(--amber-ink); }
 
   .container { max-width: 780px; margin: 0 auto; padding: 0 24px 110px; }
   .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 780px; margin: 0 auto; }
   .wordmark { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); }
-  .wordmark span { color: var(--amber); }
+  .wordmark span { color: var(--amber-ink); }
   .topnav .back { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
-  .serif-pop { font-family: var(--font-serif); font-style: italic; color: var(--amber); }
+  .serif-pop { font-family: var(--font-serif); font-style: italic; color: var(--amber-deep); }
 
   h1 { font-family: var(--font-display); font-weight: 780; letter-spacing: -0.03em; font-size: clamp(2.2rem, 5.5vw, 3.4rem); line-height: 1.04; margin: 0 0 18px; text-wrap: balance; }
   .lede { font-size: 1.12rem; color: var(--body-c); max-width: 58ch; margin: 0 0 28px; }
@@ -72,7 +49,7 @@
 
   .toc { display: flex; flex-wrap: wrap; gap: 7px 16px; padding: 22px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-family: var(--font-display); font-size: 0.82rem; font-weight: 600; margin-top: 36px; }
   .toc a { color: var(--body-c); }
-  .toc a:hover { color: var(--amber); }
+  .toc a:hover { color: var(--amber-ink); }
 
   h2 { font-family: var(--font-display); font-weight: 740; letter-spacing: -0.02em; font-size: clamp(1.4rem, 3vw, 1.85rem); margin: 60px 0 8px; text-wrap: balance; }
   .h2-sub { color: var(--muted); font-size: 0.94rem; margin: 0 0 22px; max-width: 58ch; }
@@ -87,11 +64,11 @@
 
   /* routing slip cards */
   .sticker { display: inline-flex; align-items: center; font-family: var(--font-display); font-weight: 700; font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
-  .sticker.amber { color: #b57d00; background: rgba(240,168,14,0.14); }
-  .sticker.blue  { color: #4a6dd8; background: rgba(124,158,240,0.14); }
-  .sticker.green { color: #2a9c5c; background: rgba(90,209,138,0.14); }
-  .sticker.purple{ color: #8a54cc; background: rgba(176,124,240,0.14); }
-  .sticker.coral { color: #d05436; background: rgba(240,120,90,0.14); }
+  .sticker.amber { color: var(--amber-ink); background: rgba(217,154,31,0.16); }
+  .sticker.blue  { color: var(--blue-ink); background: rgba(63,91,191,0.13); }
+  .sticker.green { color: var(--green-ink); background: rgba(63,174,90,0.16); }
+  .sticker.purple{ color: var(--purple-ink); background: rgba(122,70,184,0.13); }
+  .sticker.coral { color: var(--coral-ink); background: rgba(192,73,44,0.14); }
 
   .slip { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); margin-bottom: 20px; overflow: hidden; }
   .slip-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; }
@@ -106,28 +83,28 @@
 
   pre { font-family: var(--font-mono); font-size: 12px; line-height: 1.7; background: var(--canvas2); border-radius: 10px; padding: 14px 16px; overflow-x: auto; margin: 0; color: var(--ink); }
   pre .dim { color: var(--muted); }
-  pre .hit { color: var(--green); font-weight: 600; }
+  pre .hit { color: var(--green-ink); font-weight: 600; }
 
-  .filed { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-family: var(--font-mono); font-size: 11.5px; color: var(--green); }
+  .filed { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-family: var(--font-mono); font-size: 11.5px; color: var(--green-ink); }
   .filed::before { content: "✓"; }
 
   /* tech section */
   .tech-grid { display: grid; gap: 14px; margin-top: 22px; }
   .tech-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px 20px; display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: flex-start; }
-  .tech-item .glyph { font-family: var(--font-serif); font-style: italic; font-size: 1.8rem; color: var(--amber); line-height: 1; }
+  .tech-item .glyph { font-family: var(--font-serif); font-style: italic; font-size: 1.8rem; color: var(--amber-ink); line-height: 1; }
   .tech-item h3 { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin: 0 0 4px; }
   .tech-item p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.55; }
   .tech-item code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 5px; border-radius: 4px; }
 
   .tool-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
   .tool-chip { font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; color: var(--ink); text-decoration: none; }
-  a.tool-chip:hover { border-color: var(--amber); color: var(--amber); }
+  a.tool-chip:hover { border-color: var(--amber-ink); color: var(--amber-ink); }
 
   .optional { margin-top: 20px; padding: 16px 20px; border: 1.5px dashed var(--line); border-radius: var(--r-md); font-size: 0.9rem; color: var(--body-c); }
-  .optional .tag { display: inline-block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral); background: rgba(208,84,54,0.12); padding: 3px 9px; border-radius: 20px; margin-bottom: 8px; }
+  .optional .tag { display: inline-block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral-ink); background: rgba(208,84,54,0.12); padding: 3px 9px; border-radius: 20px; margin-bottom: 8px; }
 
   .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
-  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber-ink); margin-bottom: 6px; }
   .trust-item p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.55; }
 
   footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
@@ -140,8 +117,8 @@
 </style>
 
 <nav class="topnav">
-  <a class="wordmark" href="https://mini.mydori.app/">dori<span>mini</span></a>
-  <a class="back" href="https://mini.mydori.app/docs/getting-started">← Start here</a>
+  <a class="wordmark" href="/">dori<span>mini</span></a>
+  <a class="back" href="/docs/getting-started">← Start here</a>
 </nav>
 
 <div class="container">
@@ -332,7 +309,7 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     </div>
   </div>
   <p style="font-size:0.9rem; color:var(--body-c); margin-top:-8px; max-width:58ch;">
-    <a class="underline" style="text-decoration:underline; text-underline-offset:3px;" href="https://mini.mydori.app/docs/whatsapp">What it needs, and why it's safe →</a>
+    <a class="underline" style="text-decoration:underline; text-underline-offset:3px;" href="/docs/whatsapp">What it needs, and why it's safe →</a>
   </p>
 
   <h2 id="tech">How it stays fast and cheap to run</h2>
@@ -356,7 +333,7 @@ upload_date: 20260812 | duration: 34:02 | channel: <span class="dim">Acme Talks<
     </div>
   </div>
   <p style="font-size:0.9rem; color:var(--body-c); margin-top:18px; max-width:58ch;">
-    This is the short version. <a class="underline" style="text-decoration:underline; text-underline-offset:3px;" href="https://mini.mydori.app/docs/cost">The full technical breakdown →</a>
+    This is the short version. <a class="underline" style="text-decoration:underline; text-underline-offset:3px;" href="/docs/cost">The full technical breakdown →</a>
     covers the SQLite/FTS5 index, the local embedding model, RRF re-ranking, and a
     traced example of a real capture end to end.
   </p>

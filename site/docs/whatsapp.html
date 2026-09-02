@@ -7,7 +7,12 @@
   /* Palette and type follow the homepage. See docs/site-v3-spec.md.
      Token NAMES are unchanged so every existing rule keeps working. */
   :root {
+    color-scheme: light;
     --amber: #d99a1f; --amber-soft: #f0d79a; --amber-hover: #b87d14;
+    --amber-ink: #8a6210;   /* amber as small text on light */
+    --on-amber: #171c45;    /* text ON an amber fill; amber never flips */
+    --green-ink: #2b7a42; --coral-ink: #a4381f;
+    --amber-deep: #b87d14;  /* amber as large text on light */
     --navy: #171c45; --navy-deep: #131737;
     --canvas: #fdfcf9; --canvas2: #f5f3ec; --card: #ffffff;
     --ink: #171c45; --muted: #666b88; --body-c: #525878;
@@ -20,50 +25,21 @@
     --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   }
   /* --navy-deep panels stay dark in both themes; --amber-soft is their text. */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
-      --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
-      --amber: #e8b542; --amber-hover: #f0c766;
-      --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
-      --line: #2b3164;
-    }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
-    --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
-    --amber: #e8b542; --amber-hover: #f0c766;
-    --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
-    --line: #2b3164;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
-      --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
-      --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
-    }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
-    --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
-    --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
-  }
 
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
   ::selection { background: var(--amber); color: var(--navy); }
-  a { color: var(--amber); text-decoration: none; }
+  a { color: var(--amber-ink); text-decoration: none; }
   a.underline { text-decoration: underline; text-underline-offset: 3px; }
 
   .container { max-width: 760px; margin: 0 auto; padding: 0 24px 100px; }
   .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 760px; margin: 0 auto; }
   .wordmark { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); }
-  .wordmark span { color: var(--amber); }
+  .wordmark span { color: var(--amber-ink); }
   .topnav .back { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
-  .serif-pop { font-family: var(--font-serif); font-style: italic; color: var(--amber); }
+  .serif-pop { font-family: var(--font-serif); font-style: italic; color: var(--amber-deep); }
 
-  .eyebrow { font-family: var(--font-display); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--green); display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .eyebrow { font-family: var(--font-display); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--green-ink); display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
   .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
 
   h1 { font-family: var(--font-display); font-weight: 780; letter-spacing: -0.03em; font-size: clamp(2.1rem, 5.2vw, 3.2rem); line-height: 1.06; margin: 0 0 18px; text-wrap: balance; }
@@ -71,16 +47,16 @@
   .lede b { color: var(--ink); }
 
   .promise { margin: 20px 0 0; padding: 18px 20px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); font-size: 0.95rem; color: var(--body-c); display: flex; gap: 12px; align-items: flex-start; }
-  .promise .mark { color: var(--amber); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; line-height: 1.4; }
+  .promise .mark { color: var(--amber-ink); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; line-height: 1.4; }
   .promise b { color: var(--ink); }
 
   h2 { font-family: var(--font-display); font-weight: 740; letter-spacing: -0.02em; font-size: clamp(1.4rem, 3vw, 1.85rem); margin: 60px 0 8px; text-wrap: balance; }
   .h2-sub { color: var(--muted); font-size: 0.94rem; margin: 0 0 22px; max-width: 58ch; }
 
   .sticker { display: inline-flex; align-items: center; font-family: var(--font-display); font-weight: 700; font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
-  .sticker.amber { color: #b57d00; background: rgba(240,168,14,0.14); }
-  .sticker.green { color: #2a9c5c; background: rgba(90,209,138,0.14); }
-  .sticker.coral { color: #d05436; background: rgba(240,120,90,0.14); }
+  .sticker.amber { color: var(--amber-ink); background: rgba(217,154,31,0.16); }
+  .sticker.green { color: var(--green-ink); background: rgba(63,174,90,0.16); }
+  .sticker.coral { color: var(--coral-ink); background: rgba(192,73,44,0.14); }
 
   .slip { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); margin-bottom: 20px; overflow: hidden; }
   .slip-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; }
@@ -91,42 +67,40 @@
   .then { font-size: 0.92rem; color: var(--body-c); margin: 0 0 16px; line-height: 1.6; }
   .then b { color: var(--ink); }
   .then code { font-family: var(--font-mono); font-size: 0.88em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
-  .filed { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-family: var(--font-mono); font-size: 11.5px; color: var(--green); }
+  .filed { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-family: var(--font-mono); font-size: 11.5px; color: var(--green-ink); }
   .filed::before { content: "✓"; }
 
   .steps { list-style: none; margin: 20px 0 0; padding: 0; counter-reset: step; }
   .steps li { counter-increment: step; position: relative; padding: 0 0 20px 40px; font-size: 0.95rem; color: var(--body-c); }
   .steps li::before { content: counter(step); position: absolute; left: 0; top: -1px; width: 26px; height: 26px; border-radius: 50%; background: var(--canvas2); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--navy); }
-  :root:not([data-theme="light"]) .steps li::before { color: var(--amber-soft); }
-  :root[data-theme="dark"] .steps li::before { color: var(--amber-soft); }
   .steps li b { color: var(--ink); }
   .steps li code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
 
   .safe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
   .safe-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px 20px; }
   .safe-item .label { font-family: var(--font-display); font-size: 0.92rem; font-weight: 720; color: var(--ink); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-  .safe-item .label::before { content: "✓"; color: var(--green); font-weight: 800; }
+  .safe-item .label::before { content: "✓"; color: var(--green-ink); font-weight: 800; }
   .safe-item p { margin: 0; font-size: 0.87rem; color: var(--body-c); line-height: 1.55; }
 
   .limits { display: grid; gap: 10px; margin-top: 20px; }
   .limit-row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); font-size: 0.92rem; color: var(--body-c); line-height: 1.55; }
   .limit-row:first-child { border-top: none; }
-  .limit-row .x { color: var(--coral); font-weight: 800; font-family: var(--font-display); flex-shrink: 0; }
+  .limit-row .x { color: var(--coral-ink); font-weight: 800; font-family: var(--font-display); flex-shrink: 0; }
   .limit-row b { color: var(--ink); }
 
   .optional { margin-top: 20px; padding: 16px 20px; border: 1.5px dashed var(--line); border-radius: var(--r-md); font-size: 0.9rem; color: var(--body-c); }
-  .optional .tag { display: inline-block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral); background: rgba(208,84,54,0.12); padding: 3px 9px; border-radius: 20px; margin-bottom: 8px; }
+  .optional .tag { display: inline-block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral-ink); background: rgba(208,84,54,0.12); padding: 3px 9px; border-radius: 20px; margin-bottom: 8px; }
 
   .cta-row { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-  .btn-amber { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; color: var(--navy); background: var(--amber); padding: 12px 22px; border-radius: 999px; display: inline-block; box-shadow: 0 2px 0 rgba(0,0,0,0.18); transition: transform 0.15s, box-shadow 0.15s, background 0.15s; }
+  .btn-amber { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; color: var(--on-amber); background: var(--amber); padding: 12px 22px; border-radius: 999px; display: inline-block; box-shadow: 0 2px 0 rgba(0,0,0,0.18); transition: transform 0.15s, box-shadow 0.15s, background 0.15s; }
   .btn-amber:hover { background: var(--amber-hover); transform: translateY(-2px) rotate(-1deg); box-shadow: 0 8px 20px rgba(240,168,14,0.4); }
 
   footer { max-width: 760px; margin: 0 auto; padding: 30px 24px 40px; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
 </style>
 
 <nav class="topnav">
-  <a class="wordmark" href="https://mini.mydori.app/">dori<span>mini</span></a>
-  <a class="back" href="https://mini.mydori.app/docs/guide">← The full guide</a>
+  <a class="wordmark" href="/">dori<span>mini</span></a>
+  <a class="back" href="/docs/guide">← The full guide</a>
 </nav>
 
 <div class="container">
@@ -247,7 +221,7 @@
       Everything else this tool does — YouTube, documents, meetings, expenses, recall —
       is in the full guide.
     </div>
-    <a class="btn-amber" href="https://mini.mydori.app/docs/guide">Read the full guide →</a>
+    <a class="btn-amber" href="/docs/guide">Read the full guide →</a>
   </div>
 
 </div>

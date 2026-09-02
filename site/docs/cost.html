@@ -7,7 +7,12 @@
   /* Palette and type follow the homepage. See docs/site-v3-spec.md.
      Token NAMES are unchanged so every existing rule keeps working. */
   :root {
+    color-scheme: light;
     --amber: #d99a1f; --amber-soft: #f0d79a; --amber-hover: #b87d14;
+    --amber-ink: #8a6210;   /* amber as small text on light */
+    --on-amber: #171c45;    /* text ON an amber fill; amber never flips */
+    --green-ink: #2b7a42; --coral-ink: #a4381f;
+    --amber-deep: #b87d14;  /* amber as large text on light */
     --navy: #171c45; --navy-deep: #131737;
     --canvas: #fdfcf9; --canvas2: #f5f3ec; --card: #ffffff;
     --ink: #171c45; --muted: #666b88; --body-c: #525878;
@@ -20,48 +25,19 @@
     --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   }
   /* --navy-deep panels stay dark in both themes; --amber-soft is their text. */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
-      --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
-      --amber: #e8b542; --amber-hover: #f0c766;
-      --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
-      --line: #2b3164;
-    }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
-    --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
-    --amber: #e8b542; --amber-hover: #f0c766;
-    --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
-    --line: #2b3164;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
-      --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
-      --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
-    }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
-    --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
-    --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
-  }
 
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
   ::selection { background: var(--amber); color: var(--navy); }
-  a { color: var(--amber); }
+  a { color: var(--amber-ink); }
   a.underline { text-decoration: underline; text-underline-offset: 3px; font-size: 0.85rem; display: inline-block; margin-top: 8px; }
 
   .container { max-width: 780px; margin: 0 auto; padding: 0 24px 110px; }
   .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 780px; margin: 0 auto; }
   .wordmark { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); }
-  .wordmark span { color: var(--amber); }
+  .wordmark span { color: var(--amber-ink); }
   .topnav .back { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
-  .serif-pop { font-family: var(--font-serif); font-style: italic; color: var(--amber); }
+  .serif-pop { font-family: var(--font-serif); font-style: italic; color: var(--amber-deep); }
 
   h1 { font-family: var(--font-display); font-weight: 780; letter-spacing: -0.03em; font-size: clamp(2.1rem, 5.2vw, 3.2rem); line-height: 1.05; margin: 0 0 18px; text-wrap: balance; }
   .lede { font-size: 1.12rem; color: var(--body-c); max-width: 58ch; margin: 0 0 8px; }
@@ -71,7 +47,7 @@
     margin: 28px 0 0; padding: 16px 20px; background: rgba(42,156,92,0.1); border: 1px solid rgba(42,156,92,0.3);
     border-radius: var(--r-md); font-size: 0.94rem; color: var(--body-c); display: flex; gap: 12px; align-items: flex-start;
   }
-  .cost-badge .mark { color: var(--green); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
+  .cost-badge .mark { color: var(--green-ink); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
   .cost-badge b { color: var(--ink); }
 
   h2 { font-family: var(--font-display); font-weight: 740; letter-spacing: -0.02em; font-size: clamp(1.4rem, 3vw, 1.85rem); margin: 60px 0 8px; text-wrap: balance; }
@@ -83,22 +59,22 @@
   .compare-card.bad { background: rgba(208,84,54,0.07); border: 1px solid rgba(208,84,54,0.25); }
   .compare-card.good { background: rgba(42,156,92,0.07); border: 1px solid rgba(42,156,92,0.25); }
   .compare-card .tag { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; display: block; }
-  .compare-card.bad .tag { color: var(--coral); }
-  .compare-card.good .tag { color: var(--green); }
+  .compare-card.bad .tag { color: var(--coral-ink); }
+  .compare-card.good .tag { color: var(--green-ink); }
   .compare-card p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.6; }
   .compare-card p b { color: var(--ink); }
 
   .stack { display: flex; flex-direction: column; gap: 14px; margin-top: 22px; }
   .layer { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px 22px; display: grid; grid-template-columns: 46px 1fr; gap: 16px; }
-  .layer .glyph { font-family: var(--font-serif); font-style: italic; font-size: 1.9rem; color: var(--amber); line-height: 1; }
+  .layer .glyph { font-family: var(--font-serif); font-style: italic; font-size: 1.9rem; color: var(--amber-ink); line-height: 1; }
   .layer h3 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 720; margin: 0 0 6px; }
   .layer p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.6; }
   .layer p code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas2); padding: 1px 6px; border-radius: 4px; }
   .layer .cost-tag {
     display: inline-block; margin-top: 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 500;
-    color: var(--green); background: rgba(42,156,92,0.12); padding: 3px 9px; border-radius: 20px;
+    color: var(--green-ink); background: rgba(42,156,92,0.12); padding: 3px 9px; border-radius: 20px;
   }
-  .layer .cost-tag.sometimes { color: var(--amber); background: rgba(240,168,14,0.14); }
+  .layer .cost-tag.sometimes { color: var(--amber-ink); background: rgba(240,168,14,0.14); }
 
   .trace { background: var(--navy-deep); border-radius: var(--r-md); overflow: hidden; margin-top: 22px; box-shadow: 0 12px 32px rgba(19,23,55,0.25); }
   .trace-bar { display: flex; gap: 6px; padding: 12px 16px; background: rgba(255,255,255,0.04); }
@@ -112,11 +88,11 @@
   .trace-row .what { font-family: var(--font-mono); font-size: 12.5px; color: #d9deee; }
   .trace-row .cost { font-family: var(--font-mono); font-size: 11px; font-weight: 500; white-space: nowrap; }
   .trace-row .cost.free { color: #7bd68f; }
-  .trace-row .cost.cheap { color: var(--amber-soft); }
+  .trace-row .cost.cheap { color: var(--amber-ink); }
   .trace-row .cost.main { color: #f0a4a4; }
 
   .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
-  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber-ink); margin-bottom: 6px; }
   .trust-item p { margin: 0; font-size: 0.9rem; color: var(--body-c); line-height: 1.55; }
 
   footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
@@ -124,8 +100,8 @@
 </style>
 
 <nav class="topnav">
-  <a class="wordmark" href="https://mini.mydori.app/">dori<span>mini</span></a>
-  <a class="back" href="https://mini.mydori.app/docs/guide">← Back to the guide</a>
+  <a class="wordmark" href="/">dori<span>mini</span></a>
+  <a class="back" href="/docs/guide">← Back to the guide</a>
 </nav>
 
 <div class="container">
@@ -303,7 +279,7 @@
   </div>
 
   <p style="margin-top:40px; font-size:0.9rem; color:var(--body-c);">
-    Want actual numbers instead of the theory above? <a class="underline" href="https://mini.mydori.app/docs/benchmarks">See real measured token/context counts →</a>
+    Want actual numbers instead of the theory above? <a class="underline" href="/docs/benchmarks">See real measured token/context counts →</a>
   </p>
 
   <h2>The promise, restated</h2>

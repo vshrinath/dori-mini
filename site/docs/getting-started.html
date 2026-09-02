@@ -7,7 +7,12 @@
   /* Palette and type follow the homepage. See docs/site-v3-spec.md.
      Token NAMES are unchanged so every existing rule keeps working. */
   :root {
+    color-scheme: light;
     --amber: #d99a1f; --amber-soft: #f0d79a; --amber-hover: #b87d14;
+    --amber-ink: #8a6210;   /* amber as small text on light */
+    --on-amber: #171c45;    /* text ON an amber fill; amber never flips */
+    --green-ink: #2b7a42; --coral-ink: #a4381f;
+    --amber-deep: #b87d14;  /* amber as large text on light */
     --navy: #171c45; --navy-deep: #131737;
     --canvas: #fdfcf9; --canvas2: #f5f3ec; --card: #ffffff;
     --ink: #171c45; --muted: #666b88; --body-c: #525878;
@@ -20,54 +25,25 @@
     --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   }
   /* --navy-deep panels stay dark in both themes; --amber-soft is their text. */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
-      --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
-      --amber: #e8b542; --amber-hover: #f0c766;
-      --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
-      --line: #2b3164;
-    }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #0f1333; --canvas2: #161b45; --card: #1b2054;
-    --ink: #f4f2ea; --navy: #f4f2ea; --muted: #868ba6; --body-c: #bcc0d6;
-    --amber: #e8b542; --amber-hover: #f0c766;
-    --green: #4fc373; --coral: #e8795c; --blue: #8aa1ee; --purple: #b98ae0;
-    --line: #2b3164;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
-      --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
-      --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
-    }
-  }
-  :root[data-theme="dark"] {
-    --canvas: #131737; --canvas2: #1a1f4e; --card: #1a1f4e;
-    --ink: #f7f4ea; --muted: #aab2c8; --body-c: #c7cee0;
-    --line: rgba(247,244,234,0.12); --amber-soft: #ffe6a3;
-  }
 
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
   ::selection { background: var(--amber); color: var(--navy); }
-  a { color: var(--amber); text-decoration: none; }
+  a { color: var(--amber-ink); text-decoration: none; }
   a.underline { text-decoration: underline; text-underline-offset: 3px; }
 
   .container { max-width: 760px; margin: 0 auto; padding: 0 24px 100px; }
 
   .topnav { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; max-width: 760px; margin: 0 auto; }
   .wordmark { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--ink); letter-spacing: -0.03em; }
-  .wordmark span { color: var(--amber); }
+  .wordmark span { color: var(--amber-ink); }
   .topnav .to-guide { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--body-c); }
 
-  .serif-pop { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--amber); }
+  .serif-pop { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--amber-deep); }
 
   .eyebrow {
     font-family: var(--font-display); font-size: 0.78rem; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase; color: var(--green);
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--green-ink);
     display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
   }
   .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
@@ -83,7 +59,7 @@
     margin: 32px 0 0; padding: 18px 20px; background: var(--card); border: 1px solid var(--line);
     border-radius: var(--r-md); font-size: 0.95rem; color: var(--body-c); display: flex; gap: 12px; align-items: flex-start;
   }
-  .promise .mark { color: var(--amber); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; line-height: 1.4; }
+  .promise .mark { color: var(--amber-ink); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; line-height: 1.4; }
   .promise b { color: var(--ink); }
 
   h2 {
@@ -94,7 +70,7 @@
 
   .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
   .trust-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px 18px; }
-  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+  .trust-item .label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber-ink); margin-bottom: 6px; }
   .trust-item p { margin: 0; font-size: 0.87rem; color: var(--body-c); line-height: 1.55; }
 
   .optional {
@@ -103,7 +79,7 @@
   }
   .optional .tag {
     display: inline-block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral); background: rgba(208,84,54,0.12);
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--coral-ink); background: rgba(208,84,54,0.12);
     padding: 3px 9px; border-radius: 20px; margin-bottom: 8px;
   }
 
@@ -117,7 +93,7 @@
   .say-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
   .say-num {
     font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
-    text-transform: uppercase; color: var(--amber); margin-bottom: 8px;
+    text-transform: uppercase; color: var(--amber-ink); margin-bottom: 8px;
   }
   .say-line {
     font-family: var(--font-mono); font-size: 0.87rem; color: var(--ink); background: var(--canvas2);
@@ -129,12 +105,12 @@
     background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
     cursor: pointer; flex-shrink: 0; transition: border-color 0.15s, color 0.15s;
   }
-  .copy-btn:hover { border-color: var(--amber); color: var(--amber); }
-  .copy-btn.copied { border-color: var(--green); color: var(--green); }
+  .copy-btn:hover { border-color: var(--amber-ink); color: var(--amber-ink); }
+  .copy-btn.copied { border-color: var(--green); color: var(--green-ink); }
 
   .cta-row { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
   .btn-amber {
-    font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; color: var(--navy);
+    font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; color: var(--on-amber);
     background: var(--amber); padding: 12px 22px; border-radius: 999px; display: inline-block;
     box-shadow: 0 2px 0 rgba(0,0,0,0.18); transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
   }
@@ -144,8 +120,8 @@
 </style>
 
 <nav class="topnav">
-  <a class="wordmark" href="https://mini.mydori.app/">dori<span>mini</span></a>
-  <a class="to-guide" href="https://mini.mydori.app/docs/how-it-works">How it works →</a>
+  <a class="wordmark" href="/">dori<span>mini</span></a>
+  <a class="to-guide" href="/docs/how-it-works">How it works →</a>
 </nav>
 
 <div class="container">
@@ -261,7 +237,7 @@
       <p class="say-line">Dori, add WhatsApp as a channel</p>
       <p class="say-why">Runs the pairing script and shows a QR code to scan, right there.
       Needs a <b>spare</b> WhatsApp number, never your main one.
-      <a class="underline" href="https://mini.mydori.app/docs/whatsapp">Why it's safe →</a></p>
+      <a class="underline" href="/docs/whatsapp">Why it's safe →</a></p>
     </div>
 
   </div>
@@ -347,8 +323,8 @@
       every capture type in depth.
     </div>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <a class="btn-amber" href="https://mini.mydori.app/docs/how-it-works">How it works →</a>
-      <a class="btn-amber" href="https://mini.mydori.app/docs/guide">Full guide →</a>
+      <a class="btn-amber" href="/docs/how-it-works">How it works →</a>
+      <a class="btn-amber" href="/docs/guide">Full guide →</a>
     </div>
   </div>
 
