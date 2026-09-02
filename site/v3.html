@@ -162,6 +162,11 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .row .tick::after{content:"";width:4px;height:7px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translateY(-1px)}
 .row small{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--ink-3)}
 
+/* watched folder */
+.watch{padding:88px 0}
+.watch svg{color:var(--ink-3);margin-bottom:22px}
+.watch .say-big{margin-top:26px}
+
 /* knowledge */
 .kb{background:var(--paper-2)}
 .two-vids{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:44px}
@@ -356,7 +361,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
     <div class="grp rv">
       <div class="gtext">
         <h3>Money</h3>
-        <p>Photograph a receipt and it reads the amount, date and category, then files it against the right client or trip. Setup asks which folder to watch, so point it at Downloads and you never change a habit.</p>
+        <p>Photograph a receipt and it reads the amount, date and category, then files it against the right client or trip. Ask for a trip total and it closes out into a summary you can send for reimbursement.</p>
         <div class="say-big">Dori, close out the Denver trip</div>
       </div>
       <div class="gvis">
@@ -395,6 +400,19 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
       </div>
     </div>
 
+  </div>
+</section>
+
+<section class="watch">
+  <div class="narrow center">
+    <svg width="86" height="66" viewBox="0 0 86 66" fill="none" aria-hidden="true">
+      <path d="M6 20c0-2.5 2-4.5 4.5-4.5h17l5 6h33c2.5 0 4.5 2 4.5 4.5v28c0 2.5-2 4.5-4.5 4.5h-55C8 58.5 6 56.5 6 54V20Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M43 4v18M43 22l-6-6M43 22l6-6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/>
+      <circle cx="74" cy="10" r="4.5" fill="var(--amber)"/>
+    </svg>
+    <h2>Or don't lift a finger at all.</h2>
+    <p class="sub">Don't want to drag and drop files? Ask Dori to watch a folder, and it reads every document you put in there, automatically.</p>
+    <div class="say-big">Dori, watch my Downloads folder</div>
   </div>
 </section>
 
@@ -472,7 +490,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
     <p class="sub center">Nothing to configure. Just give it something to work with.</p>
     <div class="steps">
       <div class="step rv"><b>01</b><p>Paste your last meeting transcript.</p></div>
-      <div class="step rv"><b>02</b><p>Drop a folder of invoices into the watched folder.</p></div>
+      <div class="step rv"><b>02</b><p>Point Dori at a folder full of invoices.</p></div>
       <div class="step rv"><b>03</b><p>Ask Dori what's still open.</p></div>
     </div>
   </div>

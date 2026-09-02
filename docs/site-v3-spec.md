@@ -111,8 +111,6 @@ Full-width alternating bands. Each states **how**, and carries a real `Dori, …
    → *"Dori, what did Alan commit to in the last meeting?"*
 2. **Money.** Photograph a receipt. It reads the amount, date and category and files it
    against the right client or trip, then closes a trip out into a summary you can send.
-   **Includes the watched folder:** setup asks which folder to watch — point it at
-   Downloads and you never change a habit.
    → *"Dori, close out the Denver trip."*
 3. **Projects and people.** Say you're starting something new and it builds the whole
    project structure. Paste a transcript and it identifies who was in the room, creates each
@@ -121,6 +119,22 @@ Full-width alternating bands. Each states **how**, and carries a real `Dori, …
 4. **Your knowledge base.** Drop in a talk, a proposal, a framework, a set of brand
    guidelines. It indexes each one and answers from them, showing the passage it came from.
    → *"Dori, what did that talk say about pricing?"*
+
+### 3.7a Watched folder — its own short band
+
+Moved out of the Money group in review: it was unclear there, and it isn't a money feature.
+It answers the question a reader has after the four groups — *do I have to hand it
+everything by hand?* — so it sits directly after them, centred and compact.
+
+> **Or don't lift a finger at all.**
+>
+> Don't want to drag and drop files? Ask Dori to watch a folder, and it reads every document
+> you put in there, automatically.
+>
+> → *"Dori, watch my Downloads folder"*
+
+The default is a `~/Dori Inbox` folder, but setup prompts for which folder to watch, so
+Downloads is a supported and much stronger example.
 
 ### 3.8 Knowledge base — its own full section
 Lifted out of the four groups because it is the only part of the page that argues the
