@@ -290,6 +290,15 @@ Re-run the audit after any palette change: walk every text-bearing element, comp
 alpha stack to get the true background, and compare. Check all three theme states — bare
 `:root`, `prefers-color-scheme: dark`, and `[data-theme="dark"]`.
 
+**The agent-name flip must not move anything but the word.** "Got" sits outside the flipping
+box and the headline is centred, so *any* change to the box's width re-centres the line and
+shifts "Got" — animating that width slides it, changing it instantly teleports it. Measured on
+2026-09-02: "Got" was moving between x=30, x=85 and x=47 across the three words. The box is
+therefore locked once to the widest option ("Claude Code?", 244px) and never resized; only the
+crossfade runs. Accepted tradeoff: shorter words leave trailing space, so "Got Codex?" sits
+left of a true centre. Stillness was judged worth more than perfect centring — the lines below
+share the same left edge, so it reads as a ragged headline rather than a fault.
+
 **Section heads are always centred, and a subhead inherits its head's alignment.** Mixed
 alignment across sections reads as an accident, not a rhythm. Every `h2` that opens a section
 sits in a `.sechead` block: centred, `max-width:60ch`, with its `.sub` centred beneath it.

@@ -601,10 +601,15 @@ document.querySelectorAll('.rv').forEach((el, i) => { el.style.transitionDelay =
 const flipBox = document.querySelector('h1 .flip');
 const flips = [...document.querySelectorAll('h1 .flip b')];
 let fi = 0;
-/* The line must not slide. So the box is resized only while BOTH words are at
-   opacity 0 — the word fades out, the line silently re-fits, the next word fades
-   in. No width transition, therefore no travelling text. */
-function sizeFlip() { flipBox.style.width = flips[fi].getBoundingClientRect().width + 'px'; }
+/* "Got" sits outside this box, so ANY change to the box's width re-centres the
+   line and shoves "Got" sideways. Resizing per word — animated or not — always
+   moves it. So the box is locked to the widest option once, and never changes:
+   the word is the only thing that ever changes. */
+function sizeFlip() {
+  flipBox.style.width = 'auto';
+  const w = Math.max(...flips.map(f => f.getBoundingClientRect().width));
+  if (w) flipBox.style.width = w + 'px';
+}
 document.fonts.ready.then(sizeFlip);
 addEventListener('resize', sizeFlip);
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -615,8 +620,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       cur.classList.remove('on');
       cur.style.opacity = '';
       fi = (fi + 1) % flips.length;
-      sizeFlip();                               // resize while nothing is visible
-      flips[fi].classList.add('on');
+      flips[fi].classList.add('on');            // width never changes, so nothing shifts
     }, 340);
   }, 2800);
 }
