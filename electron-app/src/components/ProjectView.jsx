@@ -44,10 +44,10 @@ import { cn } from '../lib/utils.js';
 
 function getFileIcon(filename) {
   const ext = filename?.split('.').pop()?.toLowerCase() || '';
-  if (ext === 'md') return <FileText size={15} className="text-amber-400" />;
-  if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) return <FileImage size={15} className="text-purple-400" />;
-  if (['csv', 'xlsx', 'xls'].includes(ext)) return <FileSpreadsheet size={15} className="text-emerald-400" />;
-  return <FileIcon size={15} className="text-sky-400" />;
+  if (ext === 'md') return <FileText size={15} className="text-amber-500" />;
+  if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) return <FileImage size={15} className="text-purple-500" />;
+  if (['csv', 'xlsx', 'xls'].includes(ext)) return <FileSpreadsheet size={15} className="text-emerald-500" />;
+  return <FileIcon size={15} className="text-sky-500" />;
 }
 
 function formatRelativeTime(iso) {
@@ -268,11 +268,11 @@ export function ProjectView({
   if (project === undefined) {
     return (
       <div className="flex-1 overflow-y-auto p-8 space-y-6">
-        <Skeleton className="h-8 w-1/3 bg-white/5" />
-        <Skeleton className="h-24 w-full bg-white/5" />
+        <Skeleton className="h-8 w-1/3" />
+        <Skeleton className="h-24 w-full" />
         <div className="grid grid-cols-2 gap-6">
-          <Skeleton className="h-48 w-full bg-white/5" />
-          <Skeleton className="h-48 w-full bg-white/5" />
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-48 w-full" />
         </div>
       </div>
     );
@@ -291,15 +291,15 @@ export function ProjectView({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[var(--surface-canvas)] text-[var(--foreground)]">
+    <div className="flex h-full flex-col overflow-hidden bg-[var(--surface-canvas)] text-foreground">
       {/* Scrollable Dashboard Body */}
       <div className="flex-1 overflow-y-auto p-8 space-y-6 max-w-5xl w-full mx-auto">
         {/* Header Breadcrumbs & Actions */}
-        <header className="space-y-3 pb-4 border-b border-white/[0.08]">
+        <header className="space-y-3 pb-4 border-b border-border">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink onClick={onNavigateProjects} className="cursor-pointer text-white/50 hover:text-white">
+                <BreadcrumbLink onClick={onNavigateProjects} className="cursor-pointer text-muted-foreground hover:text-foreground">
                   Projects
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -308,9 +308,9 @@ export function ProjectView({
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     {seg.isLast ? (
-                      <BreadcrumbPage className="font-semibold text-white/90">{seg.name}</BreadcrumbPage>
+                      <BreadcrumbPage className="font-semibold text-foreground">{seg.name}</BreadcrumbPage>
                     ) : (
-                      <BreadcrumbLink onClick={() => onSelectProject(seg.path)} className="cursor-pointer text-white/50 hover:text-white">
+                      <BreadcrumbLink onClick={() => onSelectProject(seg.path)} className="cursor-pointer text-muted-foreground hover:text-foreground">
                         {seg.name}
                       </BreadcrumbLink>
                     )}
@@ -323,14 +323,14 @@ export function ProjectView({
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="font-display text-2xl font-bold tracking-tight text-white/95">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
                   {project.title}
                 </h1>
-                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20 text-xs font-semibold px-2 py-0.5">
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20 text-xs font-semibold px-2 py-0.5">
                   Active
                 </Badge>
               </div>
-              <p className="mt-1 text-xs text-white/50">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {details.files?.length || 0} files · {details.meetings?.length || 0} meetings · {openTasks.length} open loops
               </p>
             </div>
@@ -340,17 +340,17 @@ export function ProjectView({
               <button
                 type="button"
                 onClick={() => setIsSubProjectsOpen(!isSubProjectsOpen)}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors cursor-pointer shadow-xs"
+                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors cursor-pointer shadow-xs"
               >
-                <Layers size={13} className="text-amber-400" />
+                <Layers size={13} className="text-amber-500" />
                 <span>Sub-projects ({children.length})</span>
-                <ChevronDown size={12} className={cn('transition-transform duration-150 text-white/40', isSubProjectsOpen && 'rotate-180')} />
+                <ChevronDown size={12} className={cn('transition-transform duration-150 text-muted-foreground', isSubProjectsOpen && 'rotate-180')} />
               </button>
 
               {isSubProjectsOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-white/10 bg-[#161922] p-2 shadow-2xl z-30 anim-rise space-y-1">
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-border bg-card p-2 shadow-2xl z-30 anim-rise space-y-1">
                   {children.length === 0 ? (
-                    <div className="px-3 py-2 text-xs text-white/40 italic">No sub-projects yet</div>
+                    <div className="px-3 py-2 text-xs text-muted-foreground italic">No sub-projects yet</div>
                   ) : (
                     children.map((child) => (
                       <button
@@ -359,23 +359,23 @@ export function ProjectView({
                           setIsSubProjectsOpen(false);
                           onSelectProject(child.projectPath);
                         }}
-                        className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors"
+                        className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-foreground hover:bg-muted transition-colors"
                       >
                         <span className="truncate">{child.title}</span>
-                        <ChevronRight size={12} className="text-white/30" />
+                        <ChevronRight size={12} className="text-muted-foreground" />
                       </button>
                     ))
                   )}
 
                   {/* Inline Quick Add */}
-                  <form onSubmit={handleCreateSubProject} className="pt-2 border-t border-white/[0.08]">
+                  <form onSubmit={handleCreateSubProject} className="pt-2 border-t border-border">
                     <div className="flex items-center gap-1.5">
                       <input
                         type="text"
                         placeholder="+ Quick add sub-project..."
                         value={quickAddName}
                         onChange={(e) => setQuickAddName(e.target.value)}
-                        className="flex-1 rounded-md border border-white/10 bg-black/30 px-2 py-1 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
+                        className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-amber-500/50"
                       />
                       <button
                         type="submit"
@@ -396,39 +396,39 @@ export function ProjectView({
         {contextDoc && (
           <div
             onClick={() => onSelectDocument(contextDoc.path)}
-            className="group flex items-center justify-between p-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.03] hover:bg-amber-500/[0.07] hover:border-amber-500/35 transition-all cursor-pointer shadow-xs"
+            className="group flex items-center justify-between p-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] hover:border-amber-500/35 transition-all cursor-pointer shadow-xs"
           >
             <div className="flex items-start gap-3 min-w-0">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 mt-0.5">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 mt-0.5">
                 <Info size={15} />
               </span>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Project Context</span>
-                  <span className="text-[11px] text-white/40">({contextDoc.path})</span>
+                  <span className="text-xs font-semibold text-amber-500 uppercase tracking-wider">Project Context</span>
+                  <span className="text-[11px] text-muted-foreground">({contextDoc.path})</span>
                 </div>
-                <p className="mt-1 text-xs text-white/70 line-clamp-2 leading-relaxed">
+                <p className="mt-1 text-xs text-foreground-secondary line-clamp-2 leading-relaxed">
                   {contextDoc.content.replace(/^#+.*$/gm, '').trim().slice(0, 180)}...
                 </p>
               </div>
             </div>
-            <ChevronRight size={16} className="text-white/30 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all shrink-0 ml-4" />
+            <ChevronRight size={16} className="text-muted-foreground group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all shrink-0 ml-4" />
           </div>
         )}
 
         {/* 2-Column Cockpit Layout: Open Loops + Activity Timeline */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left: Open Loops (Tasks) */}
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
-              <div className="flex items-center gap-2 font-semibold text-xs text-white/80 uppercase tracking-wider">
-                <ListTodo size={14} className="text-emerald-400" />
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <div className="flex items-center gap-2 font-semibold text-xs text-foreground uppercase tracking-wider">
+                <ListTodo size={14} className="text-emerald-500" />
                 <span>Open Loops ({openTasks.length})</span>
               </div>
             </div>
 
             {openTasks.length === 0 ? (
-              <div className="py-6 text-center text-xs text-white/40 italic">
+              <div className="py-6 text-center text-xs text-muted-foreground italic">
                 No open tasks for this project
               </div>
             ) : (
@@ -436,19 +436,19 @@ export function ProjectView({
                 {openTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="group flex items-start gap-2.5 p-2 rounded-lg hover:bg-white/[0.04] transition-colors"
+                    className="group flex items-start gap-2.5 p-2 rounded-lg hover:bg-muted transition-colors"
                   >
                     <button
                       type="button"
                       onClick={() => handleToggleTask(task.id)}
-                      className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-white/20 hover:border-emerald-400 hover:bg-emerald-500/20 text-transparent hover:text-emerald-400 transition-colors"
+                      className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-border hover:border-emerald-500 hover:bg-emerald-500/20 text-transparent hover:text-emerald-500 transition-colors"
                     >
                       <Check size={10} strokeWidth={3} />
                     </button>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-white/90 leading-tight">{task.title}</p>
+                      <p className="text-xs font-medium text-foreground leading-tight">{task.title}</p>
                       {task.dueDate && (
-                        <p className="mt-0.5 text-[11px] text-amber-400/80">Due {task.dueDate}</p>
+                        <p className="mt-0.5 text-[11px] text-amber-500">Due {task.dueDate}</p>
                       )}
                     </div>
                   </div>
@@ -458,16 +458,16 @@ export function ProjectView({
           </div>
 
           {/* Right: Activity Feed (Files & Meetings) */}
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
-              <div className="flex items-center gap-2 font-semibold text-xs text-white/80 uppercase tracking-wider">
-                <Clock size={14} className="text-sky-400" />
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <div className="flex items-center gap-2 font-semibold text-xs text-foreground uppercase tracking-wider">
+                <Clock size={14} className="text-sky-500" />
                 <span>Activity Timeline</span>
               </div>
             </div>
 
             {activityTimeline.length === 0 ? (
-              <div className="py-6 text-center text-xs text-white/40 italic">
+              <div className="py-6 text-center text-xs text-muted-foreground italic">
                 No activity recorded yet
               </div>
             ) : (
@@ -477,15 +477,15 @@ export function ProjectView({
                     key={item.id}
                     type="button"
                     onClick={() => item.relPath && onSelectDocument(item.relPath)}
-                    className="flex w-full items-center justify-between gap-3 p-2 rounded-lg text-left hover:bg-white/[0.04] transition-colors group cursor-pointer"
+                    className="flex w-full items-center justify-between gap-3 p-2 rounded-lg text-left hover:bg-muted transition-colors group cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className="shrink-0">{getFileIcon(item.relPath)}</span>
-                      <span className="truncate text-xs font-medium text-white/80 group-hover:text-white">
+                      <span className="truncate text-xs font-medium text-foreground group-hover:text-amber-500">
                         {item.title}
                       </span>
                     </div>
-                    <span className="text-[11px] text-white/40 shrink-0 font-mono">
+                    <span className="text-[11px] text-muted-foreground shrink-0 font-mono">
                       {formatRelativeTime(item.date)}
                     </span>
                   </button>
@@ -496,23 +496,23 @@ export function ProjectView({
         </div>
 
         {/* 3. Scoped Project Chat & Actions */}
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
-            <div className="flex items-center gap-2 font-semibold text-xs text-white/80 uppercase tracking-wider">
-              <MessageSquare size={14} className="text-amber-400" />
+        <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
+            <div className="flex items-center gap-2 font-semibold text-xs text-foreground uppercase tracking-wider">
+              <MessageSquare size={14} className="text-amber-500" />
               <span>Project Assistant & Notes</span>
             </div>
-            <div className="text-[11px] text-white/40 font-mono">
-              Engine: <span className="text-amber-400 font-semibold">{engine}</span>
+            <div className="text-[11px] text-muted-foreground font-mono">
+              Engine: <span className="text-amber-500 font-semibold">{engine}</span>
             </div>
           </div>
 
           {/* Chat History Snippets */}
           {messages.length > 0 && (
-            <div className="space-y-3 max-h-60 overflow-y-auto p-2 bg-black/20 rounded-lg border border-white/[0.06]">
+            <div className="space-y-3 max-h-60 overflow-y-auto p-2 bg-muted/30 rounded-lg border border-border">
               {messages.map((m, i) => (
-                <div key={i} className={cn('text-xs leading-relaxed', m.role === 'user' ? 'text-amber-300' : 'text-white/90')}>
-                  <span className="font-semibold uppercase tracking-wider text-[10px] text-white/40 mr-1.5">
+                <div key={i} className={cn('text-xs leading-relaxed', m.role === 'user' ? 'text-amber-600 dark:text-amber-300' : 'text-foreground')}>
+                  <span className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mr-1.5">
                     {m.role === 'user' ? 'You' : 'Dori'}:
                   </span>
                   {m.text}
@@ -536,7 +536,7 @@ export function ProjectView({
                 }
               }}
               disabled={isLoading}
-              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3.5 py-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
+              className="flex-1 rounded-lg border border-border bg-background px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-amber-500/50"
             />
             <Button
               size="sm"
@@ -548,7 +548,7 @@ export function ProjectView({
             </Button>
           </div>
           {errorMessage && (
-            <p className="text-xs text-red-400">{errorMessage}</p>
+            <p className="text-xs text-red-500">{errorMessage}</p>
           )}
         </div>
       </div>

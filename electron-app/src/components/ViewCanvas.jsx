@@ -340,7 +340,7 @@ export function ViewCanvas({
     <aside
       style={{ width: isMaximized ? '100%' : `${width}px` }}
       className={cn(
-        'relative flex h-full flex-col border-l border-white/[0.08] bg-[var(--surface-canvas)] text-[var(--foreground)] transition-[width] duration-150 ease-out z-20 shrink-0',
+        'relative flex h-full flex-col border-l border-border bg-[var(--surface-canvas)] text-foreground transition-[width] duration-150 ease-out z-20 shrink-0',
         isDragging && 'select-none transition-none'
       )}
     >
@@ -352,28 +352,28 @@ export function ViewCanvas({
           title="Drag to resize canvas (Double click to reset)"
           className="absolute -left-1.5 top-0 bottom-0 w-3 cursor-col-resize z-30 hover:bg-amber-500/30 group flex items-center justify-center transition-colors"
         >
-          <div className="w-[2px] h-12 rounded-full bg-white/20 group-hover:bg-amber-500 transition-colors" />
+          <div className="w-[2px] h-12 rounded-full bg-border group-hover:bg-amber-500 transition-colors" />
         </div>
       )}
 
       {/* Document Reader Toolbar */}
-      <header className="flex h-12 items-center justify-between border-b border-white/[0.08] px-4 bg-white/[0.02]">
+      <header className="flex h-12 items-center justify-between border-b border-border px-4 bg-foreground/[0.02]">
         <div className="flex items-center gap-2 min-w-0">
           {history.length > 1 && (
             <button
               onClick={handleBack}
               title="Back to previous document"
-              className="flex h-7 w-7 items-center justify-center rounded-[6px] text-white/60 hover:bg-white/[0.08] hover:text-white transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground hover:bg-foreground/[0.08] hover:text-foreground transition-colors"
             >
               <ArrowLeft size={14} />
             </button>
           )}
 
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/[0.06] text-white/70">
-              {ytMeta ? <Video size={12} className="text-red-400" /> : <FileText size={12} className="text-amber-400" />}
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-foreground/[0.06] text-muted-foreground">
+              {ytMeta ? <Video size={12} className="text-red-500" /> : <FileText size={12} className="text-amber-500" />}
             </span>
-            <span className="truncate text-[13px] font-medium text-white/90" title={doc?.title || relPath}>
+            <span className="truncate text-[13px] font-semibold text-foreground" title={doc?.title || relPath}>
               {doc?.title || relPath.split('/').pop()}
             </span>
           </div>
@@ -382,13 +382,13 @@ export function ViewCanvas({
         {/* Reader Actions */}
         <div className="flex items-center gap-1">
           {/* Text Size Scale */}
-          <div className="flex items-center rounded-md bg-white/[0.04] p-0.5 border border-white/[0.06] mr-1">
+          <div className="flex items-center rounded-md bg-foreground/[0.04] p-0.5 border border-border mr-1">
             <button
               onClick={() => setTextSize((s) => (s === 'large' ? 'normal' : 'compact'))}
               title="Smaller font size"
               className={cn(
                 'px-1.5 py-0.5 text-[11px] rounded font-medium transition-colors',
-                textSize === 'compact' ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white'
+                textSize === 'compact' ? 'bg-foreground/[0.12] text-foreground' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               A-
@@ -398,7 +398,7 @@ export function ViewCanvas({
               title="Larger font size"
               className={cn(
                 'px-1.5 py-0.5 text-[11px] rounded font-medium transition-colors',
-                textSize === 'large' ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white'
+                textSize === 'large' ? 'bg-foreground/[0.12] text-foreground' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               A+
@@ -409,9 +409,9 @@ export function ViewCanvas({
           <button
             onClick={handleCopy}
             title={copied ? 'Copied relative path!' : 'Copy path'}
-            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-white/60 hover:bg-white/[0.08] hover:text-white transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground hover:bg-foreground/[0.08] hover:text-foreground transition-colors"
           >
-            {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+            {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
           </button>
 
           {/* Edit / View Toggle */}
@@ -421,7 +421,7 @@ export function ViewCanvas({
               title={isEditing ? 'Preview Markdown' : 'Edit Document'}
               className={cn(
                 'flex h-7 w-7 items-center justify-center rounded-[6px] transition-colors',
-                isEditing ? 'bg-amber-500/20 text-amber-400' : 'text-white/60 hover:bg-white/[0.08] hover:text-white'
+                isEditing ? 'bg-amber-500/20 text-amber-500' : 'text-muted-foreground hover:bg-foreground/[0.08] hover:text-foreground'
               )}
             >
               {isEditing ? <Eye size={13} /> : <Edit3 size={13} />}
@@ -432,7 +432,7 @@ export function ViewCanvas({
           <button
             onClick={() => setIsMaximized(!isMaximized)}
             title={isMaximized ? 'Restore Split View' : 'Maximize Workspace'}
-            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-white/60 hover:bg-white/[0.08] hover:text-white transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground hover:bg-foreground/[0.08] hover:text-foreground transition-colors"
           >
             {isMaximized ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
           </button>
@@ -441,7 +441,7 @@ export function ViewCanvas({
           <button
             onClick={onClose}
             title="Close Canvas (Esc)"
-            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-white/60 hover:bg-white/[0.08] hover:text-white transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-[6px] text-muted-foreground hover:bg-foreground/[0.08] hover:text-foreground transition-colors"
           >
             <X size={14} />
           </button>
@@ -450,27 +450,27 @@ export function ViewCanvas({
 
       {/* Meeting Segmented Tabs */}
       {meetingParts.isMeeting && meetingParts.hasTranscript && (
-        <div className="flex border-b border-white/[0.08] bg-white/[0.01] px-4 py-2">
-          <div className="inline-flex rounded-lg bg-black/40 p-1 border border-white/[0.08] text-[12px]">
+        <div className="flex border-b border-border bg-foreground/[0.01] px-4 py-2">
+          <div className="inline-flex rounded-lg bg-muted p-1 border border-border text-[12px]">
             <button
               onClick={() => setMeetingTab('mom')}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-all',
+                'flex items-center gap-1.5 px-3 py-1 rounded-md font-semibold transition-all',
                 meetingTab === 'mom'
-                  ? 'bg-amber-500/20 text-amber-300 shadow-sm border border-amber-500/30'
-                  : 'text-white/60 hover:text-white'
+                  ? 'bg-card text-foreground shadow-xs border border-border'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <Sparkles size={12} className={meetingTab === 'mom' ? 'text-amber-400' : ''} />
+              <Sparkles size={12} className={meetingTab === 'mom' ? 'text-amber-500' : ''} />
               <span>Minutes of Meeting (MOM)</span>
             </button>
             <button
               onClick={() => setMeetingTab('transcript')}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-all',
+                'flex items-center gap-1.5 px-3 py-1 rounded-md font-semibold transition-all',
                 meetingTab === 'transcript'
-                  ? 'bg-white/15 text-white shadow-sm border border-white/20'
-                  : 'text-white/60 hover:text-white'
+                  ? 'bg-card text-foreground shadow-xs border border-border'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
               <List size={12} />
@@ -491,17 +491,17 @@ export function ViewCanvas({
       >
         {loading ? (
           <div className="space-y-4">
-            <Skeleton className="h-8 w-3/4 bg-white/5" />
-            <Skeleton className="h-4 w-1/2 bg-white/5" />
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
             <div className="space-y-2 pt-4">
-              <Skeleton className="h-4 w-full bg-white/5" />
-              <Skeleton className="h-4 w-5/6 bg-white/5" />
-              <Skeleton className="h-4 w-4/6 bg-white/5" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-4/6" />
             </div>
           </div>
         ) : error ? (
-          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-300">
-            <div className="flex items-center gap-2 font-medium">
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-600 dark:text-red-300">
+            <div className="flex items-center gap-2 font-semibold">
               <AlertTriangle size={16} />
               <span>Failed to load document</span>
             </div>
@@ -509,8 +509,8 @@ export function ViewCanvas({
           </div>
         ) : isEditing ? (
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
-              <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Markdown Editor</span>
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <span className="text-xs font-semibold text-amber-500 uppercase tracking-wider">Markdown Editor</span>
               <Button
                 size="sm"
                 onClick={handleSave}
@@ -523,27 +523,27 @@ export function ViewCanvas({
             </div>
             <EditorContent
               editor={editor}
-              className="prose prose-invert max-w-none focus:outline-none min-h-[400px] font-mono text-[13px] bg-black/20 p-4 rounded-xl border border-white/[0.08]"
+              className="prose dark:prose-invert max-w-none focus:outline-none min-h-[400px] font-mono text-[13px] bg-muted/40 p-4 rounded-xl border border-border text-foreground"
             />
           </div>
         ) : (
           <div className="space-y-6">
             {/* Frontmatter Metadata Pill Header */}
             {doc?.frontmatter && Object.keys(doc.frontmatter).length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-white/[0.08]">
+              <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-border">
                 {doc.frontmatter.date && (
-                  <Badge variant="outline" className="flex items-center gap-1 bg-white/[0.03] text-xs font-medium border-white/10">
-                    <Calendar size={11} className="text-amber-400" />
+                  <Badge variant="outline" className="flex items-center gap-1 bg-foreground/[0.03] text-xs font-medium border-border">
+                    <Calendar size={11} className="text-amber-500" />
                     <span>{doc.frontmatter.date}</span>
                   </Badge>
                 )}
                 {doc.frontmatter.type && (
-                  <Badge variant="outline" className="bg-white/[0.03] text-xs font-medium border-white/10 uppercase tracking-wider text-white/70">
+                  <Badge variant="outline" className="bg-foreground/[0.03] text-xs font-medium border-border uppercase tracking-wider text-muted-foreground">
                     {doc.frontmatter.type}
                   </Badge>
                 )}
                 {doc.frontmatter.project && (
-                  <Badge variant="outline" className="bg-amber-500/10 text-amber-300 text-xs font-medium border-amber-500/20">
+                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-300 text-xs font-medium border-amber-500/20">
                     {doc.frontmatter.project}
                   </Badge>
                 )}
@@ -554,32 +554,32 @@ export function ViewCanvas({
             {meetingParts.isMeeting ? (
               meetingTab === 'mom' ? (
                 <div
-                  className="prose prose-invert max-w-none prose-headings:font-semibold prose-a:text-amber-400"
+                  className="prose dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-amber-500 text-foreground"
                   dangerouslySetInnerHTML={{
                     __html: doc?.renderedHtml || doc?.content || '',
                   }}
                 />
               ) : (
-                <div className="space-y-4 font-mono text-[13px] leading-relaxed bg-black/20 p-4 rounded-xl border border-white/[0.08]">
-                  <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Verbatim Transcript</div>
+                <div className="space-y-4 font-mono text-[13px] leading-relaxed bg-muted/40 p-4 rounded-xl border border-border">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Verbatim Transcript</div>
                   {meetingParts.transcript.split('\n\n').map((para, i) => {
                     const match = para.match(/^(\*\*[^*]+\*\*)\s*:\s*(.*)/);
                     if (match) {
                       return (
                         <div key={i} className="space-y-0.5">
-                          <span className="text-amber-400 font-bold">{match[1].replace(/\*\*/g, '')}:</span>
-                          <span className="text-white/80 ml-2">{match[2]}</span>
+                          <span className="text-amber-500 font-bold">{match[1].replace(/\*\*/g, '')}:</span>
+                          <span className="text-foreground ml-2">{match[2]}</span>
                         </div>
                       );
                     }
-                    return <p key={i} className="text-white/70">{para}</p>;
+                    return <p key={i} className="text-foreground-secondary">{para}</p>;
                   })}
                 </div>
               )
             ) : ytMeta ? (
               <div className="space-y-6">
                 {ytMeta.videoId && (
-                  <div className="aspect-video w-full rounded-xl overflow-hidden border border-white/10 bg-black">
+                  <div className="aspect-video w-full rounded-xl overflow-hidden border border-border bg-black">
                     <iframe
                       src={`https://www.youtube.com/embed/${ytMeta.videoId}`}
                       title={doc?.title || 'YouTube Video'}
@@ -590,13 +590,13 @@ export function ViewCanvas({
                   </div>
                 )}
                 <div
-                  className="prose prose-invert max-w-none"
+                  className="prose dark:prose-invert max-w-none text-foreground"
                   dangerouslySetInnerHTML={{ __html: doc?.renderedHtml || doc?.content || '' }}
                 />
               </div>
             ) : (
               <div
-                className="prose prose-invert max-w-none prose-headings:font-semibold prose-a:text-amber-400"
+                className="prose dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-amber-500 text-foreground"
                 dangerouslySetInnerHTML={{
                   __html: doc?.renderedHtml || doc?.content || '',
                 }}

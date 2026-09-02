@@ -84,8 +84,8 @@ function ProjectRow({ node, selected, onSelect, depth = 0 }) {
           className={cn(
             "group flex min-h-[2.15rem] flex-1 items-center gap-2 rounded-[10px] px-2.5 py-1 text-left text-[13px] tracking-[-0.01em] transition-all cursor-pointer",
             isSelected
-              ? "bg-white/[0.08] text-white font-medium shadow-xs"
-              : "text-white/70 font-normal hover:bg-white/[0.045] hover:text-white"
+              ? "bg-foreground/[0.08] text-foreground font-semibold shadow-xs"
+              : "text-foreground-secondary font-medium hover:bg-foreground/[0.045] hover:text-foreground"
           )}
         >
           {depth === 0 ? (
@@ -94,7 +94,7 @@ function ProjectRow({ node, selected, onSelect, depth = 0 }) {
               strokeWidth={1.55}
               className={cn(
                 "shrink-0 transition-colors",
-                isSelected ? "text-amber-400" : "text-white/50 group-hover:text-white/80"
+                isSelected ? "text-amber-500" : "text-muted-foreground group-hover:text-foreground"
               )}
             />
           ) : (
@@ -103,8 +103,8 @@ function ProjectRow({ node, selected, onSelect, depth = 0 }) {
                 className={cn(
                   "w-1.5 h-1.5 rounded-full transition-all",
                   isSelected
-                    ? "bg-amber-400 scale-125"
-                    : "bg-white/40 group-hover:bg-white/70"
+                    ? "bg-amber-500 scale-125"
+                    : "bg-muted-foreground/50 group-hover:bg-foreground"
                 )}
               />
             </div>
@@ -119,7 +119,7 @@ function ProjectRow({ node, selected, onSelect, depth = 0 }) {
               e.stopPropagation();
               setIsOpen(!isOpen);
             }}
-            className="flex h-6 w-6 items-center justify-center rounded text-white/40 hover:bg-white/[0.06] hover:text-white transition-colors"
+            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground transition-colors"
           >
             <ChevronDown size={13} className={cn("transition-transform duration-150", !isOpen && "-rotate-90")} />
           </button>
@@ -127,7 +127,7 @@ function ProjectRow({ node, selected, onSelect, depth = 0 }) {
       </div>
 
       {hasChildren && isOpen && (
-        <div className="mt-0.5 flex flex-col gap-0.5 pl-2.5 border-l border-white/[0.08] ml-3.5">
+        <div className="mt-0.5 flex flex-col gap-0.5 pl-2.5 border-l border-border/60 ml-3.5">
           {node.children.map((child) => (
             <ProjectRow
               key={child.projectPath}
@@ -154,20 +154,20 @@ function ProfileFooter({ onOpenSettings, onSelectProfile, profileVersion }) {
   }, [profileVersion]);
 
   return (
-    <div className="flex shrink-0 items-center justify-between border-t border-[var(--space-sidebar-border)] p-2.5 bg-white/[0.01]">
+    <div className="flex shrink-0 items-center justify-between border-t border-border p-2.5 bg-foreground/[0.01]">
       <button
         type="button"
         onClick={onSelectProfile}
-        className="flex min-w-0 items-center gap-2.5 rounded-[10px] p-1.5 text-left transition-colors hover:bg-white/[0.045] cursor-pointer flex-1"
+        className="flex min-w-0 items-center gap-2.5 rounded-[10px] p-1.5 text-left transition-colors hover:bg-foreground/[0.045] cursor-pointer flex-1"
       >
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white/80 border border-white/10 font-semibold text-xs">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground/[0.08] text-foreground border border-border font-semibold text-xs">
           {profile?.name ? profile.name.slice(0, 1).toUpperCase() : <User size={13} />}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-medium text-white/90">
+          <p className="truncate text-[13px] font-semibold text-foreground">
             {profile?.name || "Dori User"}
           </p>
-          <p className="truncate text-[11px] text-white/40">
+          <p className="truncate text-[11px] text-muted-foreground">
             {profile?.email || "Personal Vault"}
           </p>
         </div>
@@ -176,7 +176,7 @@ function ProfileFooter({ onOpenSettings, onSelectProfile, profileVersion }) {
       <button
         type="button"
         onClick={onOpenSettings}
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-white/50 hover:bg-white/[0.06] hover:text-white transition-colors"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground transition-colors"
         title="Settings (Cmd+,)"
       >
         <Settings size={14} strokeWidth={1.55} />
@@ -269,7 +269,7 @@ export function Sidebar({
   );
 
   const projectTree = buildProjectTree(projects);
-  const displayedProjects = showAllProjects ? projectTree : projectTree.slice(0, 5);
+  const displayedProjects = showAllProjects ? projectTree : projectTree.slice(0, 6);
 
   return (
     <aside
@@ -278,14 +278,14 @@ export function Sidebar({
         minWidth: `${SIDEBAR_MIN_WIDTH}px`,
         maxWidth: `${SIDEBAR_MAX_WIDTH}px`,
       }}
-      className="relative flex h-full shrink-0 flex-col border-r border-[var(--space-sidebar-border)] bg-[var(--surface-canvas)] select-none"
+      className="relative flex h-full shrink-0 flex-col border-r border-border bg-[var(--surface-canvas)] select-none"
     >
       {/* Brand Header */}
-      <div className="relative flex shrink-0 items-center justify-between border-b border-[var(--space-sidebar-border)] px-3.5 py-3">
+      <div className="relative flex shrink-0 items-center justify-between border-b border-border px-3.5 py-3">
         <button
           type="button"
           onClick={() => onSelect("chat")}
-          className="font-display text-[17px] font-semibold tracking-[-0.02em] text-white/90 hover:text-white transition-colors"
+          className="font-display text-[18px] font-bold tracking-[-0.02em] text-foreground hover:opacity-85 transition-opacity"
         >
           Dori
         </button>
@@ -294,7 +294,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-            className="flex h-6 w-6 items-center justify-center rounded-[6px] bg-white/[0.08] hover:bg-white/[0.14] text-white/80 transition-colors shadow-xs"
+            className="flex h-6 w-6 items-center justify-center rounded-[6px] bg-foreground/[0.08] hover:bg-foreground/[0.14] text-foreground transition-colors shadow-xs"
             title="Create Menu"
             aria-label="Create Menu"
           >
@@ -302,16 +302,16 @@ export function Sidebar({
           </button>
 
           {isAddMenuOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-48 rounded-[10px] border border-white/10 bg-[#161922] p-1 shadow-2xl z-30 anim-rise">
+            <div className="absolute right-0 top-full mt-1.5 w-48 rounded-[10px] border border-border bg-card p-1 shadow-2xl z-30 anim-rise">
               <button
                 type="button"
                 onClick={() => {
                   setIsAddMenuOpen(false);
                   onNewNote?.();
                 }}
-                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] font-medium text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors"
+                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <FileText size={14} strokeWidth={1.55} className="text-amber-400" />
+                <FileText size={14} strokeWidth={1.55} className="text-amber-500" />
                 <span>New Note</span>
               </button>
 
@@ -321,9 +321,9 @@ export function Sidebar({
                   setIsAddMenuOpen(false);
                   onSelect("tasks");
                 }}
-                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] font-medium text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors"
+                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <Check size={14} strokeWidth={1.55} className="text-emerald-400" />
+                <Check size={14} strokeWidth={1.55} className="text-emerald-500" />
                 <span>New Task</span>
               </button>
 
@@ -333,9 +333,9 @@ export function Sidebar({
                   setIsAddMenuOpen(false);
                   onSelect("finance");
                 }}
-                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] font-medium text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors"
+                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <Receipt size={14} strokeWidth={1.55} className="text-amber-400" />
+                <Receipt size={14} strokeWidth={1.55} className="text-amber-500" />
                 <span>New Expense</span>
               </button>
 
@@ -345,9 +345,9 @@ export function Sidebar({
                   setIsAddMenuOpen(false);
                   onSelect("projects");
                 }}
-                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] font-medium text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors"
+                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] font-medium text-foreground hover:bg-muted transition-colors"
               >
-                <FolderKanban size={14} strokeWidth={1.55} className="text-sky-400" />
+                <FolderKanban size={14} strokeWidth={1.55} className="text-sky-500" />
                 <span>New Project</span>
               </button>
             </div>
@@ -361,13 +361,13 @@ export function Sidebar({
         <button
           type="button"
           onClick={onOpenSearch}
-          className="flex h-8 w-full items-center justify-between rounded-[8px] border border-white/[0.08] bg-white/[0.03] px-2.5 text-[12.5px] font-medium text-white/50 hover:bg-white/[0.06] hover:text-white/80 transition-colors"
+          className="flex h-8 w-full items-center justify-between rounded-[8px] border border-border bg-foreground/[0.02] px-2.5 text-[12.5px] font-medium text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground transition-colors"
         >
           <div className="flex items-center gap-2">
             <Search size={13} strokeWidth={1.55} />
             <span>Search everything...</span>
           </div>
-          <kbd className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40 border border-white/10">
+          <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground border border-border">
             ⌘K
           </kbd>
         </button>
@@ -375,7 +375,7 @@ export function Sidebar({
         {/* Space Navigation Groups */}
         {SPACES_NAV.map((space) => (
           <div key={space.id} className="space-y-0.5">
-            <div className="px-2 py-1 text-[11px] font-semibold text-white/35 uppercase tracking-wider">
+            <div className="px-2 py-1 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider">
               {space.label}
             </div>
 
@@ -393,8 +393,8 @@ export function Sidebar({
                   className={cn(
                     "flex min-h-[2.15rem] w-full items-center gap-2.5 rounded-[10px] px-2.5 py-1 text-left text-[13px] tracking-[-0.01em] transition-all cursor-pointer",
                     isSelected
-                      ? "bg-white/[0.08] text-white font-medium shadow-xs"
-                      : "text-white/70 font-normal hover:bg-white/[0.045] hover:text-white"
+                      ? "bg-foreground/[0.08] text-foreground font-semibold shadow-xs"
+                      : "text-foreground-secondary font-medium hover:bg-foreground/[0.045] hover:text-foreground"
                   )}
                 >
                   <Icon
@@ -402,12 +402,12 @@ export function Sidebar({
                     strokeWidth={1.55}
                     className={cn(
                       "shrink-0 transition-colors",
-                      isSelected ? "text-amber-400" : "text-white/50 group-hover:text-white/80"
+                      isSelected ? "text-amber-500" : "text-muted-foreground group-hover:text-foreground"
                     )}
                   />
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
                   {badgeCount > 0 && (
-                    <span className="rounded bg-white/[0.08] px-1.5 py-0.2 text-[10.5px] font-semibold text-white/70 border border-white/10">
+                    <span className="rounded bg-muted px-1.5 py-0.2 text-[10.5px] font-semibold text-foreground-secondary border border-border">
                       {badgeCount}
                     </span>
                   )}
@@ -418,12 +418,12 @@ export function Sidebar({
         ))}
 
         {/* Projects Accordion Section */}
-        <div className="space-y-1 pt-2 border-t border-white/[0.06]">
+        <div className="space-y-1 pt-2 border-t border-border">
           <div className="flex items-center justify-between px-2 py-1">
             <button
               type="button"
               onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
-              className="flex items-center gap-1.5 text-[11px] font-semibold text-white/35 uppercase tracking-wider hover:text-white/60 transition-colors"
+              className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider hover:text-foreground transition-colors"
             >
               <ChevronDown
                 size={12}
@@ -435,7 +435,7 @@ export function Sidebar({
             <button
               type="button"
               onClick={() => onSelect("projects")}
-              className="text-[11px] text-white/40 hover:text-amber-400 font-medium transition-colors"
+              className="text-[11px] text-muted-foreground hover:text-amber-500 font-medium transition-colors"
             >
               View all
             </button>
@@ -452,13 +452,13 @@ export function Sidebar({
                 />
               ))}
 
-              {projectTree.length > 5 && (
+              {projectTree.length > 6 && (
                 <button
                   type="button"
                   onClick={() => setShowAllProjects(!showAllProjects)}
-                  className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
-                  <span>{showAllProjects ? "Show fewer" : `See ${projectTree.length - 5} more...`}</span>
+                  <span>{showAllProjects ? "Show fewer" : `See ${projectTree.length - 6} more...`}</span>
                 </button>
               )}
             </div>

@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026-09-02] — Fix Sidebar, ViewCanvas and Project Dashboard Color Contrast with Theme-Aware Tokens
+
+**Branch**: `main`
+
+### What changed
+- Replaced hardcoded `text-white/*` and `border-white/*` opacity values in `Sidebar.jsx`, `ViewCanvas.jsx`, and `ProjectView.jsx` with semantic, theme-aware tokens (`text-foreground`, `text-foreground-secondary`, `text-muted-foreground`, `border-border`, and `bg-card`).
+- Restored crisp, clear readability across both light and dark themes.
+
+### Why
+Hardcoded white text classes on light/canvas backgrounds caused severe contrast failure and rendered sidebar navigation labels unreadable.
+
+### Files touched
+- `electron-app/src/components/Sidebar.jsx` — Swapped hardcoded text-white for semantic foreground tokens
+- `electron-app/src/components/ViewCanvas.jsx` — Updated toolbar and reader body colors
+- `electron-app/src/components/ProjectView.jsx` — Updated cockpit cards and text contrast
+
 ## [2026-09-02] — Real Dori Design Alignment: ViewCanvas Workspace, Refined Sidebar & Single-Canvas Project Dashboard
 
 **Branch**: `main`
