@@ -248,6 +248,9 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 footer{padding:34px 0 46px;font-size:13.5px;color:var(--ink-3);border-top:1px solid var(--hair)}
 footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 footer a{color:inherit}
+footer .doclinks{display:flex;gap:26px;flex-wrap:wrap;padding-bottom:26px;margin-bottom:26px;border-bottom:1px solid var(--hair)}
+footer .doclinks a{color:var(--ink);font-weight:600;font-size:14.5px}
+footer .doclinks a:hover{color:var(--amber-ink)}
 
 a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:4px}
 .js .rv{opacity:0;transform:translateY(16px);transition:opacity .7s cubic-bezier(.2,.7,.3,1),transform .7s cubic-bezier(.2,.7,.3,1)}
@@ -280,7 +283,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
     <nav>
       <a href="#groups">What it does</a>
       <a href="#knowledge">Knowledge base</a>
-      <a href="/docs/benchmarks">The numbers</a>
+      <a href="/docs/getting-started">Docs</a>
     </nav>
     <a class="head-cta" href="#start">Get started</a>
   </div>
@@ -567,6 +570,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 </section>
 
 <footer>
+  <div class="wrap doclinks">
+    <a href="/docs/getting-started">Start here</a>
+    <a href="/docs/how-it-works">How it works</a>
+    <a href="/docs/whatsapp">WhatsApp</a>
+    <a href="/docs/benchmarks">Benchmarks</a>
+  </div>
   <div class="wrap">
     <span>Dori Mini · open source</span>
     <span>Works with Claude Code, Codex and Antigravity</span>

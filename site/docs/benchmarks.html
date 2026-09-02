@@ -124,8 +124,9 @@ footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   <div class="opener">
     <p class="eyebrow"><i></i> Benchmarks</p>
     <h1>Same question.<br><span class="serif-pop">Far less to read.</span></h1>
-    <p>Not estimates. Every number below came from running the real scripts against a real
-    test vault, and running the plain-grep alternative an agent falls back to without them.</p>
+    <p>Not estimates. Every number came from running the real scripts against a real working
+    vault of about 2,800 Markdown files — not a demo folder — and running the by-hand
+    alternative an agent falls back to without them.</p>
   </div>
 
   <section>
@@ -136,81 +137,110 @@ footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
         </thead>
         <tbody>
           <tr>
-            <td class="q">"Last meeting with Priya — what got decided?"</td>
-            <td class="wo"><b>3,285 chars</b><code>grep -l</code> matches 10 files, all read in full (~821 tokens)</td>
-            <td class="wi"><b>1,549 chars</b><code>query-vault.mjs last-meeting</code> — one ranked hit's Decisions and Actions, plus 3 lightweight alternates (~387 tokens)</td>
-            <td><span class="win">−53%</span></td>
+            <td class="q">"What got decided in my last meeting with Priya?"</td>
+            <td class="wo"><b>2,304,101 chars</b>all 188 real meeting-type files read in full to find the one that answers it (~576K tokens)</td>
+            <td class="wi"><b>2,836 chars</b><code>query-vault.mjs last-meeting</code> — one ranked hit's Decisions and Actions (~709 tokens)</td>
+            <td><span class="win">−99.88%</span></td>
           </tr>
           <tr>
             <td class="q">"What are my pending tasks?"</td>
-            <td class="wo"><b>3,285 chars</b>the same 10 meeting files, re-read in full to reconstruct open Action Items by hand</td>
-            <td class="wi"><b>122 chars</b><code>list-tasks.mjs open</code> reads the task store directly — 2 open tasks (~31 tokens)</td>
-            <td><span class="win">−96%</span></td>
+            <td class="wo"><b>2,304,101 chars</b>the same 188 files, re-read in full to reconstruct open Action Items by hand</td>
+            <td class="wi"><b>5,264 chars</b><code>list-tasks.mjs open</code> reads the task store directly — 49 open tasks (~1,316 tokens)</td>
+            <td><span class="win">−99.77%</span></td>
+          </tr>
+          <tr>
+            <td class="q">"What % of revenue came from the GPS products he led?"<span>One number, buried in a real résumé PDF with no paragraph breaks, among real converted PDFs.</span></td>
+            <td class="wo"><b>the whole document</b>every converted PDF read in full to find which one holds the figure</td>
+            <td class="wi"><b>604 chars</b>correct chunk ranked #1 with no company name or number in the query; the snippet lands on the exact sentence, and the answer (40%) is right</td>
+            <td><span class="win">≈ −99%</span></td>
+          </tr>
+          <tr>
+            <td class="q">"Which strength is ranked third?"<span>An ordinal fact, in a 27,261-char assessment report — a different file and a different fact type, to check the case above generalises.</span></td>
+            <td class="wo"><b>27,261 chars</b>the whole report read to find the ranked list</td>
+            <td class="wi"><b>≈1,500 chars</b>five chunks, including the literal ranked list. <b style="color:var(--coral-ink)">The correct chunk ranked 5th of 5</b> — it needed the full window, not a clean top hit.</td>
+            <td><span class="win">≈ −94%</span></td>
           </tr>
           <tr>
             <td class="q">"Where should this new document go?"</td>
-            <td class="wo"><b>7,348 chars</b>the vault-conventions doc a model must reason over to route correctly — and the answer still varies call to call</td>
-            <td class="wi"><b>0 chars</b><code>route-destination.mjs</code> — deterministic code, ~28ms, same answer every time</td>
+            <td class="wo"><b>a judgment call</b>the routing conventions have to be reasoned over every time — and the answer varies call to call</td>
+            <td class="wi"><b>no model call at all</b><code>route-destination.mjs</code> — deterministic code, milliseconds, the same answer every time</td>
             <td><span class="win">−100%</span></td>
-          </tr>
-          <tr>
-            <td class="q">"How much are we charging customers?"<span>The source text says "pricing", never "price".</span></td>
-            <td class="wo"><b>1 of 3 docs found</b>keyword grep for <code>charg|price|cost|fee</code> misses "pricing" outright — a real regex gap, not staged</td>
-            <td class="wi"><b>3 of 3, ranked</b><code>semantic-index.mjs search</code> — 897 chars returned, correct meetings ranked by relevance</td>
-            <td><span class="win">3× recall</span></td>
-          </tr>
-          <tr>
-            <td class="q">"What do we lose cancelling the venue 5 days out?"<span>A needle in 6 unrelated reference docs.</span></td>
-            <td class="wo"><b>2,047 chars</b>all 6 reference docs read in full to find which one holds the answer (~512 tokens)</td>
-            <td class="wi"><b>648 chars</b>correct doc (the venue contract) ranked #1 at score 1.000 (~162 tokens)</td>
-            <td><span class="win">−68%</span></td>
-          </tr>
-          <tr>
-            <td class="q">"What % of revenue came from the GPS products he led?"<span>One number, buried in a real PDF résumé with no paragraph breaks, among 5 real converted PDFs.</span></td>
-            <td class="wo"><b>66,830 chars</b>all 5 PDFs converted via <code>markitdown</code> and read in full (~16.7K tokens)</td>
-            <td class="wi"><b>604 chars</b>correct chunk ranked #1 with no company name or number in the query; the snippet lands on the exact sentence (~151 tokens)</td>
-            <td><span class="win">−99%</span></td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <p class="fn narrow">Measured against a 12-file test vault — 10 meetings spanning 2026-05-12
-    to 2026-08-20, one project, one recurring attendee — deliberately small so every number is
-    exact and checkable rather than cherry-picked. Token counts use the common ≈4 chars/token
+    <p class="fn narrow">The vault is about 2,800 <code>.md</code> files; the by-hand baseline
+    is all 188 real meeting-type files, which is the honest naive move — an agent with no
+    better option reads what matches. Token counts use the common ≈4 chars/token
     approximation on real character counts: an estimate of an estimate, not a claim about a
-    specific tokenizer. The "without" baseline is the honest naive move — grep, then read every
-    match in full — because that is what an agent actually does absent a better option. Every
-    "with" number is unedited script output.</p>
+    specific tokenizer. Every "with" figure is unedited script output. An earlier round of
+    these tests ran against a 12-file synthetic fixture; those numbers have been retired in
+    favour of the ones above.</p>
   </section>
 
   <section>
     <h2>Reproduce it yourself.</h2>
-    <p class="h2sub">Every number above came from these commands, run against a throwaway vault.</p>
+    <p class="h2sub">Against your own vault, not ours. The "without" side is the by-hand
+    baseline — every real meeting-type file, read in full.</p>
     <div class="term">
-      <pre><span class="c"># build a scratch vault + index</span>
-VAULT_ROOT=/tmp/demo-vault PORTAL_DB_PATH=/tmp/demo.db node reindex-vault.mjs
+      <pre><span class="c"># the by-hand baseline: every real meeting-type file, in full</span>
+find "$VAULT_ROOT" -name '*.md' \( -iname '*mom*' -o -path '*/meetings/*' \) \
+  | tee /dev/stderr | xargs cat | wc -c
 
-<span class="c"># with Dori Mini</span>
-VAULT_ROOT=/tmp/demo-vault VAULT_INDEX_DB=/tmp/demo.db \
-  node query-vault.mjs last-meeting --person "Priya Menon" --sections decisions,actions
-VAULT_ROOT=/tmp/demo-vault node list-tasks.mjs open
-node route-destination.mjs document acme-nonprofit
+<span class="c"># the same two questions, through Dori Mini</span>
+node query-vault.mjs last-meeting --person "Priya Menon" --sections decisions,actions | wc -c
+node list-tasks.mjs open | wc -c
 
-<span class="c"># without Dori Mini — the naive fallback</span>
-grep -rli "priya menon" /tmp/demo-vault/projects | xargs cat | wc -c
+<span class="c"># routing — deterministic, no model call</span>
+node route-destination.mjs document orbitpay
 
-<span class="c"># the 6-document needle-in-haystack search</span>
-VAULT_ROOT=/tmp/docs-vault VAULT_VECTORS_DB=/tmp/docs.db node semantic-index.mjs index
-VAULT_ROOT=/tmp/docs-vault VAULT_VECTORS_DB=/tmp/docs.db \
-  node semantic-index.mjs search "what do we lose cancelling the venue 5 days out" 2
-
-<span class="c"># the PDF number, through the real markitdown pipeline</span>
-markitdown my-resume.pdf &gt;&gt; pdf-vault/references/clippings/resume.md
-VAULT_ROOT=/tmp/pdf-vault VAULT_VECTORS_DB=/tmp/pdf.db node semantic-index.mjs index
-VAULT_ROOT=/tmp/pdf-vault VAULT_VECTORS_DB=/tmp/pdf.db \
-  node semantic-index.mjs search "what share of company revenue came from the GPS products he led" 2</pre>
+<span class="c"># the PDF needle, through the real markitdown pipeline</span>
+markitdown resume.pdf &gt;&gt; "$VAULT_ROOT/references/clippings/resume.md"
+node semantic-index.mjs index
+node semantic-index.mjs search "what share of company revenue came from the GPS products he led" 2</pre>
     </div>
+  </section>
+
+  <section>
+    <h2>Does the structure reduce hallucination?</h2>
+    <p class="h2sub">One eval, on a real transcript rather than a written-for-the-test one.</p>
+    <p>A real 973-line meeting transcript — actual speech-to-text output, with all the noise
+    that implies. A ten-question answer key was fixed <b>before</b> either answer was
+    generated, and four of the ten were chosen precisely because the source itself hedges or
+    contradicts: a speaker says "Monday, Monday or Tuesday"; another says a task is done
+    "<b>if</b> he has completed" it; a third names the speaker as "either Hari or Gautam".</p>
+    <p>A bare "summarize this meeting" prompt scored <b>6 of 10</b>. The structured
+    extraction Dori Mini actually uses scored <b>10 of 10</b>. Every miss had the same shape:
+    a hedge in the source flattened into false confidence — "tomorrow" where the speaker
+    contradicted himself, one name picked where the transcript named two.</p>
+    <p class="fn narrow">Honestly: this is one transcript, and the grading was not blind. It
+    is a real signal about a specific, repeatable failure mode — a summarizer with nothing
+    telling it to flag uncertainty will invent certainty — and not a measured hallucination
+    rate. Don't quote it as one.</p>
+  </section>
+
+  <section>
+    <h2>Where it breaks.</h2>
+    <p class="h2sub">Run specifically to find failure modes. This one is real and unfixed.</p>
+    <p><b>Paraphrase brittleness.</b> Semantic search finds a fact reliably when your wording
+    is close to the source's. Ask the same thing in natural, generic language and it can miss
+    entirely. Against the real vault, for a standup time stated plainly in one file:</p>
+    <div class="scroll">
+      <table class="tbl" style="min-width:520px">
+        <thead><tr><th>How you ask</th><th>Correct file in the top 5?</th></tr></thead>
+        <tbody>
+          <tr><td class="q" style="width:60%">"we have a stand-up at 2.30" <span>near-exact wording</span></td><td class="wi"><b>Yes</b>tied for rank 1</td></tr>
+          <tr><td class="q">"what time is the Pulse team's daily stand-up" <span>natural phrasing</span></td><td class="wo"><b>No</b>five wrong files, all real, none containing the answer</td></tr>
+          <tr><td class="q">"when does the team meet each day to sync on progress" <span>generic paraphrase</span></td><td class="wo"><b>No</b>five wrong files, and the wrong project entirely</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fn narrow">The same pattern held on a second, independent fact. Some paraphrases
+    work and some genuinely fail, and there is no way to tell which from the outside without
+    checking the chunk. An earlier round of tests claimed a 3× recall win for paraphrased
+    search on a small synthetic vault; this result is why that claim has been withdrawn rather
+    than repeated.</p>
   </section>
 
   <section>
@@ -218,12 +248,12 @@ VAULT_ROOT=/tmp/pdf-vault VAULT_VECTORS_DB=/tmp/pdf.db \
     <p class="h2sub">The limits of the table above, stated plainly.</p>
     <div class="lim">
       <div class="it">
-        <h3>A small test vault</h3>
-        <p>12 files, one project. The gap only widens as a real vault accumulates months of history — grep's cost grows with matches; the store-backed lookups don't.</p>
+        <h3>One vault, one person's working habits</h3>
+        <p>About 2,800 files accumulated by real use. A vault shaped differently — fewer meetings, more documents — will not produce these exact ratios.</p>
       </div>
       <div class="it">
-        <h3>One search example, not an average</h3>
-        <p>The keyword-vs-semantic row is one real regex miss. Treat it as illustrative of a known failure mode, not a universal 3× figure.</p>
+        <h3>The retrieval wins are not universal</h3>
+        <p>See "where it breaks" above. When the paraphrase misses, the saving is zero and you get a wrong-looking answer instead.</p>
       </div>
       <div class="it">
         <h3>Not every case has a number</h3>

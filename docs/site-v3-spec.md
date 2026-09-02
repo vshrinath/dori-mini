@@ -106,8 +106,15 @@ by is not a benefit.
 > **Zero** extra per month. No new subscription, no API key.
 
 Then one line, the only statistic on the page:
-> Up to 95% fewer tokens to find something or answer a question. Measured against a real
+> 95% fewer tokens to find something or answer a question. Measured against a real
 > working vault of about 2,800 files. [See the numbers →]
+
+"Up to" dropped 2026-09-02: every real-vault measurement in
+`docs/research-benchmarks-2026-08-26.md` §8.1 lands between 94% and 99.9%, so 95% is at
+the conservative end, not a ceiling. The docs page now publishes those real-vault numbers
+rather than the retired 12-file synthetic fixture, and carries §2.1's paraphrase-brittleness
+failure mode — the research doc's standing instruction is that site copy must not round off
+its hedges.
 
 ### 3.7 The four groups
 Full-width alternating bands. Each states **how**, and carries a real `Dori, …` utterance.
