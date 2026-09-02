@@ -248,11 +248,10 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .close h2{font-size:clamp(2rem,4vw,2.9rem);max-width:none}
 .close h2 .mark{font-family:var(--f-serif);font-style:italic;font-weight:400;font-size:1.16em;letter-spacing:0;position:relative;white-space:nowrap}
 .close h2 .mark::after{content:"";position:absolute;left:-.02em;right:-.02em;bottom:.03em;height:.1em;background:var(--amber);border-radius:3px;z-index:-1;opacity:.9;transform:rotate(-.8deg)}
-.close .one{margin:22px auto 0;max-width:44ch;font-size:1.1rem;color:var(--ink-2)}
+.close .one{margin:22px auto 0;max-width:none;font-size:1.1rem;color:var(--ink-2)}
 .close .one b{color:var(--ink);font-weight:600}
-.fork{margin:30px auto 0;display:flex;flex-direction:column;gap:11px;align-items:center;font-size:1.06rem}
-.fork div{display:flex;align-items:center;gap:11px}
-.flat{margin-top:26px;font-size:1.06rem;font-weight:600}
+.close .flat{margin:12px auto 0;max-width:none;font-size:1.06rem;line-height:1.6;color:var(--ink-2)}
+.close .flat b{color:var(--ink);font-weight:600}
 .close .pill{display:inline-block;margin-top:30px}
 .paste{margin:40px auto 0;max-width:560px}
 .paste .box{display:flex;align-items:center;gap:10px;background:var(--raise);box-shadow:var(--shadow-sm);border-radius:14px;padding:11px 11px 11px 16px}
@@ -574,11 +573,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 
     <h2>Stop being your own <span class="mark">filing system</span></h2>
     <p class="one">One line inside Claude Code sets up <b>meetings, invoices, expenses and recall</b>.</p>
-    <div class="fork">
-      <div>Boring bits? Handled on your machine.</div>
-      <div>Real decisions? Still yours.</div>
-    </div>
-    <p class="flat">No new subscription. Just setup.</p>
+    <p class="flat">All on your own machine. The real decisions stay yours. <b>No new subscription.</b></p>
 
     <div class="paste">
       <div class="box"><code id="p1">Set up Dori Mini for me: curl -fsSL https://mini.mydori.app/install.sh | sh</code><button type="button" data-copy="p1">Copy</button></div>
