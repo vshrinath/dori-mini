@@ -52,9 +52,12 @@ in. Height ~56px.
 
 `Claude Code` cycles to `Codex` and `Antigravity` on a soft crossfade. It rests on Claude Code.
 
-Sub-line (this is where jargon is named once and discarded):
-> Skills, tools, MCP servers, harnesses. Engineers spend weeks wiring that in. Dori Mini
-> does it in one line.
+Sub-line (this is where jargon is named once and discarded), split across two lines so the
+payoff isn't buried at the end of the setup — the second line is larger, full-ink and
+semibold, the first stays muted:
+> Skills, tools, MCP servers, harnesses. Engineers spend weeks wiring that in.
+>
+> **Dori Mini does it in one line.**
 
 Two links, Apple pattern: a filled pill `Get started`, a plain text link `See it work`.
 **No curl command in the hero.** It moves to the close.
