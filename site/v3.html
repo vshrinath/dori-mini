@@ -16,9 +16,10 @@
   --raise:#ffffff;
   --ink:#171c45;
   --ink-2:#525878;
-  --ink-3:#8a8fa8;
+  --ink-3:#666b88;
   --hair:#e6e3d9;
   --amber:#d99a1f;
+  --amber-deep:#b87d14;
   --amber-ink:#8a6210;
   --green:#3fae5a;
   --wa-bg:#efeae2;--wa-out:#d9fdd3;--wa-in:#ffffff;--wa-ink:#111b21;
@@ -33,7 +34,7 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --paper:#0f1333;--paper-2:#161b45;--raise:#1b2054;--ink:#f4f2ea;--ink-2:#bcc0d6;--ink-3:#868ba6;
-  --hair:#2b3164;--amber:#e8b542;--amber-ink:#f0c766;--green:#4fc373;
+  --hair:#2b3164;--amber:#e8b542;--amber-deep:#e8b542;--amber-ink:#f0c766;--green:#4fc373;
   --wa-bg:#0b141a;--wa-out:#005c4b;--wa-in:#202c33;--wa-ink:#e9edef;
   --wa-doodle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.07' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='13' r='4.5'/%3E%3Cpath d='M33 9h12M33 14h7'/%3E%3Cpath d='M38 37l4 4 8-9'/%3E%3Cpath d='M9 40c3-4 8-4 11 0'/%3E%3Ccircle cx='48' cy='23' r='2.5'/%3E%3Cpath d='M20 52h9'/%3E%3C/g%3E%3C/svg%3E");
   --shadow-sm:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.28);
@@ -41,7 +42,7 @@
 }}
 :root[data-theme="dark"]{
   --paper:#0f1333;--paper-2:#161b45;--raise:#1b2054;--ink:#f4f2ea;--ink-2:#bcc0d6;--ink-3:#868ba6;
-  --hair:#2b3164;--amber:#e8b542;--amber-ink:#f0c766;--green:#4fc373;
+  --hair:#2b3164;--amber:#e8b542;--amber-deep:#e8b542;--amber-ink:#f0c766;--green:#4fc373;
   --wa-bg:#0b141a;--wa-out:#005c4b;--wa-in:#202c33;--wa-ink:#e9edef;
   --wa-doodle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.07' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='13' r='4.5'/%3E%3Cpath d='M33 9h12M33 14h7'/%3E%3Cpath d='M38 37l4 4 8-9'/%3E%3Cpath d='M9 40c3-4 8-4 11 0'/%3E%3Ccircle cx='48' cy='23' r='2.5'/%3E%3Cpath d='M20 52h9'/%3E%3C/g%3E%3C/svg%3E");
   --shadow-sm:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.28);
@@ -72,8 +73,8 @@ header nav a:hover{color:var(--ink)}
 /* hero */
 .hero{padding:104px 0 0;text-align:center}
 h1{font-size:clamp(2.4rem,5.4vw,4.1rem);line-height:1.04;max-width:15ch;margin:0 auto}
-h1 .flip{display:inline-block;position:relative;text-align:left;transition:width .45s cubic-bezier(.4,0,.2,1);will-change:width}
-h1 .flip b{font-weight:inherit;position:absolute;left:0;top:0;white-space:nowrap;opacity:0;transition:opacity .5s}
+h1 .flip{display:inline-block;position:relative;text-align:left;vertical-align:top}
+h1 .flip b{font-weight:inherit;position:absolute;left:0;top:0;white-space:nowrap;opacity:0;transition:opacity .34s ease}
 h1 .flip b.on{opacity:1;position:relative}
 h1 .mark{position:relative;white-space:nowrap}
 h1 .mark::after{content:"";position:absolute;left:-.02em;right:-.02em;bottom:.04em;height:.14em;background:var(--amber);border-radius:3px;z-index:-1;opacity:.9;transform:rotate(-.8deg)}
@@ -84,7 +85,7 @@ h1 .mark::after{content:"";position:absolute;left:-.02em;right:-.02em;bottom:.04
 .pill:hover{transform:translateY(-1px)}
 .textlink{text-decoration:none;font-weight:500;font-size:16px;color:var(--amber-ink)}
 .textlink:hover{text-decoration:underline}
-.plain{margin:34px auto 0;max-width:56ch;font-size:15px;color:var(--ink-3)}
+.plain{margin:34px auto 0;max-width:58ch;font-size:16.5px;line-height:1.6;color:var(--ink-2)}
 
 /* chat demo */
 .demo{margin:78px auto 0;max-width:720px;background:var(--raise);border-radius:24px;padding:22px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:12px;min-height:250px;text-align:left}
@@ -104,22 +105,27 @@ section{padding:104px 0}
 h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .sub{color:var(--ink-2);font-size:1.06rem;margin-top:14px;max-width:52ch}
 .center{text-align:center}
+.sechead{text-align:center;max-width:60ch;margin:0 auto}
+.sechead .sub{margin-left:auto;margin-right:auto}
 .center .sub{margin-left:auto;margin-right:auto}
 
 /* frames */
 .frames{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:48px}
 .frame{background:var(--raise);border-radius:20px;padding:20px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:16px}
-.frame .art{background:var(--paper-2);border-radius:13px;height:150px;padding:14px;overflow:hidden;position:relative}
+.frame .art{background:var(--paper-2);border-radius:13px;aspect-ratio:16/9;padding:14px;overflow:hidden;position:relative}
 .frame .when{font-size:16.5px;font-weight:600;line-height:1.35}
 .frame .when span{color:var(--ink-3);font-weight:400}
 .frame .say{font-family:var(--f-mono);font-size:12.5px;color:var(--amber-ink);background:var(--paper-2);border-radius:9px;padding:9px 12px}
 
 /* art bits */
-.vid{height:100%;border-radius:9px;background:linear-gradient(150deg,#2a2f5e,#191d43);display:flex;align-items:center;justify-content:center;position:relative}
+.frame .art-vid{padding:0;background:none}
+.vid{display:block;position:relative;width:100%;height:100%;border-radius:13px;overflow:hidden;background:linear-gradient(150deg,#2a2f5e,#191d43)}
+.vid img{width:100%;height:100%;object-fit:cover;display:block}
+.vid .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .vid .play{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center}
 .vid .play::after{content:"";border-left:11px solid #191d43;border-top:7px solid transparent;border-bottom:7px solid transparent;margin-left:3px}
-.vid .dur{position:absolute;right:9px;bottom:20px;background:rgba(0,0,0,.78);color:#fff;font:500 11px var(--f-mono);padding:2px 6px;border-radius:4px}
-.vid .prog{position:absolute;left:9px;right:9px;bottom:10px;height:3px;background:rgba(255,255,255,.28);border-radius:2px}
+.vid .dur{position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.78);color:#fff;font:500 11px var(--f-mono);padding:2px 6px;border-radius:4px}
+.vid .prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.28);border-radius:2px}
 .vid .prog::after{content:"";display:block;width:2%;height:100%;background:#ff4444;border-radius:2px}
 .note{height:100%;background:var(--raise);border-radius:9px;padding:12px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:9px}
 .note .end{font-size:11px;color:var(--ink-3);font-family:var(--f-mono)}
@@ -145,17 +151,19 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 
 /* turn */
 .turn{padding:112px 0;text-align:center}
-.turn p{font-family:var(--f-serif);font-style:italic;font-size:clamp(1.9rem,4.4vw,3.1rem);line-height:1.18;max-width:24ch;margin:0 auto;letter-spacing:-.01em}
+.turn p{font-family:var(--f-serif);font-style:italic;font-size:clamp(2.2rem,5.6vw,3.9rem);line-height:1.16;max-width:24ch;margin:0 auto;letter-spacing:-.02em;text-wrap:balance}
+.turn .mark{font-style:normal;font-family:var(--f-display);font-weight:600;font-size:.88em;position:relative;white-space:nowrap}
+.turn .mark::after{content:"";position:absolute;left:-.03em;right:-.03em;bottom:.02em;height:.13em;background:var(--amber);border-radius:4px;z-index:-1;opacity:.9;transform:rotate(-.7deg)}
 
 /* zeros */
 .zeros{background:var(--paper-2)}
-.zrow{display:grid;grid-template-columns:repeat(3,1fr);gap:38px}
-.z b{display:block;font-size:clamp(2.6rem,5.4vw,4rem);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--amber)}
+.zrow{display:grid;grid-template-columns:repeat(3,1fr);gap:38px;text-align:center}
+.z b{display:block;font-size:clamp(2.6rem,5.4vw,4rem);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--amber-deep)}
 .z p{margin-top:12px;font-size:1.02rem}
 .z p em{font-style:normal;color:var(--ink-2);display:block;font-size:.94rem;margin-top:5px}
-.stat{margin-top:56px;padding-top:30px;border-top:1px solid var(--hair);font-size:1.02rem;color:var(--ink-2);max-width:64ch}
-.stat b{color:var(--ink);font-weight:600}
-.stat a{color:var(--amber-ink);font-weight:500}
+.stat{margin:56px auto 0;padding:30px 34px;background:var(--raise);border-radius:18px;box-shadow:var(--shadow-sm);font-size:1.22rem;line-height:1.5;color:var(--ink-2);max-width:60ch;text-align:center}
+.stat b{display:block;font-family:var(--f-display);font-size:2.5rem;font-weight:600;letter-spacing:-.03em;color:var(--ink);margin-bottom:6px}
+.stat a{display:inline-block;margin-top:12px;color:var(--amber-ink);font-weight:500;white-space:nowrap}
 
 /* groups */
 .grp{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;padding:52px 0}
@@ -196,13 +204,15 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .aside{color:var(--ink-2);font-size:1rem;padding-top:.35rem}
 
 /* trust */
-.trust .wrap{display:grid;grid-template-columns:1fr 1.15fr;gap:56px;align-items:start}
-.tlist{display:flex;flex-direction:column;gap:16px}
-.tlist div{display:flex;gap:13px;align-items:flex-start;font-size:1.04rem;color:var(--ink-2)}
-.tlist div::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--amber);flex:none;margin-top:.55em}
+.trust .wrap{}
+.tlist{display:grid;grid-template-columns:repeat(3,1fr);gap:34px;margin-top:44px}
+.tlist div{font-size:1.04rem;color:var(--ink-2);text-align:center}
+.tlist div::before{content:"";display:block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin:0 auto 14px}
 
 /* whatsapp */
-.wa .wrap{display:grid;grid-template-columns:290px 1fr;gap:64px;align-items:center}
+.wa .wrap{text-align:center}
+.wa .phone{max-width:300px;margin:46px auto 0;text-align:left}
+.walink{margin-top:30px}
 .phone{background:var(--raise);border-radius:26px;box-shadow:var(--shadow-lg);padding:14px;display:flex;flex-direction:column;overflow:hidden}
 .phone .h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink-2);padding:2px 4px 12px}
 .phone .h i{width:8px;height:8px;border-radius:50%;background:var(--green)}
@@ -233,6 +243,8 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .close{text-align:center;padding:110px 0 96px}
 .close .mark-art{margin:0 auto 30px;display:block}
 .close h2{font-size:clamp(2rem,4vw,2.9rem);max-width:none}
+.close h2 .mark{font-family:var(--f-serif);font-style:italic;font-weight:400;font-size:1.16em;letter-spacing:0;position:relative;white-space:nowrap}
+.close h2 .mark::after{content:"";position:absolute;left:-.02em;right:-.02em;bottom:.03em;height:.1em;background:var(--amber);border-radius:3px;z-index:-1;opacity:.9;transform:rotate(-.8deg)}
 .close .one{margin:22px auto 0;max-width:44ch;font-size:1.1rem;color:var(--ink-2)}
 .close .one b{color:var(--ink);font-weight:600}
 .fork{margin:30px auto 0;display:flex;flex-direction:column;gap:11px;align-items:center;font-size:1.06rem}
@@ -256,7 +268,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}.msg{opacity:1;transform:none}}
 @media (max-width:880px){
-  .frames,.two-vids,.zrow,.steps,.grp,.wa .wrap,.kbclose,.trust .wrap{grid-template-columns:1fr}
+  .frames,.two-vids,.zrow,.steps,.grp,.kbclose,.tlist{grid-template-columns:1fr}
   .grp{gap:32px;padding:36px 0}
   .grp:nth-child(odd)>.gtext{order:0}
   section{padding:72px 0}
@@ -310,12 +322,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 <section id="frames">
   <div class="wrap">
     <h2 class="center">When you don't want to.</h2>
-    <p class="sub center">Six things nobody has ever enjoyed doing. Each one is now a sentence you type.</p>
     <div class="frames">
 
       <div class="frame rv">
-        <div class="art"><div class="vid"><div class="play"></div><div class="dur">45:12</div><div class="prog"></div></div></div>
-        <p class="when">When you don't want to watch a 45 minute video <span>for two key points.</span></p>
+        <div class="art art-vid"><a class="vid" href="https://www.youtube.com/watch?v=hiYTq9xnkPw" target="_blank" rel="noopener" aria-label="Watch Blind Spots To Big Bets on YouTube"><img src="https://img.youtube.com/vi/hiYTq9xnkPw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360"><span class="play"></span><span class="dur">46:08</span><span class="prog"></span></a></div>
+        <p class="when">…watch a 46 minute video <span>for two key points.</span></p>
         <div class="say">Dori, grab this and tell me what's useful</div>
       </div>
 
@@ -323,41 +334,41 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
         <div class="art"><div class="files">
           <div>invoice-final.pdf</div><div>invoice-final-v2.pdf</div><div>invoice-FINAL-actual.pdf</div><div>Scan-2026-08-12.pdf</div><div>invoice_kestrel_v3(1).pdf</div>
         </div></div>
-        <p class="when">When you don't want to open six folders <span>to find one invoice.</span></p>
+        <p class="when">…open six folders <span>to find one invoice.</span></p>
         <div class="say">Dori, pull up the last Kestrel invoice</div>
-      </div>
-
-      <div class="frame rv">
-        <div class="art"><div class="note"><div class="end">Call ended · 1h 04m</div><div class="cur"></div></div></div>
-        <p class="when">When you don't want to write up the meeting <span>you just sat through.</span></p>
-        <div class="say">Dori, here's the transcript</div>
-      </div>
-
-      <div class="frame rv">
-        <div class="art"><div class="recs"><i></i><i></i><i></i><div class="cell">Total: <b>?</b></div></div></div>
-        <p class="when">When you don't want to rebuild a trip's expenses <span>from a fistful of receipts.</span></p>
-        <div class="say">Dori, close out the Denver trip</div>
-      </div>
-
-      <div class="frame rv">
-        <div class="art"><p class="tx">…so we can push that to next sprint.<br>Right, and on the pricing page —<br><mark>I'll get that to you Friday.</mark><br>Sure. Anything else before we —<br>No, I think that's everything…</p></div>
-        <p class="when">When you don't want to remember who promised what, <span>and by when.</span></p>
-        <div class="say">Dori, what did Alan commit to?</div>
       </div>
 
       <div class="frame rv">
         <div class="art"><div class="pdf"><div class="sb"></div>
           <div class="ln" style="width:92%"></div><div class="ln" style="width:78%"></div><div class="ln" style="width:88%"></div><div class="ln" style="width:64%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:71%"></div><div class="ln" style="width:84%"></div>
           <div class="search">Find: day rate</div></div></div>
-        <p class="when">When you don't want to re-read a 30 page proposal <span>for one number.</span></p>
+        <p class="when">…re-read a 30 page proposal <span>for one number.</span></p>
         <div class="say">Dori, what day rate did we quote?</div>
+      </div>
+
+      <div class="frame rv">
+        <div class="art"><div class="recs"><i></i><i></i><i></i><div class="cell">Total: <b>?</b></div></div></div>
+        <p class="when">…rebuild a trip's expenses <span>from a fistful of receipts.</span></p>
+        <div class="say">Dori, close out the Denver trip</div>
+      </div>
+
+      <div class="frame rv">
+        <div class="art"><div class="note"><div class="end">Call ended · 1h 04m</div><div class="cur"></div></div></div>
+        <p class="when">…write up the meeting <span>you just sat through.</span></p>
+        <div class="say">Dori, here's the transcript</div>
+      </div>
+
+      <div class="frame rv">
+        <div class="art"><p class="tx">…so we can push that to next sprint.<br>Right, and on the pricing page —<br><mark>I'll get that to you Friday.</mark><br>Sure. Anything else before we —<br>No, I think that's everything…</p></div>
+        <p class="when">…remember who promised what, <span>and by when.</span></p>
+        <div class="say">Dori, what did Alan commit to?</div>
       </div>
 
     </div>
   </div>
 </section>
 
-<div class="turn"><p>Dori Mini handles the boring bits of your business.</p></div>
+<div class="turn"><p>Dori Mini handles the <span class="mark">boring bits</span> of your business.</p></div>
 
 <section class="zeros">
   <div class="wrap">
@@ -366,7 +377,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
       <div class="z rv"><b>Zero</b><p>technical skill to set up.<em>One line, inside the tool you already use.</em></p></div>
       <div class="z rv"><b>Zero</b><p>extra per month.<em>No new subscription, no API key.</em></p></div>
     </div>
-    <p class="stat">Up to <b>95% fewer tokens</b> to find something or answer a question. Measured against a real working vault of about 2,800 files, not a demo folder. <a href="/docs/benchmarks">See the numbers →</a></p>
+    <p class="stat"><b>Up to 95% fewer tokens</b> to find something or answer a question. Measured against a real working vault of about 2,800 files, not a demo folder.<br><a href="/docs/benchmarks">See the numbers →</a></p>
   </div>
 </section>
 
@@ -448,8 +459,10 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 
 <section class="kb" id="knowledge">
   <div class="wrap">
-    <h2>You bookmarked it. You never went back.</h2>
-    <p class="sub">Everything you save is worth something. None of it is worth anything if you can't get back into it. Paste a link and you get jump points you can click, with the whole transcript underneath.</p>
+    <div class="sechead">
+      <h2>You bookmarked it. You never went back.</h2>
+      <p class="sub">Everything you save is worth something. None of it is worth anything if you can't get back into it. Paste a link and you get jump points you can click, with the whole transcript underneath.</p>
+    </div>
 
     <div class="two-vids">
       <div class="card rv">
@@ -490,7 +503,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 
 <section class="trust">
   <div class="wrap">
-    <h2>No new company in the loop.</h2>
+    <div class="sechead"><h2>No new company in the loop.</h2></div>
     <div class="tlist">
       <div>Dori Mini has no server and no account. There's nobody on our end, because there is no our end.</div>
       <div>Everything sits in a folder on your own machine.</div>
@@ -501,6 +514,10 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
 
 <section class="wa">
   <div class="wrap">
+    <div class="sechead">
+      <h2>Or skip the window entirely.</h2>
+      <p class="sub">Message Dori on WhatsApp. The same filing, the same answers, from your phone, before you've opened a laptop.</p>
+    </div>
     <div class="phone">
       <div class="h"><i></i>WhatsApp</div>
       <div class="thread">
@@ -510,11 +527,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
         <div class="msg dori show">Yes. 20 Sept, confirmed on 12 Aug.</div>
       </div>
     </div>
-    <div>
-      <h2>Or skip the window entirely.</h2>
-      <p class="sub">Message Dori on WhatsApp. The same filing, the same answers, from your phone, before you've opened a laptop.</p>
-      <p style="margin-top:26px"><a class="textlink" href="/docs/whatsapp">See the WhatsApp setup →</a></p>
-    </div>
+    <p class="walink"><a class="textlink" href="/docs/whatsapp">See the WhatsApp setup →</a></p>
   </div>
 </section>
 
@@ -552,7 +565,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
       <circle cx="97" cy="14" r="5" fill="var(--amber)"/>
     </svg>
 
-    <h2>Stop being your own filing system</h2>
+    <h2>Stop being your own <span class="mark">filing system</span></h2>
     <p class="one">One line inside Claude Code sets up <b>meetings, invoices, expenses and recall</b>.</p>
     <div class="fork">
       <div>Boring bits? Handled on your machine.</div>
@@ -588,15 +601,23 @@ document.querySelectorAll('.rv').forEach((el, i) => { el.style.transitionDelay =
 const flipBox = document.querySelector('h1 .flip');
 const flips = [...document.querySelectorAll('h1 .flip b')];
 let fi = 0;
+/* The line must not slide. So the box is resized only while BOTH words are at
+   opacity 0 — the word fades out, the line silently re-fits, the next word fades
+   in. No width transition, therefore no travelling text. */
 function sizeFlip() { flipBox.style.width = flips[fi].getBoundingClientRect().width + 'px'; }
 document.fonts.ready.then(sizeFlip);
 addEventListener('resize', sizeFlip);
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   setInterval(() => {
-    flips[fi].classList.remove('on');
-    fi = (fi + 1) % flips.length;
-    flips[fi].classList.add('on');
-    sizeFlip();
+    const cur = flips[fi];
+    cur.style.opacity = '0';                    // fade the current word out
+    setTimeout(() => {
+      cur.classList.remove('on');
+      cur.style.opacity = '';
+      fi = (fi + 1) % flips.length;
+      sizeFlip();                               // resize while nothing is visible
+      flips[fi].classList.add('on');
+    }, 340);
   }, 2800);
 }
 

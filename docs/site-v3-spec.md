@@ -277,6 +277,34 @@ The agent name crossfades. Nothing else moves. Respect `prefers-reduced-motion`.
 **Palette:** navy ink, cream paper, amber accent used once per screen, echoing the dot on
 the `i`. One green, only in the WhatsApp band.
 
+**Contrast is a token rule, not a per-element fix.** Every text colour must clear WCAG AA
+(4.5:1 normal, 3:1 for large) against *all three* grounds it can sit on — `--paper`,
+`--paper-2` and `--raise` — because the same muted token is reused across bands. `--paper-2`
+is the darkest ground and therefore the binding constraint. An audit on 2026-09-02 found 47
+failures across the page; every single one was `--ink-3`, which was `#8a8fa8` (3.11:1). It is
+now `#666b88`, which passes on all three grounds. Amber-as-text uses `--amber-deep`
+(`#b87d14`); `--amber` itself stays bright because its other uses are decoration
+(underline strokes, dots, rules), which carry no contrast requirement.
+
+Re-run the audit after any palette change: walk every text-bearing element, composite the
+alpha stack to get the true background, and compare. Check all three theme states — bare
+`:root`, `prefers-color-scheme: dark`, and `[data-theme="dark"]`.
+
+**Section heads are always centred, and a subhead inherits its head's alignment.** Mixed
+alignment across sections reads as an accident, not a rhythm. Every `h2` that opens a section
+sits in a `.sechead` block: centred, `max-width:60ch`, with its `.sub` centred beneath it.
+This cost two earlier two-column layouts (the trust list and the WhatsApp panel, both of which
+had heading-left / content-right); both are now centred head over centred content. Card-level
+`h3`s inside the alternating feature groups stay left-aligned — they are card content, not
+section heads.
+
+**The ground stays warm.** Pure white was evaluated and rejected on 2026-09-02. It does not
+help contrast (it would have moved the failing token from 3.11 to 3.19 against a 4.5
+requirement, so the ink was always the real problem). All 29 raised surfaces carry their own
+border or shadow, so nothing structurally depends on the cream — but on white the raised
+white cards lose their perceived lift and the page reads more generic. The warmth also ties
+the page to the script logo.
+
 ## 5. Claims register — what is defensible
 
 | Claim | Verdict | Source |
