@@ -209,6 +209,15 @@ Replaces the false "100% private" claim. Answers the real question: *am I taking
 ### 3.10 WhatsApp
 Keeps its own band. Phone mockup, real exchange, links to `/docs/whatsapp`.
 
+The thread uses WhatsApp's own **colours** so it's recognised instantly — beige ground
+`#efeae2`, outgoing bubbles `#d9fdd3`, incoming white, ink `#111b21`; dark mode `#0b141a` /
+`#005c4b` / `#202c33`. Tails on the correct corners, outgoing right-aligned.
+
+Deliberately **not** WhatsApp's actual doodle wallpaper, which is their artwork. The texture
+is a generic tile of abstract marks at ~5% opacity, and the colour does the recognising.
+Note: a `var()` inside a data URI never resolves, so the doodle's stroke colour and opacity
+are baked into two SVGs and the whole `url()` is swapped via `--wa-doodle` per theme.
+
 ### 3.11 Your first five minutes
 Fixes the empty-room problem: every group above assumes you've already fed it something.
 
