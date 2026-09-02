@@ -249,6 +249,8 @@ the `i`. One green, only in the WhatsApp band.
 | 100% private | ❌ false | model calls go to the agent's provider |
 | Requires Node.js 24+ | ❌ remove from site | `setup.sh` installs Node via nvm/brew/apt/pacman |
 | Works with Gemini CLI | ❌ false | installer covers Claude Code, Codex, Antigravity only |
+| "N past meetings linked" | ❌ false | nothing backfills existing meetings onto a new person. Linking is forward-only, which the body copy already said ("maps every future meeting to them") |
+| "Details researched online and updated" | ❌ don't use | `research-person.mjs` fetches via Tavily but never writes back to the profile, so "updated" is false — and it needs a `TAVILY_API_KEY`, which contradicts the "no API key" line in the Zeros |
 | "Dori classifies business vs personal bills for you" | ❌ not built | `expense-router.mjs`'s classifier is keyword-based and only assigns Food / Transport / Lodging / Travel. There is no business-vs-personal inference anywhere in the repo |
 | "You say which is which, and only the business ones land on the claim" | ✅ true | the ledger has a `Reimbursable` column; `attach-receipt.mjs` takes `--reimbursable true\|false` and `actions.mjs` exposes it. Set explicitly, never guessed |
 
