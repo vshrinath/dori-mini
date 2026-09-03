@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-09-03] — Canonical SituationShell & Card System Alignment
+
+**Branch**: `main`
+
+### What changed
+- Created `electron-app/src/components/ui/situation-shell.jsx` matching `dori-portal`'s `SituationShell` component (`rounded-xl border-border/80 bg-card/60 backdrop-blur-xs`, uppercase micro-eyebrows, relative timestamps, and primary/secondary button actions).
+- Integrated `SituationShell` and `api.js` methods across `InboxView.jsx` and `ProjectView.jsx`.
+- Cleaned up remaining direct `window.dori.call` invocations in `InboxView.jsx` to route through the typed `api` adapter.
+
+### Why
+Align card geometry, borders, typography, and micro-eyebrow metrics with real Dori (`dori-portal/components/situation/situation-shell.tsx`).
+
+### Files touched
+- `electron-app/src/components/ui/situation-shell.jsx` — Created shared SituationShell card component
+- `electron-app/src/components/InboxView.jsx` — Swapped raw IPC for `api` adapter and aligned card structure
+- `electron-app/src/components/ProjectView.jsx` — Integrated SituationShell for project context and situation cards
+
 ## [2026-09-02] — Design Tokens, Space Categories & Calibrated Shell Navigation (Milestone 2)
 
 **Branch**: `main`

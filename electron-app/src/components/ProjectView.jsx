@@ -31,6 +31,7 @@ import { Badge } from './ui/badge.jsx';
 import { Button } from './ui/button.jsx';
 import { EmptyState } from './ui/empty-state.jsx';
 import { Skeleton } from './ui/skeleton.jsx';
+import { SituationShell } from './ui/situation-shell.jsx';
 import {
   Breadcrumb,
   BreadcrumbList,

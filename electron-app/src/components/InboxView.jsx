@@ -22,6 +22,8 @@ import {
   SelectValue,
 } from "./ui/select.jsx";
 import { Skeleton } from "./ui/skeleton.jsx";
+import { SituationShell } from "./ui/situation-shell.jsx";
+import { api } from "../lib/api.js";
 import { cn } from "../lib/utils.js";
 
 function formatDate(iso) {
@@ -57,13 +59,12 @@ export function InboxView({ onSelectDocument }) {
 
   const refresh = useCallback(() => {
     setLoading(true);
-    window.dori
-      ?.call("list_inbox", {})
+    api.listInbox()
       .then((items) => {
         setInbox(items || []);
         setError(null);
       })
-      .catch((e) => setError(e.message))
+      .catch((e) => setError(e?.message || "Failed to load inbox"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -82,10 +83,10 @@ export function InboxView({ onSelectDocument }) {
     async (actionId, clarificationId, choiceId) => {
       setProcessingIds((prev) => new Set(prev).add(clarificationId));
       try {
-        await window.dori?.call(actionId, { clarificationId, choiceId });
+        await api.call(actionId, { clarificationId, choiceId });
         refresh();
       } catch (e) {
-        setError(e.message);
+        setError(e?.message || "Failed to process decision");
       } finally {
         setProcessingIds((prev) => {
           const next = new Set(prev);
