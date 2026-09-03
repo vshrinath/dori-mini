@@ -36,16 +36,8 @@ header nav a{font-size:14px;color:var(--ink-2)}
 header nav a:hover{color:var(--ink)}
 
 .opener{padding:64px 0 8px}
-.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-ink);
-  display:inline-flex;align-items:center;gap:8px;margin-bottom:20px}
-.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--green);display:block}
 h1{font-size:clamp(1.9rem,4.4vw,2.7rem);line-height:1.1;max-width:20ch}
 .serif-pop{font-family:var(--f-serif);font-style:italic;font-weight:400;color:var(--amber-deep);letter-spacing:-.01em}
-.meta{color:var(--ink-3);font-size:1rem;margin:16px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
-.meta a{color:var(--amber-ink);font-weight:600}
-
-.lede{color:var(--ink-2);font-size:1.06rem;margin:22px 0 0;max-width:62ch}
-
 section{padding:44px 0 0}
 .k{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:0 0 6px}
 .k b{color:var(--amber-ink)}
@@ -59,28 +51,20 @@ section{padding:44px 0 0}
 .chap .body{flex:1}
 .chap .t{font-size:1.06rem;font-weight:600;color:var(--ink);transition:color .12s;display:block}
 .chap .d{font-size:.95rem;color:var(--ink-3);margin-top:4px;line-height:1.5;display:block}
-.chap .go{flex:none;color:var(--ink-3);font-size:13px;margin-top:5px}
-
-.note{background:var(--paper-2);border-radius:16px;padding:20px 22px;font-size:.98rem;color:var(--ink-2);
-  margin-top:44px}
-.note b{color:var(--ink)}
-
-.cta{border-top:1px solid var(--hair);margin-top:52px;padding:30px 0 60px;display:flex;justify-content:space-between;
-  align-items:center;flex-wrap:wrap;gap:16px}
-.cta p{margin:0;font-size:.98rem;color:var(--ink-2);max-width:40ch}
-.btn{display:inline-block;font-weight:700;font-size:.92rem;color:var(--ink);background:var(--amber);
-  padding:11px 20px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.18);transition:transform .15s,box-shadow .15s,background .15s}
-.btn:hover{background:var(--amber-deep);transform:translateY(-2px) rotate(-1deg);box-shadow:0 8px 20px rgba(217,154,31,.4)}
+.chap .go{flex:none;color:var(--ink-3);font-size:13px;margin-top:5px;transition:color .12s}
 
 footer{border-top:1px solid var(--hair);padding:24px 0 40px}
 footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
 
+.player-wrap{position:relative;margin-top:28px;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);aspect-ratio:16/9;background:#000}
+#yt-player{position:absolute;inset:0;width:100%;height:100%}
+.chap.playing{background:var(--paper-2);margin:0 -14px;padding:18px 14px;border-radius:12px}
+
 @media (max-width:640px){
   .opener{padding:44px 0 8px}
   .chap{gap:12px}
   .chap .go{display:none}
-  .cta{flex-direction:column;align-items:flex-start}
 }
 </style>
 
@@ -94,65 +78,51 @@ footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <div class="doc">
 
   <div class="opener">
-    <p class="eyebrow"><i></i> Real capture example</p>
     <h1>IST 19 · Simon Taufel · <span class="serif-pop">HOWZAT</span></h1>
-    <p class="meta">Inspire Someone Today · 2021 · 35:43 · <a class="u" href="https://www.youtube.com/watch?v=A31tJDSFIvQ" target="_blank" rel="noopener">Watch on YouTube ↗</a></p>
-    <p class="lede">This episode ships with 7 chapters from its own uploader. Dori Mini uses them exactly as given — no rewriting, no re-ranking. Every timestamp below jumps straight into the real video at that second.</p>
   </div>
+
+  <div class="player-wrap"><div id="yt-player"></div></div>
 
   <section>
     <p class="k">Uploader supplied <b>7 chapters</b>. Used as-is.</p>
     <div class="chapters">
       <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=0" target="_blank" rel="noopener">
         <span class="time">00:00</span>
-        <span class="body"><span class="t">Untitled Chapter 1</span><span class="d">The uploader left this one unnamed — introductions and setup, before the named chapters begin.</span></span>
-        <span class="go">Jump ↗</span>
+        <span class="body"><span class="t">Untitled Chapter 1</span><span class="d">The uploader left this one unnamed. It opens on him turning 50 — "hopefully far from over," with another 50 years to get to 100 not out — and the frame he sets for the whole conversation: life's a journey, we're all a work in progress, and every day is a learning opportunity.</span></span>
+        <span class="go">▶ Play</span>
       </a>
       <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=170" target="_blank" rel="noopener">
         <span class="time">02:50</span>
-        <span class="body"><span class="t">Success leaves trails</span><span class="d">On reading the patterns behind repeated success, rather than treating it as luck.</span></span>
-        <span class="go">Jump ↗</span>
+        <span class="body"><span class="t">Success leaves trails</span><span class="d">He calls himself an "accidental umpire" — no grand vision or goal to reach test-match level, just a bit of a challenge and a bit of luck, which he says everyone needs sometimes. What he could control was simpler: being the best he could be, not comparing himself to anyone else.</span></span>
+        <span class="go">▶ Play</span>
       </a>
       <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=445" target="_blank" rel="noopener">
         <span class="time">07:25</span>
-        <span class="body"><span class="t">Commitment vs training</span><span class="d">The difference between showing up and actually improving.</span></span>
-        <span class="go">Jump ↗</span>
+        <span class="body"><span class="t">Commitment vs training</span><span class="d">A wish or a dream is wanting a certain job, car, or position — commitment is different. Once it's a commitment, he says, there's a huge amount of hard work, sacrifice, and self-discipline required to actually turn that dream into something real.</span></span>
+        <span class="go">▶ Play</span>
       </a>
       <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=600" target="_blank" rel="noopener">
         <span class="time">10:00</span>
-        <span class="body"><span class="t">Importance of focus</span><span class="d">Turning long-term goals into a specific daily and weekly plan — and, within this chapter, the self-evaluation ritual he committed to writing after every match.</span></span>
-        <span class="go">Jump ↗</span>
+        <span class="body"><span class="t">Importance of focus</span><span class="d">Focus, for him, means going back to a written plan — and that plan has to be specific not just about the long-term goal, but about what you're actually going to do every day, every week, every month to move toward it. Vague long-term ambition without a specific short-term plan doesn't move anyone anywhere.</span></span>
+        <span class="go">▶ Play</span>
       </a>
       <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=944" target="_blank" rel="noopener">
         <span class="time">15:44</span>
-        <span class="body"><span class="t">Attributes of a great team</span><span class="d">Why a great team is not the same thing as a team of champions.</span></span>
-        <span class="go">Jump ↗</span>
+        <span class="body"><span class="t">Attributes of a great team</span><span class="d">He's seen great team performances and very ordinary ones, and the difference over time is a sustained commitment to excellence — his example is the early-2000s Australian cricket team, who at one point broke the record by winning 17 test matches in a row.</span></span>
+        <span class="go">▶ Play</span>
       </a>
       <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=1234" target="_blank" rel="noopener">
         <span class="time">20:34</span>
-        <span class="body"><span class="t">Leadership traits in defining moments</span><span class="d">What leadership looks like when the pressure is highest, not when things are calm.</span></span>
-        <span class="go">Jump ↗</span>
+        <span class="body"><span class="t">Leadership traits in defining moments</span><span class="d">On Steve Waugh's captaincy: what stood out was his ability to inspire confidence and self-belief in teammates, getting the best out of bowlers like Brett Lee and Shane Warne — a contrast to players like Glenn McGrath, who he saw as more self-driven and needing less of that from a captain.</span></span>
+        <span class="go">▶ Play</span>
       </a>
       <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=1569" target="_blank" rel="noopener">
         <span class="time">26:09</span>
-        <span class="body"><span class="t">Advice to young people</span><span class="d">Never decline an invitation to try something new — you don't know where it leads.</span></span>
-        <span class="go">Jump ↗</span>
+        <span class="body"><span class="t">Advice to young people</span><span class="d">Never knock back an invitation or opportunity to try something new, because you just don't know where it'll take you. With his own kids, the goal is exposure to as many different things as possible, then stepping back to let them go toward whatever they actually love, rather than pushing them.</span></span>
+        <span class="go">▶ Play</span>
       </a>
     </div>
   </section>
-
-  <div class="note">
-    <b>What this page is, and isn't.</b> These are the video's own chapter markers and start
-    times, pulled with the same <code>yt-dlp</code> command the tool runs on your machine —
-    nothing paraphrased. Your own vault note would also carry the full transcript underneath;
-    that's left out here since it's a third party's talk, not something this site should
-    republish in full. Click any timestamp to hear the real thing.
-  </div>
-
-  <div class="cta">
-    <p>This is what shows up in your vault the moment you paste a link — no setup, no editing.</p>
-    <a class="btn" href="/docs/getting-started">Try it yourself →</a>
-  </div>
 
 </div>
 
@@ -163,3 +133,30 @@ footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <span><a href="https://github.com/vshrinath/dori-mini">github.com/vshrinath/dori-mini</a></span>
   </div>
 </footer>
+
+<script>
+var player;
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('yt-player', {
+    videoId: 'A31tJDSFIvQ',
+    playerVars: { rel: 0, modestbranding: 1, playsinline: 1 }
+  });
+}
+(function () {
+  var tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+})();
+document.addEventListener('click', function (e) {
+  var a = e.target.closest('.chap');
+  if (!a) return;
+  var m = a.href.match(/[?&]t=(\d+)/);
+  if (!m || !player || typeof player.seekTo !== 'function') return;
+  e.preventDefault();
+  player.seekTo(parseInt(m[1], 10), true);
+  player.playVideo();
+  document.querySelectorAll('.chap.playing').forEach(function (el) { el.classList.remove('playing'); });
+  a.classList.add('playing');
+  document.querySelector('.player-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+</script>
