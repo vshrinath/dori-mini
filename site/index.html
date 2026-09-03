@@ -140,6 +140,11 @@ h2{font-size:clamp(1.8rem,3.4vw,2.7rem);line-height:1.1}
 .turn .mark{font-style:normal;font-family:var(--f-display);font-weight:600;font-size:.86em;position:relative;white-space:nowrap}
 .turn .mark::after{content:"";position:absolute;left:-.03em;right:-.03em;bottom:.01em;height:.16em;background:var(--amber);border-radius:5px;z-index:-1;opacity:.92;transform:rotate(-.6deg)}
 
+/* crosslink strip */
+.crosslink{background:var(--paper-2);border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);padding:15px 0;text-align:center}
+.crosslink p{margin:0;font-size:14.5px;color:var(--ink-2)}
+.crosslink a{color:var(--amber-ink);font-weight:600}
+
 /* zeros */
 .zeros{background:var(--paper-2)}
 .zrow{display:grid;grid-template-columns:repeat(3,1fr);gap:38px;text-align:center}
@@ -309,6 +314,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
     <div class="demo" id="demo" aria-live="polite">
       <div class="bar"><i></i>Claude Code</div>
     </div>
+  </div>
+</section>
+
+<section class="crosslink">
+  <div class="wrap">
+    <p>No Claude Code or Codex? <a href="https://mydori.app">Try the hosted Dori →</a></p>
   </div>
 </section>
 
