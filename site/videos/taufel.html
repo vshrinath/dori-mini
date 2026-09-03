@@ -1,0 +1,165 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dori Mini — IST 19, Simon Taufel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --paper:#fdfcf9; --paper-2:#f5f3ec; --raise:#ffffff;
+  --ink:#171c45; --ink-2:#525878; --ink-3:#666b88;
+  --hair:#e6e3d9;
+  --amber:#d99a1f; --amber-deep:#b87d14; --amber-ink:#8a6210;
+  --green:#3fae5a; --green-ink:#2b7a42;
+  --shadow-sm:0 1px 2px rgba(23,28,69,.04),0 6px 16px rgba(23,28,69,.06);
+  --f-sans:"Schibsted Grotesk",-apple-system,"Helvetica Neue",sans-serif;
+  --f-serif:"Instrument Serif",Georgia,serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 var(--f-sans);-webkit-font-smoothing:antialiased}
+::selection{background:var(--amber);color:var(--ink)}
+a{color:var(--amber-ink);text-decoration:none}
+a.u{text-decoration:underline;text-underline-offset:3px}
+h1,h2{margin:0;text-wrap:balance;letter-spacing:-.025em;font-weight:600}
+code{font-family:var(--f-mono)}
+
+.wide{max-width:1080px;margin:0 auto;padding:0 28px}
+.doc{max-width:760px;margin:0 auto;padding:0 28px}
+
+header{border-bottom:1px solid var(--hair)}
+header .wide{height:56px;display:flex;align-items:center;gap:30px}
+.wordmark{display:flex;align-items:baseline;gap:7px;color:var(--ink);flex:none;margin-right:auto}
+.wordmark svg{height:21px;width:auto;display:block;transform:translateY(3px)}
+.wordmark span{font-size:1rem;font-weight:500;letter-spacing:-.01em;color:var(--ink-3)}
+header nav a{font-size:14px;color:var(--ink-2)}
+header nav a:hover{color:var(--ink)}
+
+.opener{padding:64px 0 8px}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-ink);
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:20px}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--green);display:block}
+h1{font-size:clamp(1.9rem,4.4vw,2.7rem);line-height:1.1;max-width:20ch}
+.serif-pop{font-family:var(--f-serif);font-style:italic;font-weight:400;color:var(--amber-deep);letter-spacing:-.01em}
+.meta{color:var(--ink-3);font-size:1rem;margin:16px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.meta a{color:var(--amber-ink);font-weight:600}
+
+.lede{color:var(--ink-2);font-size:1.06rem;margin:22px 0 0;max-width:62ch}
+
+section{padding:44px 0 0}
+.k{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:0 0 6px}
+.k b{color:var(--amber-ink)}
+
+.chapters{margin:16px 0 0;border-top:1px solid var(--hair)}
+.chap{display:flex;gap:18px;align-items:flex-start;padding:18px 0;border-bottom:1px solid var(--hair);
+  color:inherit;text-decoration:none}
+.chap:hover .t{color:var(--amber-ink)}
+.chap .time{font-family:var(--f-mono);font-size:14px;color:var(--amber-ink);background:var(--paper-2);
+  border-radius:8px;padding:4px 10px;flex:none;margin-top:2px;white-space:nowrap}
+.chap .body{flex:1}
+.chap .t{font-size:1.06rem;font-weight:600;color:var(--ink);transition:color .12s;display:block}
+.chap .d{font-size:.95rem;color:var(--ink-3);margin-top:4px;line-height:1.5;display:block}
+.chap .go{flex:none;color:var(--ink-3);font-size:13px;margin-top:5px}
+
+.note{background:var(--paper-2);border-radius:16px;padding:20px 22px;font-size:.98rem;color:var(--ink-2);
+  margin-top:44px}
+.note b{color:var(--ink)}
+
+.cta{border-top:1px solid var(--hair);margin-top:52px;padding:30px 0 60px;display:flex;justify-content:space-between;
+  align-items:center;flex-wrap:wrap;gap:16px}
+.cta p{margin:0;font-size:.98rem;color:var(--ink-2);max-width:40ch}
+.btn{display:inline-block;font-weight:700;font-size:.92rem;color:var(--ink);background:var(--amber);
+  padding:11px 20px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.18);transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{background:var(--amber-deep);transform:translateY(-2px) rotate(-1deg);box-shadow:0 8px 20px rgba(217,154,31,.4)}
+
+footer{border-top:1px solid var(--hair);padding:24px 0 40px}
+footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
+
+@media (max-width:640px){
+  .opener{padding:44px 0 8px}
+  .chap{gap:12px}
+  .chap .go{display:none}
+  .cta{flex-direction:column;align-items:flex-start}
+}
+</style>
+
+<header>
+  <div class="wide">
+    <a class="wordmark" href="/" aria-label="Dori Mini"><svg viewBox="0 0 108 42" fill="none" aria-hidden="true"><path d="M30.5 6.5c-1.4 6.9-3.6 15.2-5 21.9-.8 3.9-.6 6.6 1.6 6.6 2.4 0 4.3-3.4 5.4-7.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M27.4 17.6c-2.2-2.4-6.2-2.3-9 .4-3.3 3.2-4.2 8.9-1.8 11.7 2.2 2.5 6 1.9 8.6-.9 1.6-1.7 2.6-4 3.2-6.3" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M40 20.6c-3 0-5.7 3.4-5.7 7.7 0 3.4 1.9 5.6 4.7 5.6 3.4 0 6.2-3.6 6.2-7.9 0-3.3-1.9-5.4-4.6-5.4Z" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M50 33.6c.7-4.2 1.4-8 2-11.6M52.4 25.6c1-3.2 3.3-5.4 6.4-5.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M66.6 21.4c-.9 4.2-1.6 8-2.1 12.2" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="69.4" cy="12.6" r="3.1" fill="var(--amber)"/></svg><span>mini</span></a>
+    <nav><a href="/#knowledge">← Back to the homepage</a></nav>
+  </div>
+</header>
+
+<div class="doc">
+
+  <div class="opener">
+    <p class="eyebrow"><i></i> Real capture example</p>
+    <h1>IST 19 · Simon Taufel · <span class="serif-pop">HOWZAT</span></h1>
+    <p class="meta">Inspire Someone Today · 2021 · 35:43 · <a class="u" href="https://www.youtube.com/watch?v=A31tJDSFIvQ" target="_blank" rel="noopener">Watch on YouTube ↗</a></p>
+    <p class="lede">This episode ships with 7 chapters from its own uploader. Dori Mini uses them exactly as given — no rewriting, no re-ranking. Every timestamp below jumps straight into the real video at that second.</p>
+  </div>
+
+  <section>
+    <p class="k">Uploader supplied <b>7 chapters</b>. Used as-is.</p>
+    <div class="chapters">
+      <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=0" target="_blank" rel="noopener">
+        <span class="time">00:00</span>
+        <span class="body"><span class="t">Untitled Chapter 1</span><span class="d">The uploader left this one unnamed — introductions and setup, before the named chapters begin.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=170" target="_blank" rel="noopener">
+        <span class="time">02:50</span>
+        <span class="body"><span class="t">Success leaves trails</span><span class="d">On reading the patterns behind repeated success, rather than treating it as luck.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=445" target="_blank" rel="noopener">
+        <span class="time">07:25</span>
+        <span class="body"><span class="t">Commitment vs training</span><span class="d">The difference between showing up and actually improving.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=600" target="_blank" rel="noopener">
+        <span class="time">10:00</span>
+        <span class="body"><span class="t">Importance of focus</span><span class="d">Turning long-term goals into a specific daily and weekly plan — and, within this chapter, the self-evaluation ritual he committed to writing after every match.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=944" target="_blank" rel="noopener">
+        <span class="time">15:44</span>
+        <span class="body"><span class="t">Attributes of a great team</span><span class="d">Why a great team is not the same thing as a team of champions.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=1234" target="_blank" rel="noopener">
+        <span class="time">20:34</span>
+        <span class="body"><span class="t">Leadership traits in defining moments</span><span class="d">What leadership looks like when the pressure is highest, not when things are calm.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/A31tJDSFIvQ?t=1569" target="_blank" rel="noopener">
+        <span class="time">26:09</span>
+        <span class="body"><span class="t">Advice to young people</span><span class="d">Never decline an invitation to try something new — you don't know where it leads.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+    </div>
+  </section>
+
+  <div class="note">
+    <b>What this page is, and isn't.</b> These are the video's own chapter markers and start
+    times, pulled with the same <code>yt-dlp</code> command the tool runs on your machine —
+    nothing paraphrased. Your own vault note would also carry the full transcript underneath;
+    that's left out here since it's a third party's talk, not something this site should
+    republish in full. Click any timestamp to hear the real thing.
+  </div>
+
+  <div class="cta">
+    <p>This is what shows up in your vault the moment you paste a link — no setup, no editing.</p>
+    <a class="btn" href="/docs/getting-started">Try it yourself →</a>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wide">
+    <span>Dori Mini · open source</span>
+    <span>Works with Claude Code, Codex and Antigravity</span>
+    <span><a href="https://github.com/vshrinath/dori-mini">github.com/vshrinath/dori-mini</a></span>
+  </div>
+</footer>

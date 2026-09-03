@@ -1,0 +1,199 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dori Mini — E182, Blind Spots To Big Bets</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --paper:#fdfcf9; --paper-2:#f5f3ec; --raise:#ffffff;
+  --ink:#171c45; --ink-2:#525878; --ink-3:#666b88;
+  --hair:#e6e3d9;
+  --amber:#d99a1f; --amber-deep:#b87d14; --amber-ink:#8a6210;
+  --green:#3fae5a; --green-ink:#2b7a42;
+  --shadow-sm:0 1px 2px rgba(23,28,69,.04),0 6px 16px rgba(23,28,69,.06);
+  --f-sans:"Schibsted Grotesk",-apple-system,"Helvetica Neue",sans-serif;
+  --f-serif:"Instrument Serif",Georgia,serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 var(--f-sans);-webkit-font-smoothing:antialiased}
+::selection{background:var(--amber);color:var(--ink)}
+a{color:var(--amber-ink);text-decoration:none}
+a.u{text-decoration:underline;text-underline-offset:3px}
+h1,h2{margin:0;text-wrap:balance;letter-spacing:-.025em;font-weight:600}
+code{font-family:var(--f-mono)}
+
+.wide{max-width:1080px;margin:0 auto;padding:0 28px}
+.doc{max-width:760px;margin:0 auto;padding:0 28px}
+
+header{border-bottom:1px solid var(--hair)}
+header .wide{height:56px;display:flex;align-items:center;gap:30px}
+.wordmark{display:flex;align-items:baseline;gap:7px;color:var(--ink);flex:none;margin-right:auto}
+.wordmark svg{height:21px;width:auto;display:block;transform:translateY(3px)}
+.wordmark span{font-size:1rem;font-weight:500;letter-spacing:-.01em;color:var(--ink-3)}
+header nav a{font-size:14px;color:var(--ink-2)}
+header nav a:hover{color:var(--ink)}
+
+.opener{padding:64px 0 8px}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber-ink);
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:20px}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--amber);display:block}
+h1{font-size:clamp(1.9rem,4.4vw,2.7rem);line-height:1.1;max-width:22ch}
+.serif-pop{font-family:var(--f-serif);font-style:italic;font-weight:400;color:var(--amber-deep);letter-spacing:-.01em}
+.meta{color:var(--ink-3);font-size:1rem;margin:16px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.meta a{color:var(--amber-ink);font-weight:600}
+
+.lede{color:var(--ink-2);font-size:1.06rem;margin:22px 0 0;max-width:62ch}
+
+section{padding:44px 0 0}
+.k{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:0 0 6px}
+.k b{color:var(--amber-ink)}
+
+.chapters{margin:16px 0 0;border-top:1px solid var(--hair)}
+.chap{display:flex;gap:18px;align-items:flex-start;padding:18px 0;border-bottom:1px solid var(--hair);
+  color:inherit;text-decoration:none}
+.chap:hover .t{color:var(--amber-ink)}
+.chap .time{font-family:var(--f-mono);font-size:14px;color:var(--amber-ink);background:var(--paper-2);
+  border-radius:8px;padding:4px 10px;flex:none;margin-top:2px;white-space:nowrap}
+.chap .body{flex:1}
+.chap .t{font-size:1.06rem;font-weight:600;color:var(--ink);transition:color .12s;display:block}
+.chap .d{font-size:.95rem;color:var(--ink-3);margin-top:4px;line-height:1.5;display:block}
+.chap .go{flex:none;color:var(--ink-3);font-size:13px;margin-top:5px}
+
+.note{background:var(--paper-2);border-radius:16px;padding:20px 22px;font-size:.98rem;color:var(--ink-2);
+  margin-top:44px}
+.note b{color:var(--ink)}
+.note+.note{margin-top:16px}
+
+.cta{border-top:1px solid var(--hair);margin-top:52px;padding:30px 0 60px;display:flex;justify-content:space-between;
+  align-items:center;flex-wrap:wrap;gap:16px}
+.cta p{margin:0;font-size:.98rem;color:var(--ink-2);max-width:40ch}
+.btn{display:inline-block;font-weight:700;font-size:.92rem;color:var(--ink);background:var(--amber);
+  padding:11px 20px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.18);transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover{background:var(--amber-deep);transform:translateY(-2px) rotate(-1deg);box-shadow:0 8px 20px rgba(217,154,31,.4)}
+
+footer{border-top:1px solid var(--hair);padding:24px 0 40px}
+footer .wide{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
+
+@media (max-width:640px){
+  .opener{padding:44px 0 8px}
+  .chap{gap:12px}
+  .chap .go{display:none}
+  .cta{flex-direction:column;align-items:flex-start}
+}
+</style>
+
+<header>
+  <div class="wide">
+    <a class="wordmark" href="/" aria-label="Dori Mini"><svg viewBox="0 0 108 42" fill="none" aria-hidden="true"><path d="M30.5 6.5c-1.4 6.9-3.6 15.2-5 21.9-.8 3.9-.6 6.6 1.6 6.6 2.4 0 4.3-3.4 5.4-7.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M27.4 17.6c-2.2-2.4-6.2-2.3-9 .4-3.3 3.2-4.2 8.9-1.8 11.7 2.2 2.5 6 1.9 8.6-.9 1.6-1.7 2.6-4 3.2-6.3" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M40 20.6c-3 0-5.7 3.4-5.7 7.7 0 3.4 1.9 5.6 4.7 5.6 3.4 0 6.2-3.6 6.2-7.9 0-3.3-1.9-5.4-4.6-5.4Z" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M50 33.6c.7-4.2 1.4-8 2-11.6M52.4 25.6c1-3.2 3.3-5.4 6.4-5.1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M66.6 21.4c-.9 4.2-1.6 8-2.1 12.2" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="69.4" cy="12.6" r="3.1" fill="var(--amber)"/></svg><span>mini</span></a>
+    <nav><a href="/#knowledge">← Back to the homepage</a></nav>
+  </div>
+</header>
+
+<div class="doc">
+
+  <div class="opener">
+    <p class="eyebrow"><i></i> Real capture example</p>
+    <h1>E182 · <span class="serif-pop">Blind Spots To Big Bets</span></h1>
+    <p class="meta">Inspire Someone Today · 2026 · 46:08 · <a class="u" href="https://www.youtube.com/watch?v=hiYTq9xnkPw" target="_blank" rel="noopener">Watch on YouTube ↗</a></p>
+    <p class="lede">This one shipped with zero chapters from its uploader. Dori Mini listened to the
+    whole 46 minutes and built its own 12 jump points from what was actually said. Every
+    timestamp below jumps straight into the real video at that second.</p>
+  </div>
+
+  <section>
+    <p class="k">Uploader supplied <b>none</b>. Dori built <b>12 jump points</b>.</p>
+    <div class="chapters">
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=12" target="_blank" rel="noopener">
+        <span class="time">00:12</span>
+        <span class="body"><span class="t">Two layoffs, and why the story isn't doom and gloom</span><span class="d">On being laid off from Motorola and Nokia, and reframing it as the start of a consulting career rather than an ending.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=204" target="_blank" rel="noopener">
+        <span class="time">03:24</span>
+        <span class="body"><span class="t">What big companies teach that no MBA does</span><span class="d">The lessons that only show up after years inside a large organization.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=886" target="_blank" rel="noopener">
+        <span class="time">14:46</span>
+        <span class="body"><span class="t">Seeing what people inside a company can't</span><span class="d">Why an outsider's perspective spots organizational patterns that insiders usually miss.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=1003" target="_blank" rel="noopener">
+        <span class="time">16:43</span>
+        <span class="body"><span class="t">Unable to see it, or unwilling to see it</span><span class="d">Two different blind spots, needing two different kinds of help — a coach for one, a mentor for the other.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=1098" target="_blank" rel="noopener">
+        <span class="time">18:18</span>
+        <span class="body"><span class="t">NPS as a dangerous proxy</span><span class="d">A real example: a company optimizing its product for a score instead of the actual reasons the score was low.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=1455" target="_blank" rel="noopener">
+        <span class="time">24:15</span>
+        <span class="body"><span class="t">Expertise curdles into pattern matching</span><span class="d">Years in one domain builds a reflex to assume "I've seen this before" — which is exactly where organizational friction starts.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=1874" target="_blank" rel="noopener">
+        <span class="time">31:14</span>
+        <span class="body"><span class="t">The AI-first trap</span><span class="d">On companies declaring "AI-first" as a strategy rather than a genuine change in how work gets done.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=2097" target="_blank" rel="noopener">
+        <span class="time">34:57</span>
+        <span class="body"><span class="t">Borrowing yesterday's patterns for an AI future</span><span class="d">Large companies applying old playbooks to a technology that doesn't follow the old rules.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=2483" target="_blank" rel="noopener">
+        <span class="time">41:23</span>
+        <span class="body"><span class="t">Three signs of a blind spot you haven't found yet</span><span class="d">Including pattern-matching everything, as if the future is guaranteed to look like the past.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=2514" target="_blank" rel="noopener">
+        <span class="time">41:54</span>
+        <span class="body"><span class="t">Three questions to ask yourself once a year</span><span class="d">A short, recurring check most professionals keep avoiding.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=2623" target="_blank" rel="noopener">
+        <span class="time">43:43</span>
+        <span class="body"><span class="t">Who he admires: pattern-finders in human behaviour</span><span class="d">On the researchers who can find real patterns across a country as diverse as India.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+      <a class="chap" href="https://youtu.be/hiYTq9xnkPw?t=2662" target="_blank" rel="noopener">
+        <span class="time">44:22</span>
+        <span class="body"><span class="t">The Listener Action</span><span class="d">A short exercise to start surfacing your own blind spots, today rather than someday.</span></span>
+        <span class="go">Jump ↗</span>
+      </a>
+    </div>
+  </section>
+
+  <div class="note">
+    <b>How these were made.</b> The real transcript for this video is 45,530 characters —
+    pulled with <code>yt-dlp</code>, the rolling auto-caption duplicates removed the same way
+    <code>SKILL.md</code> documents. These 12 points are topic breaks in that transcript, each
+    verified against the actual words spoken at that timestamp — not estimated from the
+    thumbnail or the description.
+  </div>
+  <div class="note">
+    <b>What's left out.</b> Your own vault note would also carry the full cleaned transcript
+    underneath, plus a short summary. That part isn't reproduced here — even for the guest's
+    own episode, a public marketing page isn't the place to republish 46 minutes of someone's
+    conversation in full. The real thing is one click away on every timestamp above.
+  </div>
+
+  <div class="cta">
+    <p>This is what shows up in your vault the moment you paste a link — no setup, no editing.</p>
+    <a class="btn" href="/docs/getting-started">Try it yourself →</a>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wide">
+    <span>Dori Mini · open source</span>
+    <span>Works with Claude Code, Codex and Antigravity</span>
+    <span><a href="https://github.com/vshrinath/dori-mini">github.com/vshrinath/dori-mini</a></span>
+  </div>
+</footer>

@@ -369,3 +369,28 @@ the page to the script logo.
 - **Real art** for the six frames and the closing panel illustration. v3 ships with
   HTML/CSS mockups that stand in convincingly; commission once the structure is signed off.
 - **The script `dori` wordmark as SVG.** Only a raster app icon exists today.
+
+
+## Two real video pages, 2026-09-03
+
+`/videos/taufel.html` and `/videos/blind-spots.html` — one real chapter breakdown per
+knowledge-base video, verified against actual `yt-dlp` output, not invented. Purpose is
+distinct from the two-page doc set (a task page, a Q&A) and from the homepage (persuasion):
+these are proof for one specific homepage claim ("jump points you can click"), so they get
+their own light chrome — no tab strip, no doc nav, just a back-link to the homepage.
+
+Real captures corrected two things the homepage's illustration had wrong:
+- Taufel's uploader chapters: 2 of 3 example titles shown were invented, not the real
+  chapter titles, despite the caption claiming "used as-is". Fixed to the exact 7 real
+  titles and timestamps (`yt-dlp --write-info-json`).
+- Blind Spots' derived chapters: "23:02 Expertise as pattern matching" was ~73s off the
+  real moment (24:15, verified against the transcript). "28 jump points" was never a real
+  count — replaced with 12, an actually-built and individually verified set.
+
+Full transcripts are NOT reproduced on either page, on purpose: even for the user's own
+episode (Blind Spots' guest is Shrinath V, confirmed via real video metadata — a research
+doc elsewhere in this repo pseudonymizes him as "Jordan Lee" for its own reasons but the
+real capture confirms the real name), a public marketing page isn't the place for 46
+minutes of verbatim conversation, and Taufel's episode is a third party's talk. Each
+chapter links straight to `youtu.be/<id>?t=<seconds>` instead — the real jump, into the
+real video.
