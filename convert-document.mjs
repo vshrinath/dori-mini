@@ -17,6 +17,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { extname } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import * as pi from '@firecrawl/pdf-inspector';
 import * as anydoc from '@firecrawl/anydoc';
 
@@ -51,7 +52,7 @@ export async function convertDocument(path) {
   return convertOther(path);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [path, ...rest] = process.argv.slice(2);
   if (!path) {
     console.error('Usage: node convert-document.mjs <path> [-o <output.md>]');
