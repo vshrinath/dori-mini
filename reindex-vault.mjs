@@ -145,12 +145,20 @@ if (process.argv[2] === 'dedupe') {
   let skippedTrivial = 0;
   for (const file of files) {
     const relPath = relative(VAULT_ROOT, file);
-    const { body } = parseFrontmatter(readFileSync(file, 'utf-8'));
+    const raw = readFileSync(file, 'utf-8');
+    const { body } = parseFrontmatter(raw);
     // Empty/near-empty bodies (frontmatter-only stub files — found 80 of these in the
     // real vault) all hash the same trivial value and would otherwise get wrongly
     // grouped as duplicates of each other and of unrelated files.
     if (body.trim().length < MIN_DEDUP_BODY_CHARS) { skippedTrivial++; continue; }
-    const hash = contentHash(body);
+    // Hash the RAW file (frontmatter + body), not just the body: two files sharing a
+    // boilerplate body template (e.g. every new trip ledger starts with the same empty
+    // table) are only real duplicates if their frontmatter matches too — found via two
+    // distinct fresh trip ledgers (different threadId/trip name) getting wrongly deduped
+    // against each other on 2026-09-04 since the empty LEDGER_HEADER body is byte-identical
+    // across every trip. A true copy-pasted duplicate still has identical frontmatter, so
+    // this loses no real detection.
+    const hash = contentHash(raw);
     if (!groups.has(hash)) groups.set(hash, []);
     groups.get(hash).push(relPath);
   }
@@ -251,8 +259,11 @@ for (const file of target) {
   }
 
   // See MIN_DEDUP_BODY_CHARS's comment above the dedupe block — empty/near-empty bodies
-  // all hash the same and must never be treated as duplicates of each other.
-  const hash = processedNote.trim().length >= MIN_DEDUP_BODY_CHARS ? contentHash(processedNote) : '';
+  // all hash the same and must never be treated as duplicates of each other. Hash the RAW
+  // file (frontmatter + body), not just processedNote — see the matching comment in the
+  // `dedupe` command above for why (two fresh trip ledgers with an identical empty-table
+  // body but different threadId/trip frontmatter are not duplicates).
+  const hash = processedNote.trim().length >= MIN_DEDUP_BODY_CHARS ? contentHash(raw) : '';
   const canonical = hash ? findCanonicalPath.get(VAULT_ID, hash, relPath) : null;
 
   const renderedHtml = renderMarkdownToHtml(processedNote);
