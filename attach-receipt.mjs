@@ -163,8 +163,13 @@ export async function attachReceipt(file, opts) {
   }
 
   // Finalize the attachment: copy the receipt into the ledger's own folder,
-  // mirroring finalizeCapture's targetDir (dirname of the ledger path).
-  let attachmentName = basename(file);
+  // mirroring finalizeCapture's targetDir (dirname of the ledger path). Trimmed: a
+  // leading/trailing space in the source filename (e.g. a browser download named
+  // " - Ticket - ....pdf") survives the copy but not the markdown link — parseTripLedger's
+  // attachment-link extraction trims each link target, so an untrimmed name round-trips
+  // into a path that doesn't exist on disk and check-reimbursement-gaps.mjs flags it as
+  // missing evidence even though the file is right there.
+  let attachmentName = basename(file).trim();
   let attachmentAbsPath = join(VAULT_ROOT, ledgerDir, attachmentName);
   if (existsSync(attachmentAbsPath)) {
     attachmentName = `${id}-${attachmentName}`;
