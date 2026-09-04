@@ -126,6 +126,23 @@ function findWordBoundaryHit(normalizedQuery, candidateName) {
 }
 
 /**
+ * Resolve a query to at most one trip threadId, via a direct hit on the trip's display
+ * name (finances/trips ledger frontmatter `trip:`) or its threadId itself. Same
+ * fails-open discipline as matchProject: 0 or >1 hits returns null rather than guessing.
+ */
+export function matchTrip(query, ledgers) {
+  const normalizedQuery = normalize(query);
+  const hits = new Set();
+  for (const l of ledgers) {
+    if (!l.threadId) continue;
+    if (l.ledger?.trip && findWordBoundaryHit(normalizedQuery, l.ledger.trip)) hits.add(l.threadId);
+    else if (findWordBoundaryHit(normalizedQuery, l.threadId)) hits.add(l.threadId);
+  }
+  if (hits.size !== 1) return null;
+  return [...hits][0];
+}
+
+/**
  * Resolve a query to at most one project slug, via a direct project-name hit or via a
  * named person's linked project. Fails open (returns null) on zero or ambiguous (>1)
  * matches — a wrong scope silently excludes the right document, worse than no scope.

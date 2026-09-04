@@ -104,6 +104,30 @@ function explicitMatches(message, ledgers) {
   return ledgers.filter((l) => l.trip && norm.includes(normalize(l.trip)));
 }
 
+/**
+ * Mirrors withThreadIdFrontmatter in trip-ledger.ts exactly — stamps `threadId:` onto a
+ * markdown document's frontmatter (inserting a block if none exists) so it's answerable
+ * from a trip-scoped search, same as real Dori tags a filed flight ticket/hotel booking.
+ * Returns null if the document already carries this exact threadId (nothing to rewrite).
+ */
+export function withThreadIdFrontmatter(content, threadId) {
+  const line = `threadId: ${JSON.stringify(threadId)}`;
+  if (!content.startsWith('---')) return `---\n${line}\n---\n\n${content}`;
+
+  const end = content.indexOf('\n---', 3);
+  if (end === -1) return `---\n${line}\n---\n\n${content}`;
+
+  const frontmatter = content.slice(0, end);
+  const existing = frontmatter.match(/^threadId:\s*(.*)$/m);
+  if (existing) {
+    const current = existing[1].trim().replace(/^["']|["']$/g, '');
+    if (current === threadId) return null;
+    return content.replace(/^threadId:\s*.*$/m, line);
+  }
+  const firstBreak = content.indexOf('\n');
+  return `${content.slice(0, firstBreak + 1)}${line}\n${content.slice(firstBreak + 1)}`;
+}
+
 /** Mirrors buildLedgerRow in trip-ledger.ts exactly (column order, defaults, marker suffix). */
 export function buildLedgerRow({ date, description, category, amount, tax, paidBy, reimbursable, attachmentCol, marker }) {
   const payer = paidBy || 'self';

@@ -117,11 +117,16 @@ export function loadLedgers() {
     if (!existsSync(dir)) continue;
     for (const f of readdirSync(dir)) {
       // generated packages (close-trip.mjs) carry the same trip/threadId
-      // frontmatter as their source ledger but no table — skip them.
+      // frontmatter as their source ledger but no table — skip them. So does a
+      // ticket/itinerary document attach-receipt.mjs files alongside the ledger and
+      // stamps with the trip's threadId (withThreadIdFrontmatter) — it carries no
+      // `type: reimbursement` marker (only buildTripLedgerSeed writes that), which is
+      // the actual ledger-vs-filed-document discriminator.
       if (!f.endsWith('.md') || f.endsWith('-reimbursement-package.md')) continue;
       const relPath = `finances/${dir === TRIPS_DIR ? 'trips' : 'reimbursements'}/${f}`;
       const raw = readFileSync(join(dir, f), 'utf-8');
-      const threadId = (raw.match(/^threadId:\s*(.+)$/m) || [])[1]?.trim();
+      if (!/^type:\s*reimbursement\s*$/m.test(raw)) continue;
+      const threadId = frontmatterField(raw, 'threadId');
       const ledger = parseTripLedger(relPath, raw);
       out.push({ threadId, relPath, ledger, totals: totals(ledger) });
     }

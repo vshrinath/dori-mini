@@ -18,15 +18,17 @@ import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { RERANK_ENABLED, RERANK_CANDIDATE_MULTIPLIER, rerank } from './reranker.mjs';
-import { discoverProjects, discoverPeople, matchProject } from './scope.mjs';
+import { discoverProjects, discoverPeople, matchProject, matchTrip } from './scope.mjs';
 import { parseFrontmatter } from './frontmatter.mjs';
+import { loadLedgers } from './query-ledger.mjs';
 
 const DB_PATH = process.env.VAULT_INDEX_DB || resolve(homedir(), 'proto-space/dori/store/portal.db');
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
-// Opt-in and unproven — see docs/eval-scope-2026-08-26.mjs before flipping the default.
-// Fails open (matchProject returns null on 0 or >1 hits): a wrong scope would silently
-// exclude the right document, worse than not scoping at all.
-const SCOPE_ENABLED = process.env.SCOPE === '1';
+// On by default since 2026-09-04 — docs/eval-scope-2026-08-26.mjs found it never hurt
+// (near-zero activation rate, fails open on 0/>1 hits) and attach-receipt.mjs now files
+// trip documents (tickets/itineraries) that depend on trip scoping to stay findable
+// without leaking into unrelated searches. Set SCOPE=0 to disable.
+const SCOPE_ENABLED = process.env.SCOPE !== '0';
 const DEFAULT_SECTIONS = ['decisions', 'actions'];
 // Mirrors real dori-portal's searchVaultDocumentsFts (lib/vault-indexer.ts:115,
 // `Math.min(Math.max(options?.limit ?? 20, 1), 50)`). dori-mini previously used 5/8,
@@ -984,7 +986,11 @@ function toPrefixAndQuery(q) {
   return kept.map((t) => `"${t.replace(/"/g, '')}"*`).join(' AND ');
 }
 
-function searchStmt(db, scoped) {
+// Trip scoping is a second, independent scope alongside the project one: a project lives
+// in a folder (rel_path LIKE), a trip is a thread tagged onto documents via `threadId:`
+// frontmatter wherever they were filed (finances/trips/, but also anywhere a ticket/
+// itinerary got stamped by attach-receipt.mjs) — so it filters frontmatter_json, not path.
+function searchStmt(db, { scopeSlug, tripId } = {}) {
   return db.prepare(`
     SELECT
       vault_documents_fts.rel_path AS rel_path,
@@ -998,14 +1004,21 @@ function searchStmt(db, scoped) {
       ON vault_documents.vault_id = vault_documents_fts.vault_id
      AND vault_documents.rel_path = vault_documents_fts.rel_path
     WHERE vault_documents_fts MATCH ?
-    ${scoped ? "AND vault_documents_fts.rel_path LIKE ?" : ''}
+    ${scopeSlug ? "AND vault_documents_fts.rel_path LIKE ?" : ''}
+    ${tripId ? "AND vault_documents.frontmatter_json LIKE ?" : ''}
     ORDER BY rank
     LIMIT ?
   `);
 }
 
-function runSearch(stmt, q, n, scopeSlug) {
-  const run = (match) => (scopeSlug ? stmt.all(match, `%/${scopeSlug}/%`, n) : stmt.all(match, n));
+function runSearch(stmt, q, n, { scopeSlug, tripId } = {}) {
+  const run = (match) => {
+    const binds = [match];
+    if (scopeSlug) binds.push(`%/${scopeSlug}/%`);
+    if (tripId) binds.push(`%"threadId":${JSON.stringify(tripId)}%`);
+    binds.push(n);
+    return stmt.all(...binds);
+  };
   try {
     const andMatch = toPrefixAndQuery(q);
     if (andMatch) {
@@ -1101,7 +1114,9 @@ async function searchDocs(db, q, limit) {
   const scopeSlug = SCOPE_ENABLED
     ? matchProject(q, discoverProjects(VAULT_ROOT), discoverPeople(VAULT_ROOT))
     : null;
-  const candidates = runSearch(searchStmt(db, Boolean(scopeSlug)), q, candidateN, scopeSlug);
+  const tripId = SCOPE_ENABLED ? matchTrip(q, loadLedgers()) : null;
+  const scope = { scopeSlug, tripId };
+  const candidates = runSearch(searchStmt(db, scope), q, candidateN, scope);
   const reranked = await rerankFtsHits(db, q, candidates);
   const hits = stripInternalFields(reranked.slice(0, n));
   return {

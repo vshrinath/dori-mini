@@ -76,9 +76,11 @@ Don't assume a project-specific convention (e.g. `references/<deck>/` + frontmat
 
 **A receipt or invoice photo/PDF is different** — it's not converted to prose, it's read for a few fields and filed as a ledger row. Read the image yourself (you're multimodal) and pull out the date, vendor/description, and total amount — this mirrors `finance-attach-trip-receipt.ts`'s real vision-extraction step, just done by you instead of a model call inside the action. Then:
 ```bash
-node ~/.claude/skills/dori/attach-receipt.mjs "<path-to-receipt-file>" --date <YYYY-MM-DD> --desc "<vendor/description>" --amount <n> --thread <threadId>
+node ~/.claude/skills/dori/attach-receipt.mjs "<path-to-receipt-file>" --date <YYYY-MM-DD> --desc "<vendor/description>" [--amount <n>] --thread <threadId>
 ```
 Omit `--thread` if you don't know which trip it belongs to — the script lists open trip ledgers as candidates and records a `ClarificationRecord` (domain `finance.trip_receipt`) instead of guessing; ask the user in the same turn, same discipline as branch 6 below. Starting a brand-new trip: add `--trip "<display name>"` (and `--account <slug>` if relevant) so the seeded ledger carries a real name, not just the thread id. A rebooked/corrected receipt for something already on the ledger: pass `--booking-ref <ref>` (an exact match against an earlier row's ref auto-supersedes it, non-destructively — the old row stays for provenance) or `--supersedes <id>` from that earlier call's own `id` field. The script is idempotent per file — reruns on the same receipt don't duplicate the row. After it appends, reindex the ledger file like any other vault write (see "Vault index" below).
+
+**Same script also files travel tickets, itineraries, and hotel bookings** — not just expense receipts. `--amount` is optional (a ticket usually has no OCR'd total, mirrors real Dori's own fallback to `''`). When the file is a type `convert-document.mjs` actually parses (pdf/docx/pptx/xlsx/odt/rtf/epub/csv), it's also converted to a markdown sidecar stamped with `threadId:` frontmatter and filed alongside the ledger (`withThreadIdFrontmatter`, mirrors `finance-attach-trip-receipt.ts`) — that's what makes the ticket itself, not just its ledger row, answerable from a trip-scoped `query-vault.mjs search` (see below). A plain receipt photo (jpg/png/heic) has no text to convert and stays a raw copy only, as before.
 
 ## 3. Meeting transcript (pasted text or a transcript file, with intent to produce minutes)
 

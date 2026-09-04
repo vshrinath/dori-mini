@@ -15,18 +15,30 @@
 // idempotency/supersede is a simple caller-provided --id instead.
 //
 // Usage:
-//   node attach-receipt.mjs <path-to-receipt-file> --date YYYY-MM-DD --desc "<vendor/description>" --amount <n>
+//   node attach-receipt.mjs <path-to-receipt-file> --date YYYY-MM-DD --desc "<vendor/description>" [--amount <n>]
 //     --thread <threadId>            # omit to list open trips + record a clarification, mirrors recordUncertainTrip
 //     [--trip "<display name>"] [--account <slug>]     # only used when seeding a brand-new ledger
 //     [--category Travel] [--tax <n>] [--paid-by self] [--reimbursable true|false]
 //     [--booking-ref <ref>] [--supersedes <id>] [--id <stable-id>]
+//
+// --amount is optional: a flight ticket/hotel booking/itinerary usually has no OCR'd
+// total the way a receipt photo does (real Dori's own invoice extraction falls back to
+// '' too — finance-attach-trip-receipt.ts). A file whose extension convert-document.mjs
+// actually parses (pdf/docx/pptx/xlsx/odt/rtf/epub/csv) also gets converted to a markdown
+// sidecar stamped with `threadId:` frontmatter, alongside the raw copy — this is what
+// makes a filed ticket answerable from a trip-scoped `query-vault.mjs search` (see
+// finance-attach-trip-receipt.ts's comment on canonicalOutputPath + withThreadIdFrontmatter).
+// A plain receipt photo (jpg/png/heic) has no text to convert, so it stays a raw copy only.
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'node:fs';
-import { join, posix as pathPosix, basename } from 'node:path';
+import { join, posix as pathPosix, basename, extname } from 'node:path';
 import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { create as createClarification } from './clarification-store.mjs';
-import { buildTripLedgerSeed, buildLedgerRow } from './expense-router.mjs';
+import { buildTripLedgerSeed, buildLedgerRow, withThreadIdFrontmatter } from './expense-router.mjs';
 import { loadLedgers } from './query-ledger.mjs';
+import { convertDocument } from './convert-document.mjs';
+
+const CONVERTIBLE_EXTS = new Set(['.pdf', '.docx', '.pptx', '.xlsx', '.odt', '.rtf', '.epub', '.csv']);
 
 const VAULT_ROOT = process.env.VAULT_ROOT || join(homedir(), 'proto-space/dori/dori-vault');
 const TRIPS_DIR = join(VAULT_ROOT, 'finances/trips');
@@ -122,11 +134,10 @@ function recordUncertainTrip(file, opts) {
   };
 }
 
-export function attachReceipt(file, opts) {
+export async function attachReceipt(file, opts) {
   if (!existsSync(file)) throw new Error(`Receipt file not found: ${file}`);
   if (!opts.date) throw new Error('--date is required');
   if (!opts.desc) throw new Error('--desc is required');
-  if (opts.amount === undefined) throw new Error('--amount is required');
 
   if (!opts.thread) return recordUncertainTrip(file, opts);
   const threadId = opts.thread;
@@ -161,16 +172,41 @@ export function attachReceipt(file, opts) {
   }
   copyFileSync(file, attachmentAbsPath);
 
+  // Convertible document types (tickets, itineraries, bookings — anything with real text,
+  // not a plain receipt photo) also get a markdown sidecar tagged with this trip's
+  // threadId, so the ticket itself — not just its ledger row — is trip-scoped searchable.
+  let docRelPath, docName;
+  if (CONVERTIBLE_EXTS.has(extname(file).toLowerCase())) {
+    try {
+      const candidateName = `${attachmentName.replace(extname(attachmentName), '')}.md`;
+      const markdown = await convertDocument(attachmentAbsPath);
+      writeFileSync(
+        join(VAULT_ROOT, ledgerDir, candidateName),
+        withThreadIdFrontmatter(markdown, threadId) ?? markdown,
+      );
+      docName = candidateName;
+      docRelPath = pathPosix.join(ledgerDir, docName);
+    } catch (err) {
+      // Best-effort, same fail-open spirit as the real invoice-extraction step: an
+      // unparseable file (scanned image needing OCR deps, corrupt document, a test
+      // fixture with fake bytes) still gets filed as a raw attachment below, just
+      // without the trip-scoped markdown sidecar.
+      console.error(`attach-receipt: document conversion skipped (${err.message})`);
+    }
+  }
+
   const bookingRef = opts['booking-ref'];
   const row = buildLedgerRow({
     date: opts.date,
     description: opts.desc,
     category: opts.category || 'Travel',
-    amount: opts.amount,
+    amount: opts.amount ?? '',
     tax: opts.tax,
     paidBy: opts['paid-by'],
     reimbursable: opts.reimbursable === undefined ? undefined : opts.reimbursable !== 'false',
-    attachmentCol: `[Receipt](${attachmentName})`,
+    attachmentCol: docRelPath
+      ? `[Receipt](${attachmentName}), [Document](${docName})`
+      : `[Receipt](${attachmentName})`,
     marker,
   });
   const rowWithRef = bookingRef ? `${row} ${bookingRefMarker(bookingRef)}` : row;
@@ -198,6 +234,7 @@ export function attachReceipt(file, opts) {
     ledgerPath: ledgerRelPath,
     id,
     attachmentPath: pathPosix.join(ledgerDir, attachmentName),
+    ...(docRelPath ? { docPath: docRelPath } : {}),
     ...(supersededId !== undefined ? { supersededId } : {}),
   };
 }
@@ -205,11 +242,11 @@ export function attachReceipt(file, opts) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const { file, opts } = parseArgs(process.argv.slice(2));
   if (!file) {
-    console.error('Usage: node attach-receipt.mjs <path-to-receipt-file> --date <YYYY-MM-DD> --desc "<text>" --amount <n> [--thread <threadId>] [--trip "<name>"] [--account <slug>] [--category <cat>] [--tax <n>] [--paid-by <name>] [--reimbursable true|false] [--booking-ref <ref>] [--supersedes <id>] [--id <stable-id>]');
+    console.error('Usage: node attach-receipt.mjs <path-to-receipt-file> --date <YYYY-MM-DD> --desc "<text>" [--amount <n>] [--thread <threadId>] [--trip "<name>"] [--account <slug>] [--category <cat>] [--tax <n>] [--paid-by <name>] [--reimbursable true|false] [--booking-ref <ref>] [--supersedes <id>] [--id <stable-id>]');
     process.exit(1);
   }
   try {
-    console.log(JSON.stringify(attachReceipt(file, opts), null, 2));
+    console.log(JSON.stringify(await attachReceipt(file, opts), null, 2));
   } catch (err) {
     console.error(err.message);
     process.exit(1);
