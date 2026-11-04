@@ -15,7 +15,7 @@ import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { VAULT_ROOT } from './route-destination.mjs';
 import { parseFrontmatter } from './frontmatter.mjs';
 import { getEngineConfig } from './engine-config.mjs';
@@ -31,78 +31,35 @@ function execEnv() {
   return { ...process.env, PATH: `${process.env.PATH || ''}:${extra.join(':')}` };
 }
 
-function runCliFast(prompt) {
+// A pure text completion: no tools and a cwd outside this repo, so the CLI can't load
+// AGENTS.md, run the Dori workflow itself and reply with chat about what it did.
+function runCli(prompt, timeout) {
   const { replyCli } = getEngineConfig();
-  const cli = replyCli === 'codex' ? 'codex' : 'claude';
-
-  if (cli === 'claude') {
-    const args = [
+  const [cmd, args] = replyCli === 'codex'
+    ? ['codex', ['exec', '--sandbox', 'read-only', prompt]]
+    : ['claude', [
       '-p', prompt,
       '--output-format', 'text',
       '--strict-mcp-config',
+      '--tools', '',
       '--settings', JSON.stringify({ hooks: { SessionEnd: [] } }),
-    ];
-    try {
-      const out = execFileSync('claude', args, {
-        cwd: HERE,
-        env: execEnv(),
-        encoding: 'utf-8',
-        timeout: 120000,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-      return out.trim();
-    } catch (err) {
-      console.warn(`[compress] Fast tier CLI warning: ${err.message}`);
-      return null;
-    }
-  } else {
-    const args = ['exec', '--sandbox', 'workspace-write', prompt];
-    try {
-      const out = execFileSync('codex', args, {
-        cwd: HERE,
-        env: execEnv(),
-        encoding: 'utf-8',
-        timeout: 120000,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-      return out.trim();
-    } catch (err) {
-      console.warn(`[compress] Codex fast tier warning: ${err.message}`);
-      return null;
-    }
-  }
+    ]];
+  const out = execFileSync(cmd, args, {
+    cwd: tmpdir(),
+    env: execEnv(),
+    encoding: 'utf-8',
+    timeout,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return out.trim();
 }
 
-function runCliReasoning(prompt) {
-  const { replyCli } = getEngineConfig();
-  const cli = replyCli === 'codex' ? 'codex' : 'claude';
+const MOM_HEADINGS = /^#{1,3}\s+(Meeting Metadata|Topics Discussed|Action Items)\b/gm;
 
-  if (cli === 'claude') {
-    const args = [
-      '-p', prompt,
-      '--output-format', 'text',
-      '--strict-mcp-config',
-      '--settings', JSON.stringify({ hooks: { SessionEnd: [] } }),
-    ];
-    const out = execFileSync('claude', args, {
-      cwd: HERE,
-      env: execEnv(),
-      encoding: 'utf-8',
-      timeout: 180000,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    return out.trim();
-  } else {
-    const args = ['exec', '--sandbox', 'workspace-write', prompt];
-    const out = execFileSync('codex', args, {
-      cwd: HERE,
-      env: execEnv(),
-      encoding: 'utf-8',
-      timeout: 180000,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    return out.trim();
-  }
+// Minutes per mom-prompt.md carry these section headings; a header block or a chat
+// reply does not.
+export function isMinutes(text) {
+  return new Set([...text.matchAll(MOM_HEADINGS)].map((m) => m[1])).size >= 2;
 }
 
 /**
@@ -113,7 +70,12 @@ async function compressTranscript(rawTranscript) {
     return rawTranscript;
   }
   const prompt = `${COMPRESSION_SYSTEM_PROMPT}\n\nTranscript:\n${rawTranscript}`;
-  const compressed = runCliFast(prompt);
+  let compressed = null;
+  try {
+    compressed = runCli(prompt, 120000);
+  } catch (err) {
+    console.warn(`[compress] Fast tier CLI warning: ${err.message}`);
+  }
   if (compressed && compressed.length > 200) {
     return compressed;
   }
@@ -139,7 +101,7 @@ async function extractMinutes({ title, date, attendees, transcript }) {
     transcript,
   ].join('\n');
 
-  return runCliReasoning(fullPrompt);
+  return runCli(fullPrompt, 180000);
 }
 
 export async function processMeetingMinutes({ relPath, force = false }) {
@@ -173,7 +135,7 @@ export async function processMeetingMinutes({ relPath, force = false }) {
     : body;
 
   const existingMOM = transcriptMatch ? body.slice(0, transcriptMatch.index).trim() : '';
-  const alreadyProcessed = existingMOM.length > 100 && !force;
+  const alreadyProcessed = isMinutes(existingMOM) && !force;
 
   if (alreadyProcessed) {
     return {
@@ -205,6 +167,9 @@ export async function processMeetingMinutes({ relPath, force = false }) {
     if (endFm !== -1) {
       cleanMOM = cleanMOM.slice(endFm + 3).trim();
     }
+  }
+  if (!isMinutes(cleanMOM)) {
+    throw new Error(`Model output is not minutes (no Topics Discussed / Action Items sections); ${targetRel} left unchanged. Output began: ${cleanMOM.slice(0, 200)}`);
   }
 
   // Stage 3: Merge back into markdown file preserving original YAML frontmatter & raw transcript

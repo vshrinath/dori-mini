@@ -83,7 +83,7 @@ export function resolveDeadline(raw, today = new Date()) {
 // Mirrors mom-tasks.ts's parseActionItems: "**Person**" heading followed by
 // "- [ ] Task | Deadline: X | Depends on: Y" lines.
 export function parseActionItems(markdown) {
-  const section = markdown.match(/###\s*Action Items\s*\n([\s\S]*?)(?=\n###|\n##[^#]|$)/i);
+  const section = markdown.match(/#{2,3}\s*Action Items\s*\n([\s\S]*?)(?=\n#{2,3}\s|$)/i);
   if (!section) return [];
   const items = [];
   let currentPerson = null;
