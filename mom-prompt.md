@@ -30,7 +30,13 @@ For each major topic:
 
 **Outcome:** What was decided, agreed, or left open?
 
-Use bold subtopic labels for skimmability. Keep each subtopic to 2-4 sentences. Avoid dense paragraphs.
+Use bold subtopic labels for skimmability. Write each subtopic at the length the discussion had: the reader should get what a careful note-taker in the room would have written, not just the conclusion. Keep:
+- how the discussion went: who proposed what, who pushed back and why, and how it was settled or left;
+- the reasoning, examples, anecdotes, comparisons and numbers people used to make their point;
+- options considered and rejected, with the reason;
+- a short verbatim quote where the exact words carry a position, commitment or concern.
+
+Cut only greetings, logistics, repetition and small talk. Prefer short paragraphs and bullets over dense blocks.
 
 Flag for review: If speaker attribution is ambiguous, note inline: `[Attribution unclear: ...]`
 
@@ -60,7 +66,7 @@ Include only firm commitments, not tentative directions.
 - Turning points in the discussion
 - Reframings or new perspectives introduced
 
-Keep to 2-4 bullets. Each insight should be 1-2 sentences.
+3-6 bullets. Each insight should be 1-3 sentences.
 
 ### Action Items
 
@@ -120,4 +126,4 @@ fathom_recording_id: "123"    # only when sourced via fetch-fathom.mjs — omit 
 - Action items must follow exact format (enables downstream automation)
 - Write for a reader with no prior context
 - Flag ambiguities rather than guessing
-- Aim for 1500-2500 words depending on meeting complexity
+- Length follows the meeting, not a target: a 15-minute call is usually 1,500-2,000 words, a 30-minute one 2,500-3,500, an hour-long discussion 4,000-6,000. Never cut a topic short to hit a number
