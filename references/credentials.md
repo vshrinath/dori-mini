@@ -1,6 +1,6 @@
 # Credentials: store and look up keys, passwords, IDs
 
-Script paths below are `~/.claude/skills/dori/...`, a link to this repo. Prefer the matching `dori-mini` MCP tool when one exists.
+No `dori` CLI equivalent: secrets stay on this machine, so this store is the primary path until the parity plan's step 5 decides otherwise (gap 4). Script paths below are `~/.claude/skills/dori/...`, a link to this repo.
 
 ## 7. Credentials (store or look up a key, password, ID, token, etc.)
 

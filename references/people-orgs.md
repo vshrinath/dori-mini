@@ -1,28 +1,23 @@
 # People, your profile, brands, organizations
 
-Script paths below are `~/.claude/skills/dori/...`, a link to this repo. Prefer the matching `dori-mini` MCP tool when one exists.
+The `dori` CLI command in `SKILL.md`'s table comes first. The scripts below (`~/.claude/skills/dori/...`, a link to this repo) and their `dori-mini` MCP tools are the fallback, for the gaps that table names.
 
 ## 5. Person research (enrich a new attendee/contact on request)
 
-When the user asks to look up or research a person (typically a new meeting attendee with no `entities/people/*.md` file yet, or thin context):
+When the user asks to look up or research a person ("who's Priya Menon from Acme", a new meeting attendee, a thin record), follow the `prep` skill's recipe (§3 Match people, §4 Research, §5 Ask once, then write). In short:
 
-```bash
-node ~/.claude/skills/dori/research-person.mjs "Full Name" ["Company/org"] ["extra context"]
-```
+1. **Match first.** `dori people list --type all --json`; match by name, then by `email`/`emails[]`, case-insensitively. For a match: `dori people get <id> --json` (relationships such as `works_for`, `met_with`), `dori facts <id> --json`, `dori people profile <id>`. A person with no `jobTitle` is thin: research them too. Two candidates for one name: ask which.
+2. **Research with your own WebSearch** (company pages, the person's own LinkedIn, The Org, talks, articles). Keep each claim's source URL and mark it `confirmed` (a primary page), `from the conversation`, or `inferred`/`unconfirmed`. No people-search sites, never contact details, home addresses or family. Common names collide (a search for a workplace-design architect once returned a same-named textiles professor): note namesakes, and confirm the right person before treating anything as fact. No public trace is a finding.
+3. **What you already have** ("what do I bring into this conversation"): colleagues at the same company (`company` in `people list`), the org's links (`dori people get <org id>`), and `dori search "<name> <org>" --limit 8` for earlier minutes, notes and proposals. Read the hits that matter with `dori vault read <path>` or `dori artifacts get <id>`.
+4. **Ask once, then write.** Show one numbered batch of every write and wait for "yes". Only `confirmed` and `from the conversation` claims become fields or facts. Write in this order: org (`dori people add "<Org>" --type organization`, or `accounts.ensure` below), person (`dori people add "<Name>" --role … --company … --email …`, or `dori people update <id>`; `--add-email` keeps existing ones), link (`dori people link <person> <org>`), facts (`dori facts add "<sentence>" [--project <p>]`), profile (`dori people profile <id> @<file>` with `## Now`, `## Career`, `## Education`, `## Links`, `## Sources and caveats`; read the current one first and keep what's still true).
 
-Calls Tavily's search API directly (`TAVILY_API_KEY` in this directory's `.env` — same key already used by `dori-portal`'s research feature, mirrors `dori-portal/lib/research-bundle.ts`'s `tavilySearch()` exactly: same endpoint, same request shape, same 0.3 relevance-score filter). Returns raw `{title, url, content}` results, deduped across a few name/company/LinkedIn queries — no summarization, no auto-filing.
+**This is not the same as recalling someone already in the vault.** "Tell me about Priya" or "what's the NDA status with Northwind" is recall: `dori people get`, `dori facts`, `dori search` (`references/recall.md`), no web research.
 
-**Always disambiguate before using results** — common names return unrelated people (verified: a search for a workplace-design architect returned mostly a same-named textiles professor). Confirm the right person with the user, then summarize/append findings into their `entities/people/<slug>.md` file yourself — this script only fetches, it doesn't write.
-
-**This is not the same thing as recalling someone already in the vault.** "Who's Priya Menon from Acme, she just joined a meeting" → this branch (external web lookup, new person). "Tell me about Priya" or "what's the NDA status with Northwind" → vault recall (`query-vault.mjs search`/`last-meeting`, above) — the person already has a file and/or meeting history, you're retrieving what's already captured, not researching them.
-
-**When the ask is "what do I bring into this conversation" rather than just "who is this"** — i.e. research plus your own prior context, not research alone:
-```bash
-node ~/.claude/skills/dori/research-and-recommend.mjs "Full Name" "Company" ["extra context"] [--project <slug>]
-```
-Same web research as above, placed next to what you already have: colleagues already in your vault at the same company (`org:` field on `entities/people/*.md`), an existing organization relationship if one's on file (`org-store.mjs`), and any vault docs already touching that company/project (`query-vault.mjs search`). Composes those three rather than duplicating any of them — no dedicated action for this exists in `dori-engine`/`dori-portal` to mirror (checked). Same identity-collision caveat applies, and the same rule: confirm before treating any of it as fact.
+Fallback, only when the CLI is down: `research-person.mjs "Full Name" ["Company"]` and `research-and-recommend.mjs "Full Name" "Company" [--project <slug>]` (Tavily, `TAVILY_API_KEY` in this directory's `.env`; fetch only, no writes).
 
 ## Your own profile (self)
+
+**CLI first:** your record is the person with `isSelf: true` in `dori people list --json`; change it with `dori call updateEntity`. The `self-store.mjs` commands below are the fallback (gap 9).
 
 When the user wants to tell the tool about themselves — role, org, or which projects they're on — rather than about someone else:
 ```bash
@@ -32,6 +27,8 @@ node ~/.claude/skills/dori/self-store.mjs get
 Mirrors real Dori's `isSelf` flag exactly — your profile is a person file at `entities/people/<slug>.md`, same shape as anyone else's, just marked `is_self: true`. Not a separate file type: `route-meeting.mjs` now excludes whoever is marked `is_self` from attendee-vote matching automatically (mirrors `if (p.isSelf) continue` in the real router), so once this is set you don't need to pass `--self` by name on every call. At most one file carries the mark — `set` clears it off any other file first, same guard real Dori applies. `set` merges onto whatever's already on file, so a call that only passes `--linkedin` won't drop a role/org set earlier. `--linkedin` stores under `links.linkedin`, matching `EntityLinksSchema` in `packages/contracts/src/entities.ts` — the same field every other entity type uses for a LinkedIn URL.
 
 ## Brands (a brand someone is launching or works for)
+
+**No CLI equivalent yet (gap 11):** use the `brand-store.mjs` commands below or the `get_brand`/`set_brand` MCP tools.
 
 When the user wants to track a brand — their own, or one they're building — distinct from the legal organization behind it (a company can have several brands; a person can be shaping one before any company exists):
 ```bash
@@ -47,6 +44,8 @@ No vault entity for this exists in `dori-engine` to mirror (checked `entities.ts
 **Brand-aware text generation**: when the user asks to write copy, a prompt, or any other text "in brand" or "in the Dori voice", run `context` first and read it before writing, don't paraphrase the brand from memory. Real Dori's own "brand-aware" feature (`dori-portal`'s Marp/documents-render pipeline) injects `BrandConfig` as CSS theme tokens into a rendered HTML document — that renderer doesn't exist in this repo. Here, "brand-aware" means the brand's guidelines feed the agent's own writing directly, no rendering step.
 
 ## 5b. Organization / account (only on a structured affiliation assertion)
+
+**CLI first:** `dori run accounts.ensure '{"orgName":"Meridian","personId":"<person id>","personName":"Anita Sharma","evidenceText":"Anita Sharma, CFO at Meridian"}'` (same evidence bar; `success: false` with `affiliation_evidence_not_cleared` writes nothing), and for duplicates `dori run entities.merge '{"sourceId":"<dup id>","targetId":"<canonical id>"}'`, which waits for the user's approval in Dori's Inbox. The `org-store.mjs` and `entity-merge.mjs` commands below are the fallback, for when the CLI is down.
 
 When a message ties a person to a company with an actual role or title — "Anita, CFO at Meridian", "Anita is the CFO at Meridian" — not a bare mention of a company name in passing:
 

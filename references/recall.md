@@ -1,8 +1,10 @@
 # Recall: search, multi-fact questions, decisions, tasks, meeting prep
 
-Script paths below are `~/.claude/skills/dori/...`, a link to this repo. Prefer the matching `dori-mini` MCP tool when one exists.
+The `dori` CLI command in `SKILL.md`'s table comes first. The scripts below (`~/.claude/skills/dori/...`, a link to this repo) and their `dori-mini` MCP tools are the fallback, for the gaps that table names.
 
 ## Vault index (search cache)
+
+**CLI first:** `dori search "<query>" [--limit N]` (hybrid full-text + vectors over Dori's vault; 6–15 s today, gap 1), then `dori vault read <path>` or `dori artifacts get <id>` for the hits that matter. The engine indexes its own writes, so nothing below is needed after a CLI write. The scripts below are the fallback, and the multi-query advice further down applies to `dori search` just the same. "Last meeting with X": `dori search "<name> meeting"` and check `dori people get <id>` for `met_with` links.
 
 After writing any file into `dori/dori-vault/`, run:
 ```bash
@@ -233,6 +235,8 @@ repeat runs.
 
 ## Decisions (any captured note, not just meeting minutes)
 
+**CLI first:** `dori facts [<entity id>]` reads current facts; `dori facts add "<text>" --project <p>` extracts and keeps a decision under a project (decisions are kept only under a project). Decision records with a status are fallback only: `decision-store.mjs` below (gap 8).
+
 A meeting's "### Decisions Log" (via `mom-prompt.md`, branch 3) already captures decisions made in a meeting — this is for everything else: a standalone note, a pasted message, a voice-note transcript, anything that isn't already routed as a meeting transcript, YouTube video, document, or expense. Mirrors `decisions.capture` (decision-record.ts) — real Dori classifies every capture this way, not just meetings.
 
 When you're about to file a piece of freeform text ≥30 characters as a note (not one of branches 1–7 above), classify it first — run this exact prompt (copied verbatim from `decisions-capture.ts`'s `buildPrompt`, in `decision-store.mjs`'s own `classifyPrompt` export) via the Agent tool with a cheap model (same spirit as branch 3's haiku compression pass):
@@ -259,6 +263,8 @@ Stored at `entities/decisions/<slug>.md`, same one-file-per-entity shape as ever
 
 ## Tasks
 
+**CLI first:** `dori tasks list [--status open|done|all] [--project <p>]`, `dori tasks get <id>`, `dori tasks add "<title>" [--due YYYY-MM-DD] [--next <text>] [--project <p>]`, `dori tasks done <id>`, and `dori tasks list --suggested` for to-dos Dori found in a meeting or capture. After minutes from a `dori capture`, Dori suggests the action items itself; mention them, don't re-extract. The scripts below are the fallback.
+
 `list-tasks.mjs` reads dori-engine's real task store directly (`<vault>/.dori/tasks/records/*.json`) — same data the engine's own `tasks.list` action reads, just a synchronous local read instead of an MCP action call. Use for "what are my pending tasks", "what's due":
 ```bash
 node ~/.claude/skills/dori/list-tasks.mjs [open|done|...] [--real]
@@ -279,6 +285,8 @@ Defaults to `open`. Pass `--real` to drop leftover e2e/debug/probe fixture tasks
   Mirrors `tasks.detect` + `tasks.create_many`'s real blocking rule: an item owned by the user becomes a task; an item owned by someone else is only created (as a `waiting` task) if one of the user's own action items names that person under "Depends on" — otherwise it's silently skipped, never guessed at. Re-running on the same file is safe — already-extracted items are deduped and skipped.
 
 ## Meeting prep (before an upcoming meeting, on request)
+
+**CLI first:** `dori run meeting.generate_brief '{"title":"<meeting>","date":"YYYY-MM-DD","attendees":["<name>"],"project":"<project>"}'` writes a brief under `meetings/prep-….md` (edit with `dori brief edit <path> @file`). For calendar meetings and per-attendee briefs, use the `prep` skill. `meeting-prep.mjs` below is the read-only fallback.
 
 When the user asks to prep for a meeting ("what should I know before the call with Anita and Sam", "prep me for the Meridian sync"):
 ```bash

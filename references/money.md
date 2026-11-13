@@ -1,8 +1,10 @@
 # Expenses, trip ledgers, reimbursements
 
-Script paths below are `~/.claude/skills/dori/...`, a link to this repo. Prefer the matching `dori-mini` MCP tool when one exists.
+The `dori` CLI command in `SKILL.md`'s table comes first. The scripts below (`~/.claude/skills/dori/...`, a link to this repo) and their `dori-mini` MCP tools are the fallback, for the gaps that table names.
 
 ## 6. Expense/bill message (mentions spending money, no document attached)
+
+**No CLI equivalent yet (gap 10):** trip ledgers, expense routing, gap checks and closing a trip all stay on the scripts and MCP tools below. A receipt file can still go in with `dori capture --file <receipt>`, which routes it.
 
 When the user pastes/types a message that describes an expense ("spent $45 on lunch", "paid $120 for the taxi on the Denver trip") with no file attached — a receipt or invoice file attachment is document routing (branch 2's receipt sub-case, `attach-receipt.mjs`), not this branch:
 

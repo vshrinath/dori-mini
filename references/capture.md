@@ -1,8 +1,10 @@
 # Capture: YouTube, documents, meeting transcripts, Fathom, filing
 
-Script paths below are `~/.claude/skills/dori/...`, a link to this repo. Prefer the matching `dori-mini` MCP tool when one exists.
+The `dori` CLI command in `SKILL.md`'s table comes first. The scripts below (`~/.claude/skills/dori/...`, a link to this repo) and their `dori-mini` MCP tools are the fallback, for the gaps that table names.
 
 ## 1. YouTube link (`youtube.com/...` or `youtu.be/...`)
+
+**To file it in Dori:** `dori capture --link <url> [--wait]`; Dori fetches the transcript and files it. The `yt-dlp` recipe below is for when the user wants the transcript here (in this session or the current project), not filed.
 
 Transcript only (default, fastest) — `--write-info-json` also lands the uploader's own chapters and description alongside the captions, in the same call:
 ```bash
@@ -28,6 +30,8 @@ yt-dlp -o "%(title)s.%(ext)s" "<url>"
 
 ## 2. Document (PDF, DOCX, PPTX, XLSX, or a local file path)
 
+**To file it in Dori:** `dori capture --file <path> [--wait]` (documents, images, audio, receipts; up to 18 MB). Dori converts and routes it. `convert-document.mjs` below is the fallback for a convert-only preview with no filing, and `attach-receipt.mjs` for "this receipt on this trip" (gaps 5 and 10).
+
 ```bash
 node ~/.claude/skills/dori/convert-document.mjs "<path>" -o "<output>.md"
 ```
@@ -48,6 +52,8 @@ Omit `--thread` if you don't know which trip it belongs to — the script lists 
 
 ## 3. Meeting transcript (pasted text or a transcript file, with intent to produce minutes)
 
+**CLI first:** save the transcript to a file and `dori capture @<file>` (or pipe it in). Dori files it and writes the minutes as an artifact: poll `dori artifacts list --limit 10 --json` for it, then `dori artifacts get <id>`. Use the manual route below (`mom-prompt.md`, then `route_meeting`/`file_meeting`/`process_meeting`) only to file into a chosen project or to redo minutes for a file already in the vault (gap 3).
+
 Write the minutes from the full transcript. Compress first only if it is ≥160,000 characters (a 2-3 hour meeting; `COMPRESS_TRANSCRIPT_TOKEN_THRESHOLD = 40000` in `process-meeting-minutes.mjs`). Compressing every transcript over 6,000 characters, as Dori's engine does, made the minutes thin: the summarizer never saw the examples, reasoning and back-and-forth. For a transcript that long, use the Agent tool with `model: "haiku"` and this exact system prompt:
 
 > Compress this raw meeting transcript into a compact structured agenda for a downstream summarizer. This is a lossy-but-lossless-for-facts pass: cut filler, repetition, and small talk, but you MUST preserve every speaker attribution, decision, numeric/date detail, and action item verbatim — the next stage extracts structured minutes from your output alone and cannot see the original transcript. Group by topic. Output plain text, no commentary, no code fences.
@@ -55,6 +61,8 @@ Write the minutes from the full transcript. Compress first only if it is ≥160,
 Then read `mom-prompt.md` in this skill's directory and follow it exactly to turn the (compressed or original, if under threshold) transcript into structured minutes. Only load `mom-prompt.md` for this branch.
 
 ## 4. Fathom sync (fetch new meetings on request)
+
+**CLI first:** `dori call fathomMeetings '{"limit":10}'` lists the 10 newest (no `since`, no filed flag, dates at midnight UTC); `dori call fathomMeeting '{"recordingId":"<id>"}'` returns one meeting's summary and transcript; `dori call fileFathomMeetings` runs the whole sync into `meetings/`. Fall back to `fetch-fathom.mjs` / `list_fathom_meetings` below for older meetings, a `since` date, or "which aren't filed yet", and to `file_meeting` for one recording into a chosen project (gap 3).
 
 When the user asks to pull/check/sync Fathom, or asks for minutes of a specific past meeting by name ("new meeting with Alex from Acme Corp") without pasting a transcript:
 
@@ -86,6 +94,8 @@ If it's unclear whether pasted text is a transcript meant for minutes vs. just t
 
 ## Destination
 
+**With the CLI there is nothing to route:** `dori capture` picks the destination itself. (`dori call classifyIntake` would preview it but answers 401 to a CLI sign-in.) The scripts below apply only to a fallback write to disk.
+
 `dori-vault` is the default destination — do not ask "where should this go" as a first move. Read `dori-vault-conventions.md` in this skill's directory (covers the two-project-tree split and a known data-quality issue), then:
 
 - **Branches 1 & 2 (YouTube/document, not meeting-routed):** run
@@ -101,6 +111,8 @@ If it's unclear whether pasted text is a transcript meant for minutes vs. just t
 - Only fall back to asking outright when the user's request itself is ambiguous about destination in a way neither script resolves (e.g. they name a project that doesn't exist in either tree).
 
 ## Inbox and clarifications
+
+**CLI first:** `dori call pendingApprovals` lists approvals waiting on a Run (the user approves, in Dori's Inbox or with `dori respond <runId> approve` in their own terminal); `dori tasks list --suggested` lists to-dos Dori suggested. `dori call inbox` answers 401 to a CLI sign-in, and dori-mini's own clarifications and inbox files have no CLI verb, so the commands below stay for those (gap 7).
 
 A minimal mirror of Dori's `buildInboxProjection` — only the two sources that translate to a synchronous, per-invocation skill (no job queue, no filesystem watcher): files sitting in vault `inbox/`, and pending `ClarificationRecord`s (mirrors `dori-engine/src/clarification/store.ts` exactly, content-addressed dedup included). Check it proactively — not just when the user asks:
 ```bash
