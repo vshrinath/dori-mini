@@ -72,7 +72,7 @@ async function compressTranscript(rawTranscript) {
   const prompt = `${COMPRESSION_SYSTEM_PROMPT}\n\nTranscript:\n${rawTranscript}`;
   let compressed = null;
   try {
-    compressed = runCli(prompt, 120000);
+    compressed = runCli(prompt, 300000);
   } catch (err) {
     console.warn(`[compress] Fast tier CLI warning: ${err.message}`);
   }
@@ -101,7 +101,7 @@ async function extractMinutes({ title, date, attendees, transcript }) {
     transcript,
   ].join('\n');
 
-  return runCli(fullPrompt, 180000);
+  return runCli(fullPrompt, 600000);
 }
 
 export async function processMeetingMinutes({ relPath, force = false }) {
