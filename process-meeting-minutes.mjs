@@ -2,7 +2,8 @@
 // Two-phase meeting minutes processor for Dori — mirrors dori-engine's
 // `meeting-document.ts` (src/workflows/meeting-document.ts) pipeline:
 //
-// 1. Threshold check: COMPRESS_TRANSCRIPT_TOKEN_THRESHOLD = 1500 tokens (~6000 chars).
+// 1. Threshold check: COMPRESS_TRANSCRIPT_TOKEN_THRESHOLD = 40000 tokens (~160k chars, a 2-3 hour
+//    meeting). Dori's engine compresses from 1500; here that cost the minutes their detail.
 // 2. Stage 1 (Fast Tier / Compression): For long transcripts, compresses verbatim
 //    dialogue into a lossy-for-filler / lossless-for-facts structured agenda.
 // 3. Stage 2 (Reasoning Tier / Extraction): Follows canonical mom-prompt.md
@@ -21,7 +22,7 @@ import { parseFrontmatter } from './frontmatter.mjs';
 import { getEngineConfig } from './engine-config.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const COMPRESS_TRANSCRIPT_TOKEN_THRESHOLD = 1500; // ~6000 chars
+const COMPRESS_TRANSCRIPT_TOKEN_THRESHOLD = 40000; // ~160k chars; below it the minutes see every word
 const COMPRESS_CHAR_THRESHOLD = COMPRESS_TRANSCRIPT_TOKEN_THRESHOLD * 4;
 
 const COMPRESSION_SYSTEM_PROMPT = `Compress this raw meeting transcript into a compact structured agenda for a downstream summarizer. This is a lossy-but-lossless-for-facts pass: cut filler, repetition, and small talk, but you MUST preserve every speaker attribution, decision, numeric/date detail, and action item verbatim — the next stage extracts structured minutes from your output alone and cannot see the original transcript. Group by topic. Output plain text, no commentary, no code fences.`;
